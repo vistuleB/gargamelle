@@ -1,4 +1,5 @@
 // Isolated design experiment. Not part of Gargamelle's public API.
+import gleam/dict.{type Dict}
 import gleam/int
 import gleam/json
 import gleam/list
@@ -7,13 +8,30 @@ import gleam/result
 import gleam/string
 
 pub type Value {
+  Null
   Text(String)
   Boolean(Bool)
   Array(List(Value))
   Object(List(#(String, Value)))
 }
 
+type Identity
+
+@external(erlang, "plan_support", "fresh_identity")
+@external(javascript, "./plan_support.mjs", "fresh_identity")
+fn fresh_identity() -> Identity
+
+type Bindings =
+  List(#(Identity, #(String, Schema)))
+
 type Schema {
+  Identified(Identity, Schema)
+  NullSchema
+  ConstantString(String)
+  NullableSchema(Schema)
+  DictionarySchema(Schema)
+  AnnotatedSchema(Schema, String)
+  ArrayLimits(Int, Int)
   StringSchema
   BooleanSchema
   ArraySchema(Schema)
@@ -21,8 +39,8 @@ type Schema {
   TupleSchema(List(Schema))
   UnionSchema(List(Schema))
   AllSchema(Schema, List(Schema))
-  Reference(String)
-  Graph(Schema, List(#(String, Schema)))
+  Reference(Identity, String)
+  Graph(Schema, Bindings)
 }
 
 pub type Policy {
@@ -56,15 +74,121 @@ pub opaque type Definition(a) {
   Definition(Schema, fn(Value) -> a)
 }
 
+fn identified(schema: Schema) -> Schema {
+  case schema {
+    Identified(_, _) -> schema
+    _ -> Identified(fresh_identity(), schema)
+  }
+}
+
+fn make_plan(schema, convert) {
+  Plan(identified(schema), convert)
+}
+
+pub opaque type Variant(a, recursion) {
+  Variant(String, List(Field), Policy, fn(Environment(recursion), Value) -> a)
+}
+
+pub fn nullable(plan: Plan(a, recursion)) -> Plan(Option(a), recursion) {
+  let Plan(schema, convert) = plan
+  make_plan(NullableSchema(schema), fn(environment, value) {
+    case value {
+      Null -> None
+      _ -> Some(convert(environment, value))
+    }
+  })
+}
+
+pub fn dictionary(
+  plan: Plan(a, recursion),
+) -> Plan(List(#(String, a)), recursion) {
+  let Plan(schema, convert) = plan
+  make_plan(DictionarySchema(schema), fn(environment, value) {
+    let assert Object(properties) = value
+    list.map(properties, fn(property) {
+      #(property.0, convert(environment, property.1))
+    })
+  })
+}
+
+pub fn describe(
+  plan: Plan(a, recursion),
+  description: String,
+) -> Plan(a, recursion) {
+  let Plan(schema, convert) = plan
+  make_plan(AnnotatedSchema(schema, description), convert)
+}
+
+pub fn array_limits(
+  plan: Plan(List(a), recursion),
+  minimum: Int,
+  maximum: Int,
+) -> Result(Plan(List(a), recursion), String) {
+  case minimum < 0 || maximum < minimum {
+    True -> Error("invalid array limits")
+    False -> {
+      let Plan(schema, convert) = plan
+      Ok(make_plan(AllSchema(schema, [ArrayLimits(minimum, maximum)]), convert))
+    }
+  }
+}
+
+pub fn variant(
+  tag: String,
+  record: Record(a, recursion),
+  policy: Policy,
+) -> Variant(a, recursion) {
+  let Record(fields, convert) = record
+  Variant(tag, fields, policy, convert)
+}
+
+pub fn tagged(
+  discriminator: String,
+  variants: List(Variant(a, recursion)),
+) -> Result(Plan(a, recursion), String) {
+  use plans <- result.try(
+    list.try_fold(variants, [], fn(plans, variant) {
+      let Variant(tag, fields, policy, convert) = variant
+      use _ <- result.try(unique_field(fields, discriminator))
+      use _ <- result.try(
+        case
+          list.length(
+            list.filter(variants, fn(other) {
+              let Variant(other_tag, _, _, _) = other
+              other_tag == tag
+            }),
+          )
+          > 1
+        {
+          True -> Error("duplicate tag")
+          False -> Ok(Nil)
+        },
+      )
+      Ok(
+        list.append(plans, [
+          make_plan(
+            RecordSchema(
+              [Field(discriminator, ConstantString(tag), Required), ..fields],
+              policy,
+            ),
+            convert,
+          ),
+        ]),
+      )
+    }),
+  )
+  any_of(plans)
+}
+
 pub fn text() -> Plan(String, environment) {
-  Plan(StringSchema, fn(_, value) {
+  make_plan(StringSchema, fn(_, value) {
     let assert Text(text) = value
     text
   })
 }
 
 pub fn boolean() -> Plan(Bool, environment) {
-  Plan(BooleanSchema, fn(_, value) {
+  make_plan(BooleanSchema, fn(_, value) {
     let assert Boolean(boolean) = value
     boolean
   })
@@ -75,12 +199,12 @@ pub fn map(
   convert: fn(a) -> b,
 ) -> Plan(b, environment) {
   let Plan(schema, run) = plan
-  Plan(schema, fn(environment, value) { convert(run(environment, value)) })
+  make_plan(schema, fn(environment, value) { convert(run(environment, value)) })
 }
 
 pub fn array(plan: Plan(a, environment)) -> Plan(List(a), environment) {
   let Plan(schema, run) = plan
-  Plan(ArraySchema(schema), fn(environment, value) {
+  make_plan(ArraySchema(schema), fn(environment, value) {
     let assert Array(values) = value
     list.map(values, run(environment, _))
   })
@@ -192,7 +316,7 @@ pub fn finish_record(
   policy: Policy,
 ) -> Plan(a, environment) {
   let Record(fields, convert) = record
-  Plan(RecordSchema(fields, policy), convert)
+  make_plan(RecordSchema(fields, policy), convert)
 }
 
 pub fn tuple(constructor: a) -> Tuple(a, environment) {
@@ -215,7 +339,7 @@ pub fn item(
 
 pub fn finish_tuple(tuple: Tuple(a, environment)) -> Plan(a, environment) {
   let Tuple(items, convert) = tuple
-  Plan(TupleSchema(items), convert)
+  make_plan(TupleSchema(items), convert)
 }
 
 pub fn any_of(
@@ -225,7 +349,7 @@ pub fn any_of(
     [] -> Error("empty union")
     _ ->
       Ok(
-        Plan(
+        make_plan(
           UnionSchema(
             list.map(plans, fn(plan) {
               let Plan(schema, _) = plan
@@ -255,7 +379,7 @@ fn choose(
 // Every converter environment carries a schema lookup plus typed recursion.
 // This alias keeps references explicit and avoids heterogeneous converter maps.
 type Environment(recursion) =
-  #(List(#(String, Schema)), recursion)
+  #(Bindings, recursion)
 
 fn environment_schema(environment: Environment(recursion)) {
   environment.0
@@ -266,7 +390,7 @@ pub fn requiring(
   rules: List(Plan(b, environment)),
 ) -> Plan(a, environment) {
   let Plan(schema, run) = base
-  Plan(
+  make_plan(
     AllSchema(
       schema,
       list.map(rules, fn(rule) {
@@ -280,7 +404,7 @@ pub fn requiring(
 
 pub fn lift(definition: Definition(a)) -> Plan(a, environment) {
   let Definition(schema, run) = definition
-  Plan(schema, fn(_, value) { run(value) })
+  make_plan(schema, fn(_, value) { run(value) })
 }
 
 pub fn finish(plan: Plan(a, Nil)) -> Definition(a) {
@@ -292,16 +416,21 @@ pub fn recursive(
   name: String,
   build: fn(Plan(a, fn(Value) -> a)) -> Result(Plan(a, fn(Value) -> a), String),
 ) -> Result(Definition(a), String) {
+  let reference_id = fresh_identity()
   let self =
-    Plan(Reference(name), fn(environment: Environment(fn(Value) -> a), value) {
-      environment.1(value)
-    })
+    make_plan(
+      Reference(reference_id, name),
+      fn(environment: Environment(fn(Value) -> a), value) {
+        environment.1(value)
+      },
+    )
   use body <- result.try(build(self))
   let Plan(schema, _) = body
-  let bindings = [#(name, schema)]
-  use _ <- result.try(resolved(Graph(Reference(name), bindings), [], []))
+  let bindings = [#(reference_id, #(name, schema))]
+  let graph = identified(Graph(Reference(reference_id, name), bindings))
+  use _ <- result.try(resolved(graph, [], []))
   use _ <- result.try(guard_bindings(bindings))
-  Ok(Definition(Graph(Reference(name), bindings), run_self(body, bindings, _)))
+  Ok(Definition(graph, run_self(body, bindings, _)))
 }
 
 fn run_self(body: Plan(a, fn(Value) -> a), bindings, value) -> a {
@@ -328,16 +457,18 @@ pub fn recursive_pair(
     True -> Error("duplicate name")
     False -> Ok(Nil)
   })
+  let first_id = fresh_identity()
+  let second_id = fresh_identity()
   let first =
-    Plan(
-      Reference(first_name),
+    make_plan(
+      Reference(first_id, first_name),
       fn(environment: Environment(#(fn(Value) -> a, fn(Value) -> b)), value) {
         environment.1.0(value)
       },
     )
   let second =
-    Plan(
-      Reference(second_name),
+    make_plan(
+      Reference(second_id, second_name),
       fn(environment: Environment(#(fn(Value) -> a, fn(Value) -> b)), value) {
         environment.1.1(value)
       },
@@ -345,20 +476,18 @@ pub fn recursive_pair(
   use bodies <- result.try(build(first, second))
   let Plan(first_schema, _) = bodies.0
   let Plan(second_schema, _) = bodies.1
-  let bindings = [#(first_name, first_schema), #(second_name, second_schema)]
-  use _ <- result.try(resolved(Graph(Reference(first_name), bindings), [], []))
+  let bindings = [
+    #(first_id, #(first_name, first_schema)),
+    #(second_id, #(second_name, second_schema)),
+  ]
+  let first_graph = identified(Graph(Reference(first_id, first_name), bindings))
+  let second_graph =
+    identified(Graph(Reference(second_id, second_name), bindings))
+  use _ <- result.try(resolved(first_graph, [], []))
   use _ <- result.try(guard_bindings(bindings))
   Ok(#(
-    Definition(Graph(Reference(first_name), bindings), run_first(
-      bodies,
-      bindings,
-      _,
-    )),
-    Definition(Graph(Reference(second_name), bindings), run_second(
-      bodies,
-      bindings,
-      _,
-    )),
+    Definition(first_graph, run_first(bodies, bindings, _)),
+    Definition(second_graph, run_second(bodies, bindings, _)),
   ))
 }
 
@@ -419,9 +548,28 @@ pub fn decode(definition: Definition(a), value: Value) -> Result(a, String) {
 fn check(
   schema: Schema,
   value: Value,
-  bindings: List(#(String, Schema)),
+  bindings: Bindings,
 ) -> Result(Nil, String) {
   case schema, value {
+    Identified(_, child), _ -> check(child, value, bindings)
+    NullSchema, Null -> Ok(Nil)
+    ConstantString(expected), Text(actual) ->
+      case expected == actual {
+        True -> Ok(Nil)
+        False -> Error("constant")
+      }
+    NullableSchema(_), Null -> Ok(Nil)
+    NullableSchema(child), _ -> check(child, value, bindings)
+    DictionarySchema(child), Object(properties) ->
+      all(
+        list.map(properties, fn(property) { check(child, property.1, bindings) }),
+      )
+    AnnotatedSchema(child, _), _ -> check(child, value, bindings)
+    ArrayLimits(minimum, maximum), Array(values) ->
+      case list.length(values) >= minimum && list.length(values) <= maximum {
+        True -> Ok(Nil)
+        False -> Error("array limits")
+      }
     StringSchema, Text(_) | BooleanSchema, Boolean(_) -> Ok(Nil)
     ArraySchema(child), Array(values) ->
       all(list.map(values, check(child, _, bindings)))
@@ -472,12 +620,12 @@ fn check(
       }
     AllSchema(base, rules), _ ->
       all(list.map([base, ..rules], check(_, value, bindings)))
-    Reference(name), _ -> {
+    Reference(id, _), _ -> {
       use child <- result.try(
-        list.key_find(bindings, name)
+        list.key_find(bindings, id)
         |> result.map_error(fn(_) { "unresolved reference" }),
       )
-      check(child, value, bindings)
+      check(child.1, value, bindings)
     }
     Graph(root, definitions), _ -> check(root, value, definitions)
     _, _ -> Error("wrong type")
@@ -488,70 +636,149 @@ fn all(results: List(Result(Nil, String))) -> Result(Nil, String) {
   list.try_fold(results, Nil, fn(_, next) { next })
 }
 
-fn guard_bindings(bindings: List(#(String, Schema))) -> Result(Nil, String) {
+fn guard_bindings(bindings: Bindings) -> Result(Nil, String) {
   all(
-    list.map(bindings, fn(binding) { guard(binding.1, bindings, [binding.0]) }),
+    list.map(bindings, fn(binding) { guard(binding.1.1, bindings, [binding.0]) }),
   )
 }
+
+type Scope {
+  Unbound
+  Bound(Identity)
+}
+
+fn scope(bindings: Bindings) -> Scope {
+  case bindings {
+    [] -> Unbound
+    [#(id, _), ..] -> Bound(id)
+  }
+}
+
+type ResolutionMemo =
+  Dict(#(Scope, Identity), Nil)
+
+type GuardMemo =
+  Dict(#(Scope, Identity, List(Identity)), Nil)
 
 // Check every edge, even beneath empty/defaulted structural positions. This
 // is distinct from the guard walk, which checks only non-descending cycles.
 fn resolved(
   schema: Schema,
-  bindings,
-  seen: List(String),
+  bindings: Bindings,
+  _seen: List(Identity),
 ) -> Result(Nil, String) {
+  resolved_walk(schema, bindings, dict.new()) |> result.map(fn(_) { Nil })
+}
+
+fn resolve_children(children, bindings, memo) {
+  list.try_fold(children, memo, fn(memo, child) {
+    resolved_walk(child, bindings, memo)
+  })
+}
+
+fn resolved_walk(
+  schema: Schema,
+  bindings: Bindings,
+  memo: ResolutionMemo,
+) -> Result(ResolutionMemo, String) {
   case schema {
-    Reference(name) ->
-      case list.contains(seen, name) {
-        True -> Ok(Nil)
-        False -> {
-          use child <- result.try(
-            list.key_find(bindings, name)
-            |> result.map_error(fn(_) { "unresolved reference" }),
-          )
-          resolved(child, bindings, [name, ..seen])
-        }
+    Identified(id, child) -> {
+      let key = #(scope(bindings), id)
+      case dict.has_key(memo, key) {
+        True -> Ok(memo)
+        False -> resolved_walk(child, bindings, dict.insert(memo, key, Nil))
       }
-    Graph(root, local) -> resolved(root, local, [])
-    ArraySchema(child) -> resolved(child, bindings, seen)
+    }
+    Reference(id, _) -> {
+      use child <- result.try(
+        list.key_find(bindings, id)
+        |> result.map_error(fn(_) { "unresolved reference" }),
+      )
+      resolved_walk(child.1, bindings, memo)
+    }
+    Graph(root, local) -> resolved_walk(root, local, memo)
+    ArraySchema(child)
+    | NullableSchema(child)
+    | DictionarySchema(child)
+    | AnnotatedSchema(child, _) -> resolved_walk(child, bindings, memo)
     RecordSchema(fields, _) ->
-      all(
+      resolve_children(
         list.map(fields, fn(field) {
           let Field(_, child, _) = field
-          resolved(child, bindings, seen)
+          child
         }),
+        bindings,
+        memo,
       )
     TupleSchema(items) | UnionSchema(items) ->
-      all(list.map(items, resolved(_, bindings, seen)))
-    AllSchema(base, rules) ->
-      all(list.map([base, ..rules], resolved(_, bindings, seen)))
-    StringSchema | BooleanSchema -> Ok(Nil)
+      resolve_children(items, bindings, memo)
+    AllSchema(base, rules) -> resolve_children([base, ..rules], bindings, memo)
+    StringSchema
+    | BooleanSchema
+    | NullSchema
+    | ConstantString(_)
+    | ArrayLimits(_, _) -> Ok(memo)
   }
 }
 
-fn guard(schema: Schema, bindings, path: List(String)) -> Result(Nil, String) {
+fn guard(
+  schema: Schema,
+  bindings: Bindings,
+  path: List(Identity),
+) -> Result(Nil, String) {
+  guard_walk(schema, bindings, path, dict.new()) |> result.map(fn(_) { Nil })
+}
+
+fn guard_children(children, bindings, path, memo) {
+  list.try_fold(children, memo, fn(memo, child) {
+    guard_walk(child, bindings, path, memo)
+  })
+}
+
+fn guard_walk(
+  schema: Schema,
+  bindings: Bindings,
+  path: List(Identity),
+  memo: GuardMemo,
+) -> Result(GuardMemo, String) {
   case schema {
-    Reference(name) ->
-      case list.contains(path, name) {
+    Identified(id, child) -> {
+      let key = #(scope(bindings), id, path)
+      case dict.has_key(memo, key) {
+        True -> Ok(memo)
+        False -> {
+          use memo <- result.try(guard_walk(child, bindings, path, memo))
+          Ok(dict.insert(memo, key, Nil))
+        }
+      }
+    }
+    Reference(id, _) ->
+      case list.contains(path, id) {
         True -> Error("unguarded recursion")
         False -> {
           use child <- result.try(
-            list.key_find(bindings, name)
+            list.key_find(bindings, id)
             |> result.map_error(fn(_) { "unresolved reference" }),
           )
-          guard(child, bindings, [name, ..path])
+          guard_walk(child.1, bindings, [id, ..path], memo)
         }
       }
-    UnionSchema(children) -> all(list.map(children, guard(_, bindings, path)))
+    UnionSchema(children) -> guard_children(children, bindings, path, memo)
     AllSchema(base, rules) ->
-      all(list.map([base, ..rules], guard(_, bindings, path)))
-    Graph(_, definitions) -> guard_bindings(definitions)
+      guard_children([base, ..rules], bindings, path, memo)
+    Graph(_, definitions) -> {
+      use _ <- result.try(guard_bindings(definitions))
+      Ok(memo)
+    }
+    NullableSchema(child) | AnnotatedSchema(child, _) ->
+      guard_walk(child, bindings, path, memo)
     StringSchema
     | BooleanSchema
     | ArraySchema(_)
     | RecordSchema(_, _)
-    | TupleSchema(_) -> Ok(Nil)
+    | TupleSchema(_) -> Ok(memo)
+    NullSchema | ConstantString(_) | ArrayLimits(_, _) | DictionarySchema(_) ->
+      Ok(memo)
   }
 }
 
@@ -580,9 +807,38 @@ fn emit_children(children, keyword, location, references) {
 fn emit_schema(
   schema: Schema,
   location: String,
-  references: List(#(String, String)),
+  references: List(#(Identity, String)),
 ) -> json.Json {
   case schema {
+    Identified(_, child) -> emit_schema(child, location, references)
+    NullSchema -> json.object([#("type", json.string("null"))])
+    ConstantString(text) -> json.object([#("const", json.string(text))])
+    NullableSchema(child) ->
+      json.object([
+        #(
+          "anyOf",
+          emit_children([NullSchema, child], "anyOf", location, references),
+        ),
+      ])
+    DictionarySchema(child) ->
+      json.object([
+        #("type", json.string("object")),
+        #(
+          "additionalProperties",
+          emit_schema(child, location <> "/additionalProperties", references),
+        ),
+      ])
+    AnnotatedSchema(child, description) ->
+      json.object([
+        #("description", json.string(description)),
+        #("allOf", emit_children([child], "allOf", location, references)),
+      ])
+    ArrayLimits(minimum, maximum) ->
+      json.object([
+        #("type", json.string("array")),
+        #("minItems", json.int(minimum)),
+        #("maxItems", json.int(maximum)),
+      ])
     StringSchema -> json.object([#("type", json.string("string"))])
     BooleanSchema -> json.object([#("type", json.string("boolean"))])
     ArraySchema(child) ->
@@ -652,14 +908,14 @@ fn emit_schema(
           emit_children([base, ..rules], "allOf", location, references),
         ),
       ])
-    Reference(name) -> {
-      let assert Ok(target) = list.key_find(references, name)
+    Reference(id, _) -> {
+      let assert Ok(target) = list.key_find(references, id)
       json.object([#("$ref", json.string(target))])
     }
     Graph(root, definitions) -> {
       let local =
         list.map(definitions, fn(binding) {
-          #(binding.0, location <> "/$defs/" <> pointer(binding.0))
+          #(binding.0, location <> "/$defs/" <> pointer(binding.1.0))
         })
       json.object([
         #(
@@ -667,7 +923,7 @@ fn emit_schema(
           json.object(
             list.map(definitions, fn(binding) {
               let assert Ok(target) = list.key_find(local, binding.0)
-              #(binding.0, emit_schema(binding.1, target, local))
+              #(binding.1.0, emit_schema(binding.1.1, target, local))
             }),
           ),
         ),

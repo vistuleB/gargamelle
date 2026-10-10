@@ -1,5 +1,11 @@
 -module(plan_support).
--export([counter/1, handoff/1]).
+-export([counter/1, handoff/1, measure/1, fresh_identity/0]).
+fresh_identity() -> make_ref().
+measure(Run) ->
+    {reductions, Before} = process_info(self(), reductions),
+    {Micros, _} = timer:tc(Run),
+    {reductions, After} = process_info(self(), reductions),
+    {Micros, After - Before}.
 counter(Make) ->
     Counter = atomics:new(1, []),
     Make(fun() -> atomics:add(Counter, 1, 1), nil end,

@@ -33,3 +33,24 @@ pub fn text_or(
 ) -> Result(p.Plan(String, environment), String) {
   p.any_of([p.text(), child])
 }
+
+pub fn provider(child, leaf, branch, index) {
+  use leaf_fields <- result.try(p.required(p.record(leaf), "value", p.text()))
+  use children <- result.try(p.array_limits(p.array(child), 0, 2))
+  use branch_fields <- result.try(p.required(
+    p.record(branch),
+    "children",
+    p.nullable(children),
+  ))
+  use index_fields <- result.try(p.required(
+    p.record(index),
+    "entries",
+    p.dictionary(child),
+  ))
+  p.tagged("kind", [
+    p.variant("leaf", leaf_fields, p.Closed),
+    p.variant("branch", branch_fields, p.Closed),
+    p.variant("index", index_fields, p.Closed),
+  ])
+  |> result.map(p.describe(_, "Provider JSON"))
+}

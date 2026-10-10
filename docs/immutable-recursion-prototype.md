@@ -29,7 +29,13 @@ recursive functions that close over the completed bodies. The bodies do not
 contain cells that need updating afterward.
 
 `Definition(a)` contains the closed schema graph and `fn(Value) -> a`. Schema
-validation receives its reference lookup explicitly. Schema emission tracks the
+nodes and reference bindings have fresh identities, using native references on
+Erlang and Symbols on JavaScript. Display names are separate from binding keys:
+an unfinished outer reference cannot become an inner reference by sharing a name.
+Construction walks pass immutable memo dictionaries explicitly, keyed by node
+identity and binding scope (plus the active reference path for guard checks).
+These caches are local to each walk and are not retained as reference storage.
+Schema validation receives its reference lookup explicitly. Schema emission tracks the
 location of each nested graph, so importing a definition does not accidentally
 resolve its references against an enclosing definition with the same name.
 
@@ -50,7 +56,7 @@ No allocation profiler or reclamation stress test has been run.
 
 | Criterion | Result |
 |---|---|
-| Self recursion and a pair with different output types | Eleven behavioral tests pass on each target; converters use typed functions, without casts. |
+| Self recursion and a pair with different output types | Fifteen behavioral tests pass on each target; converters use typed functions, without casts. |
 | Builder executes once | Counter assertions remain at one after repeated decode, validation and emission. Tested for both self recursion and a pair. |
 | Completed values survive creator exit | Native tests transfer completed self/pair definitions and a decoded closure capturing a completed definition, then use them after creator exit. JavaScript runs the same cases directly; it does not demonstrate process transfer. |
 | Construction references cannot be decoded | Eight compile-negative checks fail with type mismatches: each target rejects direct decode/finalization and finalization after mapping or wrapping a reference in a heterogeneous tuple. |
@@ -62,7 +68,9 @@ No allocation profiler or reclamation stress test has been run.
 | Curried records and tuples | Multi-field records, optional presence, defaults, open/closed projection and exact heterogeneous tuples compile and decode. Tuples carry independently typed pair outputs. |
 | Helper inference | A separately compiled helper module tests annotated generic record/union helpers and an inferred tuple helper, used in closed, self-recursive and paired contexts. Call sites do not supply recursion functions or internal environment types. |
 | Nested construction | Independent nested definitions compose through `lift`. Capturing an unfinished outer reference is rejected during construction, including below an array. |
-| Independent schema agreement | Ajv 2020-12 agrees with validation and decoding success on 511 cases per target, across self recursion, both pair roots, composition, records, defaults and tuples. Emitted schemas and case outcomes match between targets. |
+| Remaining feature combinations | A provider helper composes tagged variants, nullable recursive children, dictionary values, bounds and descriptions. Discriminator collisions, duplicate tags and non-descending nullable/description cycles are rejected. |
+| Shared construction and scope | A 26-layer graph with duplicate edges constructs on both targets. An inner definition with the same display name cannot capture an unfinished outer reference. |
+| Independent schema agreement | Ajv 2020-12 agrees with validation and decoding success on 724 cases per target, including the recursive provider feature combinations. Emitted schemas and case outcomes match between targets. |
 
 These results establish a feasible typed implementation for the tested subset.
 They do not prove that all existing Gargamelle combinators can be migrated without
@@ -123,10 +131,33 @@ additional public type parameter compared with `Definition(a)`. Users do not
 write the schema lookup or environment tuple, but migration of existing helper
 signatures still has a cost.
 
-Before any library rewrite, test the remaining combinators and their modifiers,
-larger realistic helper modules, sharing and error-path behavior. Measure
-allocation/traversal cost on deeper inputs. The typed prototype is not yet a
+Tagged variants, nullable values, dictionaries, descriptions and array bounds
+now compose in an exported provider helper. The experiment still does not
+implement every production combinator (for example conditional/contains/
+property-name constraints), detailed error paths, numeric primitives or regex.
+Before migration, map those remaining APIs onto the design, assess diagnostics
+and complete the performance work below. The typed prototype is not yet a
 demonstration that the complete API can migrate cleanly.
+
+## Bounded performance observations
+
+The runner also measures construction with shared union edges at 8/12/16 layers,
+and decoding at input depths 8/32/64. Measurements are printed as diagnostics;
+there are no hardware-dependent timing assertions.
+
+Before memoization, shared construction at 16 layers used approximately 5.3
+million Erlang reductions. After adding node identities and scope-aware immutable
+memo dictionaries, the same case used approximately 1,200 reductions. Wall times
+vary with warmup and runtime conditions; these observations establish removal of
+the measured repeated construction traversal, not a general speed guarantee.
+The separate 26-layer behavioral case retains this sharing shape as a regression.
+
+Deep decoding still shows repeated branch validation: the measured native work
+at depths 8/32/64 was approximately 1,900/22,500/85,000 reductions. Whole-input
+validation followed by branch selection rescans subtrees. That remains an
+optimization question; callback suppression must not be weakened to combine
+validation and conversion prematurely. Allocation, large shared graph emission
+and shared closure transfer sizes have not been profiled.
 
 The prototype scopes imported graphs independently and permits names outside
 Gargamelle's current restricted syntax. Its same-name composition tests prove

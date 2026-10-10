@@ -5,6 +5,147 @@ import gleeunit/should
 import immutable_plan as p
 import plan_helpers
 
+pub type Provider {
+  ProviderLeaf(String)
+  ProviderBranch(Option(List(Provider)))
+  ProviderIndex(List(#(String, Provider)))
+}
+
+pub fn provider_definition() {
+  p.recursive("provider", fn(self) {
+    plan_helpers.provider(self, ProviderLeaf, ProviderBranch, ProviderIndex)
+  })
+}
+
+pub fn tagged_nullable_dictionary_and_modifier_composition_test() {
+  let assert Ok(definition) = handoff(provider_definition)
+  let leaf = p.Object([#("kind", p.Text("leaf")), #("value", p.Text("x"))])
+  let branch =
+    p.Object([#("kind", p.Text("branch")), #("children", p.Array([leaf]))])
+  let input =
+    p.Object([
+      #("kind", p.Text("index")),
+      #(
+        "entries",
+        p.Object([
+          #("__proto__", branch),
+          #("constructor", leaf),
+        ]),
+      ),
+    ])
+  p.decode(definition, input)
+  |> should.equal(
+    Ok(
+      ProviderIndex([
+        #("__proto__", ProviderBranch(Some([ProviderLeaf("x")]))),
+        #("constructor", ProviderLeaf("x")),
+      ]),
+    ),
+  )
+  p.decode(
+    definition,
+    p.Object([#("kind", p.Text("branch")), #("children", p.Null)]),
+  )
+  |> should.equal(Ok(ProviderBranch(None)))
+  p.decode(
+    definition,
+    p.Object([
+      #("kind", p.Text("branch")),
+      #("children", p.Array([leaf, leaf, leaf])),
+    ]),
+  )
+  |> should.be_error
+  p.decode(definition, p.Object([#("kind", p.Text("unknown"))]))
+  |> should.be_error
+  p.decode(
+    definition,
+    p.Object([
+      #("kind", p.Text("leaf")),
+      #("value", p.Text("x")),
+      #("extra", p.Null),
+    ]),
+  )
+  |> should.be_error
+  string.contains(p.emit(definition), "Provider JSON") |> should.be_true
+}
+
+pub fn transparent_modifiers_do_not_guard_aliases_test() {
+  p.recursive("nullable", fn(self) {
+    Ok(p.map(p.nullable(self), fn(_) { "x" }))
+  })
+  |> should.be_error
+  p.recursive("description", fn(self) { Ok(p.describe(self, "alias")) })
+  |> should.be_error
+  let assert Ok(fields) =
+    p.required(p.record(fn(value) { value }), "kind", p.text())
+  p.tagged("kind", [p.variant("leaf", fields, p.Closed)]) |> should.be_error
+  p.tagged("kind", [
+    p.variant("same", p.record(Nil), p.Closed),
+    p.variant("same", p.record(Nil), p.Closed),
+  ])
+  |> should.be_error
+  p.array_limits(p.array(p.text()), 3, 2) |> should.be_error
+}
+
+pub fn feature_modifiers_preserve_callback_suppression_test() {
+  let #(tick, count) = counter(fn(tick, count) { #(tick, count) })
+  let assert Ok(definition) =
+    p.recursive("provider", fn(self) {
+      plan_helpers.provider(
+        self,
+        fn(text) {
+          tick()
+          ProviderLeaf(text)
+        },
+        ProviderBranch,
+        ProviderIndex,
+      )
+    })
+  let leaf = p.Object([#("kind", p.Text("leaf")), #("value", p.Text("x"))])
+  p.validate(definition, leaf) |> should.be_ok
+  p.emit(definition) |> should.not_equal("")
+  count() |> should.equal(0)
+  p.decode(
+    definition,
+    p.Object([
+      #("kind", p.Text("branch")),
+      #("children", p.Array([leaf, leaf, leaf])),
+    ]),
+  )
+  |> should.be_error
+  count() |> should.equal(0)
+  p.decode(definition, leaf) |> should.equal(Ok(ProviderLeaf("x")))
+  count() |> should.equal(1)
+}
+
+fn shared_layers(plan, depth) {
+  case depth {
+    0 -> plan
+    _ -> {
+      let assert Ok(next) = p.any_of([plan, plan])
+      shared_layers(next, depth - 1)
+    }
+  }
+}
+
+pub fn shared_graph_construction_and_same_name_scope_test() {
+  let assert Ok(_) =
+    p.recursive("shared", fn(self) {
+      use base <- result.try(
+        p.any_of([p.text(), p.map(p.array(self), fn(_) { "tree" })]),
+      )
+      Ok(shared_layers(base, 26))
+    })
+  // Equal display names must not bind a captured reference from another scope.
+  p.recursive("same", fn(outer) {
+    use _ <- result.try(
+      p.recursive("same", fn(_) { Ok(p.map(p.array(outer), fn(_) { "inner" })) }),
+    )
+    Ok(p.text())
+  })
+  |> should.be_error
+}
+
 @external(erlang, "plan_support", "counter")
 @external(javascript, "./plan_support.mjs", "counter")
 fn counter(make: fn(fn() -> Nil, fn() -> Int) -> a) -> a
@@ -127,10 +268,7 @@ pub fn unresolved_defaults_and_unguarded_recursion_test() {
 pub fn callback_suppression_and_atomic_validation_test() {
   let #(tick, count) = counter(fn(tick, count) { #(tick, count) })
   let auxiliary =
-    p.map(p.text(), fn(text) {
-      panic as "auxiliary converter must never execute"
-      text
-    })
+    p.map(p.text(), fn(_) { panic as "auxiliary converter must never execute" })
   let primary =
     p.map(p.text(), fn(text) {
       tick()

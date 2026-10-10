@@ -22,6 +22,7 @@ fn tree(name) {
 
 fn encode(value) {
   case value {
+    p.Null -> json.null()
     p.Text(text) -> json.string(text)
     p.Boolean(boolean) -> json.bool(boolean)
     p.Array(values) -> json.array(values, encode)
@@ -177,6 +178,45 @@ pub fn main() {
   let assert Ok(fields) =
     p.default_field(fields, "tree", p.lift(definition), p.Text("default"))
   let full_default = p.finish(p.finish_record(fields, p.Open))
+  let assert Ok(provider) =
+    p.recursive("provider", fn(self) {
+      plan_helpers.provider(
+        self,
+        Leaf,
+        fn(children) { Branch(option.unwrap(children, [])) },
+        fn(entries) { Branch(list.map(entries, fn(entry) { entry.1 })) },
+      )
+    })
+  let leaf = p.Object([#("kind", p.Text("leaf")), #("value", p.Text("x"))])
+  let provider_values =
+    list.append(
+      samples(),
+      list.append(
+        [
+          leaf,
+          p.Object([#("kind", p.Text("branch")), #("children", p.Null)]),
+          p.Object([
+            #("kind", p.Text("branch")),
+            #("children", p.Array([leaf, leaf])),
+          ]),
+          p.Object([
+            #("kind", p.Text("branch")),
+            #("children", p.Array([leaf, leaf, leaf])),
+          ]),
+          p.Object([
+            #("kind", p.Text("index")),
+            #("entries", p.Object([#("__proto__", leaf)])),
+          ]),
+        ],
+        list.flat_map(samples(), fn(value) {
+          [
+            p.Object([#("kind", p.Text("leaf")), #("value", value)]),
+            p.Object([#("kind", p.Text("branch")), #("children", value)]),
+            p.Object([#("kind", p.Text("index")), #("entries", value)]),
+          ]
+        }),
+      ),
+    )
   json.to_string(
     json.array(
       [
@@ -190,6 +230,7 @@ pub fn main() {
         ),
         fixture("pair-first", first, samples()),
         fixture("pair-second", second, samples()),
+        fixture("provider-features", provider, provider_values),
         fixture("named-record", named, record_samples()),
         fixture("heterogeneous-tuple", packet, tuple_samples()),
         fixture(

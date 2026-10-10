@@ -244,16 +244,21 @@ callback outputs or introduce a permanent cell registry. See decision 5 in
 the successful root-transfer evidence below for independently captured references.
 
 The isolated plan/environment prototype in `verification/portability/plans`
-now passes eleven behavioral tests per target, eight compile-negative checks,
-native creator-exit handoff and 511 independent schema cases per target. Run
+now passes fifteen behavioral tests per target, eight compile-negative checks,
+native creator-exit handoff and 724 independent schema cases per target. Run
 `node --test verification/portability/immutable-plans.test.mjs`. See
 `docs/immutable-recursion-prototype.md` for the realistic API comparison and
 acceptance results. Curried records, optional/default fields, heterogeneous
 tuples, separately compiled helper inference and independent nested construction
-are covered. Schema lookup is private; helper signatures need only a generic
-recursion parameter. The library has not been rewritten. Next, test the remaining
-combinators/modifiers, sharing and deeper traversal costs before deciding whether
-to migrate the public recursion API.
+are covered. Tagged unions, nullable/dictionary children, descriptions and bounds
+compose in a provider helper. Schema lookup is private; helper signatures need
+only a generic recursion parameter. Scope-aware node identities and immutable
+memo dictionaries eliminate measured exponential shared construction work, with
+a retained 26-layer case. Reference bindings use identities, not display names.
+Deep branch selection still rescans validated subtrees; allocation, shared schema
+emission and transfer sizes require profiling. The library has not been rewritten.
+Next, map the remaining specialized combinators and diagnostics onto this design,
+and assess remaining costs before migrating the public recursion API.
 
 The actual Erlang fixture runs 35 shared Gleam tests and seven additional typed
 API tests against a temporary library copy. It covers recursive and mutually

@@ -26,7 +26,7 @@ test('isolated immutable plans compile and run on JavaScript and Erlang',(t)=>{
     for(const target of ['javascript','erlang']) {
       const result=run(['test','--target',target]);
       assert.equal(result.status,0,target+'\n'+result.stderr+'\n'+result.stdout);
-      assert.match(result.stdout,/11 passed, no failures/);
+      assert.match(result.stdout,/15 passed, no failures/);
       const probe=run(['run','--target',target,'-m','plan_probe']);
       assert.equal(probe.status,0,probe.stderr+'\n'+probe.stdout);
       const fixtures=JSON.parse(probe.stdout.trim());
@@ -40,7 +40,12 @@ test('isolated immutable plans compile and run on JavaScript and Erlang',(t)=>{
           assert.equal(entry.decoded,entry.accepted);
         }
       }
-      t.diagnostic(`${target}: 11 behavioral tests; ${fixtures.reduce((sum,fixture)=>sum+fixture.cases.length,0)} independent schema cases`);
+      t.diagnostic(`${target}: 15 behavioral tests; ${fixtures.reduce((sum,fixture)=>sum+fixture.cases.length,0)} independent schema cases`);
+      const benchmark=run(['run','--target',target,'-m','plan_benchmark']);
+      assert.equal(benchmark.status,0,benchmark.stderr+'\n'+benchmark.stdout);
+      const costs=JSON.parse(benchmark.stdout.trim());
+      assert.equal(costs.length,6);
+      t.diagnostic(`${target} bounded costs (observations, no timing thresholds): ${JSON.stringify(costs)}`);
     }
     for(const [name,body] of [
       ['decode','p.decode(self, p.Text("x"))'],

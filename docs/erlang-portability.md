@@ -191,11 +191,18 @@ It uses typed construction plans, explicit recursion environments and immutable
 completed bodies. Self recursion, an independently typed pair, native handoff,
 callback suppression, defaults and compile-negative cases are exercised. See
 [the prototype report](immutable-recursion-prototype.md) for its API comparison,
-511-case independent schema checks per target, and limits. Curried record/tuple
+724-case independent schema checks per target, and limits. Curried record/tuple
 builders and generic helpers now compile without public schema lookup types.
 This demonstrates a
 possible **different recursion contract**; it does not fix the existing library
 or authorize a public API migration.
+
+Provider helpers now cover tagged unions, nullable/dictionary children and
+modifiers. The prototype uses native node/reference identities and scope-aware
+immutable memo dictionaries for construction. The measured 16-layer shared case
+dropped from roughly 5.3 million to 1,200 native reductions, without reference
+storage in process dictionaries or permanent registries. Repeated validation
+during deep branch selection and allocation/transfer costs remain under review.
 
 ### 6. QuickJS code with older Unicode tables — experimental candidate
 
