@@ -1,6 +1,6 @@
 # Gargamelle handoff and next work
 
-Recorded 2026-10-10; updated through development checkpoint `eaae20a`.
+Recorded 2026-10-10; updated through the production-plan integration following `fb447b7`.
 This is a handoff and prioritized candidate list, not a commitment to implement
 all JSON Schema features. Verify external state before acting on it.
 
@@ -54,13 +54,17 @@ dependency or production regex binding has been added. See
 `docs/erlang-portability.md` for the decision, reproduction, archive/source hashes
 and the remaining packaging/conformance work.
 
-Next: broaden native regex conformance and package its binding, then extend
-independent cross-target oracles and clean consumer tests. Complete Erlang support
-remains gated on the two regex externals.
+Next: promote the isolated production-plan integration with migration examples
+and clean consumer tests, then broaden native regex conformance and package its
+binding. Complete Erlang support remains gated on the two regex externals and
+replacement of the shipped recursive-reference ownership design.
 
-Current checkpoint validation passed: 36 JavaScript-target Gleam tests, 144 Node
-tests, 17,788 generated pairs and 109 official cases; nine native portability
-checks, including 43 actual Erlang Gleam API tests with only regex test adapters.
+Current JavaScript validation passed: 39 Gleam tests, 144 Node tests,
+17,788 generated pairs and 109 official cases. The production-plan experiment
+passes 42 JavaScript and 49 native tests; the shipped native graph experiment
+still has three expected lifetime failures. The earlier scalar checkpoint passed
+nine portability groups, including 43 actual Erlang Gleam API tests with only
+regex test adapters.
 The native regex candidate passed 13,572 pairs under address/undefined-behavior
 sanitizers. Docs generation, Hex export and a fresh JavaScript consumer of the
 extracted 0.2.0 archive passed using the pinned dependency sources offline.
@@ -189,8 +193,8 @@ JSON admission/canonical serialization. The admission/canonical/string helpers
 are deliberately not attached to the public API while surrogate compatibility
 is unresolved.
 
-`npm run verify:erlang-primitives` runs ten independent portability test groups,
-including the isolated immutable-plan experiment. The current library graph
+`npm run verify:erlang-primitives` runs eleven independent portability test groups,
+including the isolated immutable-plan and production integration experiments. The current library graph
 group fails on the three captured-placeholder regressions described below.
 It requires Erlang/OTP 29 for the current evidence and is separate from the
 JavaScript verification gate, so JavaScript-only development does not gain an
@@ -235,8 +239,8 @@ and bracketed walk state. No generic casts, cell servers or ETS ownership are us
 **Current blocker (2026-10-10):** this design does not preserve a builder
 placeholder captured in a decoded closure. New typed tests pass on JavaScript
 but fail on Erlang for self recursion, mutual recursion and transfer after the
-creator exits. The native graph fixture now has 43 passes and three failures;
-the JavaScript suite has 38 passes. Keep these as failing Erlang regressions,
+creator exits. The native graph fixture now has 44 passes and three failures;
+the JavaScript suite has 39 passes. Keep these as failing Erlang regressions,
 replace the reference ownership design, and demonstrate reclamation as well as
 process-independent use before claiming Erlang support. Do not silently restrict
 callback outputs or introduce a permanent cell registry. See decision 5 in
@@ -266,19 +270,29 @@ The six-layer shared transfer now occupies 5,271 receiver words (previously
 36,576); the provider occupies 310 (previously 889). Shared copying and emission
 still expand repeated branches. The report documents the evidence/memory tradeoff,
 exclusive unions, default receipts, operational failures and exact old-fixture
-comparison. The library has not been rewritten. Next, integrate plans/evidence
-with the production checker and emitter in an isolated fixture, preserving full
-DataError paths, naming/conflict and canonical-byte policies. Then run the actual
-typed API fixtures on both targets before changing the shipped API.
+comparison. The shipped library has not been rewritten.
 
-The actual Erlang fixture runs 35 shared Gleam tests and seven additional typed
+The isolated production integration now preserves full DataError paths and branch
+diagnostics, naming/conflict policies and canonical schema bytes. It passes
+42 JavaScript tests, 49 native tests, twelve compile-negative checks and 3,636
+independent cases across 36 schemas. Exact schema text, decoded outputs and
+diagnostics match shipped JavaScript and the integrated native runner. The fixture
+checks the shipped source hash to prevent silent drift. Native regex still uses
+a deliberately limited test adapter. See `docs/production-recursion-integration.md`.
+Integration exposed and fixed native input-object ordering, with a shared retained
+test, and binding-scope omission in temporary graph caches, with an isolated
+captured-plan/shared-graph rejection regression. Next, promote this design with
+migration docs, real helper/lifetime tests and clean consumers. Keep the original
+native lifetime failures visible until the public API contract is migrated.
+
+The original Erlang fixture runs 39 shared Gleam tests and eight additional typed
 API tests against a temporary library copy. It covers recursive and mutually
 recursive outputs, transfer after creator exit, composition of independent
 contexts, defaults, rejection, conflicting names, shared graph construction,
 builder/converter exceptions and restoration of an enclosing construction scope.
 It attaches experimental scalar parsing/canonicalization and native regex only
 in that copy; it does not claim full Erlang semantics. The production source
-still rejects an Erlang build through its unsupported admission/string/regex
+still rejects an Erlang build through its two unsupported regex
 externals. Integration found and fixed an unscoped default-check traversal and
 OTP signed-zero exact-equality differences in constants and number endpoints.
 Retained shared tests cover zero-sign equality and repeated exclusive bounds.

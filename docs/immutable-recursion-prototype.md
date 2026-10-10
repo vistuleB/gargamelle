@@ -256,12 +256,13 @@ production diagnostics still need preservation, and standalone validation's
 receipt allocation needs evaluation. Do not replace full error accumulation with
 the prototype's first-error String results.
 
-Next, connect plans and evidence to the production structural checker and emitter
-in an isolated integration fixture. Preserve name/conflict policies, canonical
-bytes and public error paths, and run the real typed fixtures on both targets
-before changing the shipped API. Keep shared-term transfer amplification
-explicit; this observation does not justify a permanent registry or manual
-release API. Regex integration remains a separate backend gate.
+The [isolated production integration](production-recursion-integration.md) now
+connects plans and evidence to the real structural checker and emitter. It
+preserves name/conflict policies, canonical bytes and full structured errors,
+and runs shared typed fixtures on both targets. The shipped API remains unchanged.
+Keep shared-term transfer amplification explicit; this observation does not
+justify a permanent registry or manual release API. Regex integration remains a
+separate backend gate.
 
 The prototype scopes imported graphs independently and permits names outside
 Gargamelle's current restricted syntax. Its same-name composition tests prove

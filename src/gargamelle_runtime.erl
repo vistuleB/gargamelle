@@ -9,7 +9,7 @@ canonical(Source) ->
     {ok, Text} = canonical_scalar_json(Source), Text.
 
 parse(Source, Null, Bool, Number, String, Array, Object) ->
-    case parse_scalar_json(Source) of
+    case parse_scalar_json(Source, ordered) of
         {ok, Value} -> {ok, admitted_value(Value, {Null, Bool, Number, String, Array, Object})};
         {error, syntax} -> {error, {admission_error, <<"syntax">>}};
         {error, nonfinite_number} -> {error, {admission_error, <<"non-finite number">>}};
@@ -21,6 +21,8 @@ admitted_value(N, {_, _, Make, _, _, _}) when is_float(N) -> Make(N);
 admitted_value(S, {_, _, _, Make, _, _}) when is_binary(S) -> Make(S);
 admitted_value(A, {_, _, _, _, Make, _} = Factories) when is_list(A) ->
     Make([admitted_value(V, Factories) || V <- A]);
+admitted_value({gargamelle_object, Keys, O}, {_, _, _, _, _, Make} = Factories) ->
+    Make([{K, admitted_value(maps:get(K, O), Factories)} || K <- admission_keys(Keys)]);
 admitted_value(O, {_, _, _, _, _, Make} = Factories) when is_map(O) ->
     Make([{K, admitted_value(V, Factories)} || {K, V} <- maps:to_list(O)]).
 
@@ -110,8 +112,9 @@ count_codepoints(<<_/utf8, Rest/binary>>, Count) ->
 
 %% Unicode-scalar admission scanner. Syntax and duplicate resolution finish
 %% before domain checking; private invalid units never become public Strings.
-parse_scalar_json(Source) ->
-    try read_value(whitespace(Source)) of
+parse_scalar_json(Source) -> parse_scalar_json(Source, unordered).
+parse_scalar_json(Source, Mode) ->
+    try read_value(whitespace(Source), Mode) of
         {Value, Rest} ->
             case whitespace(Rest) of
                 <<>> ->
@@ -129,45 +132,62 @@ whitespace(<<C, Rest/binary>>) when C == 32; C == 9; C == 10; C == 13 ->
 whitespace(Rest) -> Rest.
 syntax() -> throw(gargamelle_json_syntax).
 
-read_value(<<"null", Rest/binary>>) -> {null, Rest};
-read_value(<<"true", Rest/binary>>) -> {true, Rest};
-read_value(<<"false", Rest/binary>>) -> {false, Rest};
-read_value(<<$", _/binary>> = Source) -> read_string(Source);
-read_value(<<$[, Rest/binary>>) -> read_array(whitespace(Rest), []);
-read_value(<<${, Rest/binary>>) -> read_object(whitespace(Rest), #{});
-read_value(<<First, _/binary>> = Source) when First == $-;
+read_value(<<"null", Rest/binary>>, _) -> {null, Rest};
+read_value(<<"true", Rest/binary>>, _) -> {true, Rest};
+read_value(<<"false", Rest/binary>>, _) -> {false, Rest};
+read_value(<<$", _/binary>> = Source, _) -> read_string(Source);
+read_value(<<$[, Rest/binary>>, Mode) -> read_array(whitespace(Rest), [], Mode);
+read_value(<<${, Rest/binary>>, Mode) -> read_object(whitespace(Rest), #{}, [], Mode);
+read_value(<<First, _/binary>> = Source, _) when First == $-;
                                            First >= $0, First =< $9 ->
     read_number(Source);
-read_value(_) -> syntax().
+read_value(_, _) -> syntax().
 
-read_array(<<$], Rest/binary>>, []) -> {[], Rest};
-read_array(Source, Acc) ->
-    {Value, Rest} = read_value(Source),
+read_array(<<$], Rest/binary>>, [], _) -> {[], Rest};
+read_array(Source, Acc, Mode) ->
+    {Value, Rest} = read_value(Source, Mode),
     case whitespace(Rest) of
         <<$], Tail/binary>> -> {lists:reverse([Value | Acc]), Tail};
-        <<$,, Tail/binary>> -> read_array_item(whitespace(Tail), [Value | Acc]);
+        <<$,, Tail/binary>> -> read_array_item(whitespace(Tail), [Value | Acc], Mode);
         _ -> syntax()
     end.
-read_array_item(<<$], _/binary>>, _) -> syntax();
-read_array_item(Source, Acc) -> read_array(Source, Acc).
+read_array_item(<<$], _/binary>>, _, _) -> syntax();
+read_array_item(Source, Acc, Mode) -> read_array(Source, Acc, Mode).
 
-read_object(<<$}, Rest/binary>>, Map) when map_size(Map) == 0 -> {Map, Rest};
-read_object(<<$", _/binary>> = Source, Map) ->
+read_object(<<$}, Rest/binary>>, Map, [], Mode) when map_size(Map) == 0 ->
+    {finished_object(Map, [], Mode), Rest};
+read_object(<<$", _/binary>> = Source, Map, Keys, Mode) ->
     {Key, Rest} = read_string(Source),
     case whitespace(Rest) of
         <<$:, ValueSource/binary>> ->
-            {Value, Tail} = read_value(whitespace(ValueSource)),
+            {Value, Tail} = read_value(whitespace(ValueSource), Mode),
+            NextKeys = case Mode == ordered andalso not maps:is_key(Key, Map) of
+                true -> [Key | Keys];
+                false -> Keys
+            end,
             Next = maps:put(Key, Value, Map),
             case whitespace(Tail) of
-                <<$}, End/binary>> -> {Next, End};
-                <<$,, More/binary>> -> read_object_item(whitespace(More), Next);
+                <<$}, End/binary>> -> {finished_object(Next, NextKeys, Mode), End};
+                <<$,, More/binary>> -> read_object_item(whitespace(More), Next, NextKeys, Mode);
                 _ -> syntax()
             end;
         _ -> syntax()
     end;
-read_object(_, _) -> syntax().
-read_object_item(<<$}, _/binary>>, _) -> syntax();
-read_object_item(Source, Map) -> read_object(Source, Map).
+read_object(_, _, _, _) -> syntax().
+read_object_item(<<$}, _/binary>>, _, _, _) -> syntax();
+read_object_item(Source, Map, Keys, Mode) -> read_object(Source, Map, Keys, Mode).
+finished_object(Map, Keys, ordered) -> {gargamelle_object, lists:reverse(Keys), Map};
+finished_object(Map, _, unordered) -> Map.
+
+%% JSON.parse/Object.keys enumerates integer indices first, then other keys in
+%% first-insertion order. Replacing a duplicate value never moves its key.
+%% Canonical serialization continues to sort non-index keys by UTF-16 below.
+admission_keys(Keys) ->
+    {Indices, Others} = lists:partition(fun(K) ->
+        case enumeration_key(K) of {0, _} -> true; _ -> false end
+    end, Keys),
+    [K || {_, K} <- lists:keysort(1, [{binary_to_integer(K), K} || K <- Indices])]
+        ++ Others.
 
 %% Preserve unpaired surrogate units privately as WTF-8 until final-domain
 %% checking. They never become public Gleam Strings. This lets duplicate-key
@@ -226,6 +246,7 @@ number_end(_, Length) -> Length.
 
 has_nonfinite(gargamelle_nonfinite_number) -> true;
 has_nonfinite(Value) when is_list(Value) -> lists:any(fun has_nonfinite/1, Value);
+has_nonfinite({gargamelle_object, _, Value}) -> has_nonfinite(Value);
 has_nonfinite(Value) when is_map(Value) ->
     lists:any(fun has_nonfinite/1, maps:values(Value));
 has_nonfinite(_) -> false.
@@ -236,6 +257,7 @@ has_non_scalar(Value) when is_binary(Value) ->
         _ -> true
     end;
 has_non_scalar(Value) when is_list(Value) -> lists:any(fun has_non_scalar/1, Value);
+has_non_scalar({gargamelle_object, _, Value}) -> has_non_scalar(Value);
 has_non_scalar(Value) when is_map(Value) ->
     lists:any(fun has_non_scalar/1, maps:keys(Value)) orelse
     lists:any(fun has_non_scalar/1, maps:values(Value));

@@ -146,8 +146,8 @@ Typed regression tests now establish a compatibility failure when a converter
 returns a closure capturing a builder placeholder. Both self recursion and
 `recursive_pair` pass on JavaScript and fail on Erlang after decoding returns.
 Transferring the decoded closure to another process, after its creator exits,
-also fails. The native fixture reports 43 passing tests and three failures;
-the JavaScript suite reports 38 passing tests. Reproduce with:
+also fails. The native fixture reports 44 passing tests and three failures;
+the JavaScript suite reports 39 passing tests. Reproduce with:
 
 ```sh
 gleam test --target javascript
@@ -211,8 +211,24 @@ The six-layer shared received term dropped from 36,576 to 5,271 words; the
 provider dropped from 889 to 310. Shared copying and emission still expand
 repeated branches. The prototype report records the tradeoff: private transient
 receipts and cached default receipts, plus standalone validation's currently
-unoptimized receipt allocation. Next, assess an isolated integration with the
+unoptimized receipt allocation. The isolated integration now preserves the
 production checker/emitter and structured errors; the shipped API is unchanged.
+See [production integration evidence](production-recursion-integration.md).
+
+The integration uses a closed `Definition(a) = Plan(a, Nil)` specialization and
+an explicit `lift` for completed definitions inside recursive builders. This
+keeps ordinary definitions simple, while generic construction helpers acquire
+a recursion type parameter. Review that migration cost before promotion.
+Temporary graph-walk caches must include binding scope as well as node identity;
+a retained captured-plan/shared-graph regression demonstrated why identity alone
+can hide an unresolved reference. No cache owns runnable references.
+
+Cross-target comparison also exposed native input-object ordering differences.
+The admission adapter now preserves first key insertion and last duplicate value,
+then applies JavaScript index-key enumeration. This changes native dictionary
+output and diagnostic ordering to match JavaScript; it does not change canonical
+schema sorting or the admitted JSON domain. Shared tests retain duplicates,
+nested ordering and index-boundary cases.
 
 ### 6. QuickJS code with older Unicode tables — experimental candidate
 
