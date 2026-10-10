@@ -1,10 +1,10 @@
 # Production recursion integration experiment
 
-Recorded 2026-10-10. This fixture integrates the immutable recursion design with
-Gargamelle's actual admission, structural checker, schema emitter and diagnostics.
-It lives in `verification/portability/integration`; the shipped
-`src/gargamelle.gleam` API has not changed. The fixture runner checks a baseline
-source hash so the adapted copy cannot silently drift from the production module.
+Recorded 2026-10-10. Initially tested in an isolated fixture at `511d5ae`,
+this design is now integrated into `src/gargamelle.gleam` on main. No version
+has been published. The runner uses the main library directly and retains
+`integration/baseline.gleam` and its JavaScript runtime as the historical
+comparison implementation. Its baseline source hash is checked before execution.
 
 Run it with:
 
@@ -62,29 +62,36 @@ construction rejection on both targets. The smaller prototype already used
 scope-aware memoization; copying the production cache required preserving that
 distinction too.
 
-The JavaScript scope adapter is fixture-only and depends on the compiler's
-private Option representation. Before promotion, choose either an explicit
-primitive-key adapter or shared Gleam memoization rather than exposing that
-representation as a public contract.
+The main JavaScript and Erlang walk adapters receive separate primitive scope
+and node identities from Gleam callbacks. They do not inspect Option values or
+compiler-specific composite keys. The binding-scope mutation test deliberately
+removes the scope from the identity cache and must fail the retained rejection
+assertion.
 
 ## Validation evidence
 
-- 42 JavaScript tests: 37 shared production tests and five integration tests.
-- 49 Erlang tests: those tests plus seven native process/graph tests.
+- 44 main-source JavaScript tests, including the five promoted integration tests.
+- 52 Erlang tests: those tests plus eight native process/graph tests.
 - Twelve compile-negative checks across both targets, including rejection of
   construction plans by executable APIs and access to private constructors.
 - 36 emitted schemas and 3,636 cases checked independently with Ajv 2020-12.
   The validator uses own properties, with no coercion or default insertion.
-- Exact comparison with the shipped JavaScript implementation for emitted schema
+- Exact comparison with the historical JavaScript implementation for emitted schema
   text, validation acceptance, decoded fixture outputs and full diagnostics.
 - Exact native/JavaScript comparison of the same integrated fixtures.
 
-The two older positive tests that decode escaped construction placeholders are
-excluded only from the temporary migrated API copy. The original tests remain
-in the repository. The shipped native graph fixture still records three failures
-for that old lifetime contract, with 44 passing tests. The migrated fixture
-replaces that contract with compile-negative tests and completed-definition
-lifetime tests; it does not relabel the old failures as successes.
+The old implementation recorded three native failures for escaped runnable
+builder references. Main now implements a different, explicit construction-plan
+contract: the old positive tests are replaced with completed-definition lifetime
+tests and compile-negative checks. Their original programs remain in Git history
+at `511d5ae`. Main's native graph fixture passes all 52 tests; no old failure is
+reclassified as a successful execution of its original program.
+
+All eleven portability groups pass. Documentation generation and Hex tarball
+export pass. A fresh JavaScript consumer of the extracted archive, using copied
+pinned Gleam dependency sources and no repository verification tools, exercised
+recursive `lift`, a separately annotated generic helper, distinct mutual outputs,
+validation, decoding, emission, rendering and a decoded closure.
 
 Native regex uses a test adapter based on Erlang `re`. These cases do not establish
 ECMAScript regex compatibility. Full native support still requires the selected
@@ -93,16 +100,17 @@ regex engine, packaging and broader independent conformance evidence.
 ## Cost observations and remaining work
 
 The production depth-8/32/64 decode samples used approximately
-2,100/5,500/10,700 native reductions. They include production preflight and full
+2,100/5,600/10,900 native reductions. They include production preflight and full
 union diagnostics, so they are not directly comparable to the smaller prototype's
 checker. A simple completed-definition transfer occupied 103 sender heap words,
 112 flattened words and 109 receiver words. These are bounded measurements on
 OTP 29, not timing thresholds or general memory bounds. Repeated shared branches
 can still expand during transfer and emission, as the prototype report records.
 
-Next, promote the tested design with public migration examples, update real
-helper signatures and lifetime tests, remove unused construction-cell machinery,
-and verify clean consumers. Preserve the scope regression during that work.
-Then extend native oracle coverage and finish the regex binding and distribution
-gate before claiming Erlang support. Neither a release nor an application
-dependency migration follows automatically from this experiment.
+Public migration examples and helper/lifetime tests are now updated, and unused
+construction-cell machinery is removed from both runtimes. Standalone validation
+still allocates evidence, and shared copying/emission can expand repeated edges.
+Next, extend native oracle coverage and finish the regex binding and distribution
+gate before claiming Erlang support. An unmodified clean Erlang consumer remains
+blocked by the two regex externals. Neither a release nor an application dependency
+migration follows automatically from this integration.

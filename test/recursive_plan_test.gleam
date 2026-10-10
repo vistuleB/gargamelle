@@ -4,12 +4,12 @@ import gleam/option.{Some}
 import gleam/result
 import gleeunit/should
 
-@external(erlang, "plan_support", "handoff")
-@external(javascript, "./plan_support.mjs", "handoff")
+@external(erlang, "recursion_support", "handoff")
+@external(javascript, "./recursion_support.mjs", "handoff")
 fn handoff(build: fn() -> a) -> a
 
-@external(erlang, "plan_support", "counter")
-@external(javascript, "./plan_support.mjs", "counter")
+@external(erlang, "recursion_support", "counter")
+@external(javascript, "./recursion_support.mjs", "counter")
 fn counter(make: fn(fn() -> Nil, fn() -> Int) -> a) -> a
 
 pub type Tree {

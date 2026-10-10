@@ -9,20 +9,15 @@ import {fileURLToPath} from 'node:url';
 import Ajv2020 from 'ajv/dist/2020.js';
 const root=fileURLToPath(new URL('../../',import.meta.url));
 
-test('isolated production library integrates typed plans and validation evidence',(t)=>{
-  assert.equal(createHash('sha256').update(readFileSync(join(root,'src/gargamelle.gleam'))).digest('hex'),
+test('main library preserves baseline behavior with immutable recursive plans',(t)=>{
+  assert.equal(createHash('sha256').update(readFileSync(join(root,'verification/portability/integration/baseline.gleam'))).digest('hex'),
     readFileSync(join(root,'verification/portability/integration/baseline.sha256'),'utf8').trim(),
-    'production source changed: review and refresh the integration copy');
+    'historical baseline source changed');
   const directory=mkdtempSync(join(tmpdir(),'gargamelle-production-plans-'));
   try {
     for(const name of ['src','test','build/packages']) cpSync(join(root,name),join(directory,name),{recursive:true});
     for(const name of ['gleam.toml','manifest.toml']) cpSync(join(root,name),join(directory,name));
-    cpSync(join(root,'verification/portability/integration/gargamelle.gleam'),join(directory,'src/gargamelle.gleam'));
-    // The old runnable-placeholder contract is retained in the shipped suite;
-    // this isolated API instead rejects that use in compile-negative checks.
-    rmSync(join(directory,'test/reference_lifetime_test.gleam'));
     for(const name of ['plan_support.erl','plan_support.mjs']) cpSync(join(root,'verification/portability/plans',name),join(directory,'src',name));
-    cpSync(join(root,'verification/portability/integration/integration_test.gleam'),join(directory,'test/integration_test.gleam'));
     cpSync(join(root,'verification/portability/integration/integration_probe.gleam'),join(directory,'src/integration_probe.gleam'));
     const basic=[null,false,true,-1,-0,0,1,2.5,9007199254740991,"", "x", "special", "blocked", "ab", "😀"];
     const values=[...basic,[],{},...basic.flatMap(value=>[[value],["x",value],{name:value},{"a/~":value}]),
@@ -38,11 +33,10 @@ test('isolated production library integrates typed plans and validation evidence
       '{"outer":{"z":"old","a":"middle","z":"new"}}');
     writeFileSync(join(directory,'src/integration_inputs.gleam'),`pub fn values() -> List(String) { [${sources.map(value=>JSON.stringify(value)).join(',')}] }\n`);
     cpSync(join(root,'verification/portability/integration/integration_benchmark.gleam'),join(directory,'src/integration_benchmark.gleam'));
-    cpSync(join(root,'verification/portability/integration/integration_walk.mjs'),join(directory,'src/integration_walk.mjs'));
     const run=(args)=>spawnSync('gleam',args,{cwd:directory,encoding:'utf8',timeout:60000,maxBuffer:5*1024*1024,env:{...process.env,GIT_DIR:'',GIT_WORK_TREE:''}});
     const javascript=run(['test','--target','javascript']);
     assert.equal(javascript.status,0,javascript.stderr+'\n'+javascript.stdout);
-    assert.match(javascript.stdout,/42 passed, no failures/);
+    assert.match(javascript.stdout,/44 passed, no failures/);
     const probe=target=>{
       const result=run(['run','--target',target,'-m','integration_probe']);
       assert.equal(result.status,0,result.stderr+'\n'+result.stdout);
@@ -58,11 +52,15 @@ test('isolated production library integrates typed plans and validation evidence
     const integrated=probe('javascript');
     benchmark('javascript');
     const integratedSource=readFileSync(join(directory,'src/gargamelle.gleam'));
-    rmSync(join(directory,'test/integration_test.gleam'));
-    cpSync(join(root,'src/gargamelle.gleam'),join(directory,'src/gargamelle.gleam'));
+    const currentRuntime=readFileSync(join(directory,'src/runtime.mjs'));
+    // Old sources cannot compile migrated tests; a run also compiles test modules.
+    rmSync(join(directory,'test'),{recursive:true});
+    cpSync(join(root,'verification/portability/integration/baseline.gleam'),join(directory,'src/gargamelle.gleam'));
+    cpSync(join(root,'verification/portability/integration/baseline-runtime.mjs'),join(directory,'src/runtime.mjs'));
     assert.deepEqual(probe('javascript'),integrated,'schema bytes, decoded outputs or full DataError structures changed');
     writeFileSync(join(directory,'src/gargamelle.gleam'),integratedSource);
-    cpSync(join(root,'verification/portability/integration/integration_test.gleam'),join(directory,'test/integration_test.gleam'));
+    writeFileSync(join(directory,'src/runtime.mjs'),currentRuntime);
+    cpSync(join(root,'test'),join(directory,'test'),{recursive:true});
     const ajv=new Ajv2020({strict:false,allErrors:true,ownProperties:true});
     for(const fixture of integrated) {
       const validate=ajv.compile(JSON.parse(fixture.schema));
@@ -72,12 +70,7 @@ test('isolated production library integrates typed plans and validation evidence
       }
     }
     cpSync(join(root,'verification/portability/scalar_api.erl'),join(directory,'src/scalar_api.erl'));
-    let graph=readFileSync(join(root,'verification/portability/graph_api_test.gleam'),'utf8');
-    graph=graph.replace('import reference_lifetime_test.{Captured}\n','');
-    graph=graph.slice(0,graph.indexOf('pub fn captured_placeholder_handoff_test()'))+graph.slice(graph.indexOf('pub fn process_handoff_test()'));
-    graph=graph.replace('s.map(s.array(self), Tree), first','s.map(s.array(self), Tree), s.lift(first)');
-    graph=graph.replaceAll('s.Definition(String)','s.Plan(String, recursion)');
-    writeFileSync(join(directory,'test/graph_api_test.gleam'),graph);
+    cpSync(join(root,'verification/portability/graph_api_test.gleam'),join(directory,'test/graph_api_test.gleam'));
     const source=join(directory,'src/gargamelle.gleam');
     let text=readFileSync(source,'utf8');
     for(const name of ['pattern_valid','pattern_matches']) {
@@ -91,7 +84,7 @@ test('isolated production library integrates typed plans and validation evidence
       '@external(erlang, "gargamelle_runtime", "int_text")\n@external(javascript, "./runtime.mjs", "int_text")'));
     const erlang=run(['test','--target','erlang']);
     assert.equal(erlang.status,0,erlang.stderr+'\n'+erlang.stdout);
-    assert.match(erlang.stdout,/49 passed, no failures/);
+    assert.match(erlang.stdout,/52 passed, no failures/);
     assert.deepEqual(probe('erlang'),integrated,'cross-target schema/output/diagnostic mismatch');
     benchmark('erlang');
     for(const [name,body,privateValue] of [
@@ -119,7 +112,7 @@ pub fn forbidden() {
       }
     }
     t.diagnostic('12 compile-negative checks passed on the integrated API');
-    t.diagnostic(`${integrated.length} schemas, ${integrated.reduce((sum,row)=>sum+row.cases.length,0)} independent cases; exact shipped JavaScript and native comparison`);
-    t.diagnostic('37 shared production tests, five integration tests and seven native process/graph tests passed');
+    t.diagnostic(`${integrated.length} schemas, ${integrated.reduce((sum,row)=>sum+row.cases.length,0)} independent cases; exact historical JavaScript and native comparison`);
+    t.diagnostic('44 main-source tests and eight native process/graph tests passed');
   } finally {rmSync(directory,{recursive:true,force:true});}
 });

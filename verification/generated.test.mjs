@@ -36,7 +36,7 @@ async function discrepancy(recipe,value){value=JSON.parse(JSON.stringify(value))
 async function retainFailure(recipe,value,context,details){
  mkdirSync(new URL('./generated-failures/',import.meta.url),{recursive:true});
  const file=new URL(`./generated-failures/${context.seed}-${context.index}.json`,import.meta.url);
- const report={contractRevision:4,context,original:{recipe,value,details}};
+ const report={contractRevision:5,context,original:{recipe,value,details}};
  writeFileSync(file,JSON.stringify(report,null,2)+'\n');
  const reduced=await minimizeAsync(recipe,value,async(a,v)=>!!await discrepancy(a,v));
  report.minimized={...reduced,details:await discrepancy(reduced.recipe,reduced.value)};

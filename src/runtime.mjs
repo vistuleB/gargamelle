@@ -73,47 +73,29 @@ export const int_text = String;
 
 export const same_reference = (a, b) => a === b;
 
-// A single-assignment typed construction cell. No schema-author callback is
-// called here. Failed graph finalization invalidates escaped placeholders.
-export function recursive_cell(make, missing) {
-  let state = 'unbound', value;
-  return make(
-    () => state === 'bound' ? new Ok(value) : new Error(missing),
-    next => {
-      if (state !== 'unbound') throw new globalThis.Error('Recursive cell already finalized');
-      value = next; state = 'bound';
-    },
-    () => { state = 'rejected'; value = undefined; },
-  );
+// Walk state is local to one operation and keyed by binding scope and node.
+function walkState(scopes, scope) {
+  let state = scopes.get(scope);
+  if (!state) { state = new Map(); scopes.set(scope, state); }
+  return state;
 }
-
-// Tracking is local to one schema walk; it retains no process-wide cache.
-export function identity_tracker(make, key) {
-  const seen = new Set();
+export function identity_tracker(make, scope, key) {
+  const scopes = new Map();
   return make(value => {
-    value = key(value);
-    if (seen.has(value)) return true;
-    seen.add(value);
-    return false;
+    const state = walkState(scopes, scope(value)), id = key(value);
+    const seen = state.has(id);
+    state.set(id, true);
+    return seen;
   });
 }
-
-// Tri-color DFS identity state, scoped to one recursive finalization.
-// Only completed traversals enter checked; active revisits are cycles.
-export function recursion_guard(make, key) {
-  const visiting = new Set(), checked = new Set();
-  return make(node => {
-    node = key(node);
-    if (visiting.has(node)) return 1;
-    if (checked.has(node)) return 2;
-    visiting.add(node);
-    return 0;
-  }, node => { node = key(node); visiting.delete(node); checked.add(node); });
+export function recursion_guard(make, scope, key) {
+  const scopes = new Map();
+  return make(value => {
+    const state = walkState(scopes, scope(value)), id = key(value);
+    const previous = state.get(id) ?? 0;
+    if (previous === 0) state.set(id, 1);
+    return previous;
+  }, value => { walkState(scopes, scope(value)).set(key(value), 2); });
 }
-
-// JavaScript cells already retain their typed values in closure-owned storage.
-// Shared construction/context brackets therefore require no ambient state here.
 export const fresh_identity = () => Symbol();
-export const with_construction = build => [build(), undefined];
-export const with_context = (_context, run) => run();
 export const with_walk = run => run();

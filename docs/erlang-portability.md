@@ -139,6 +139,10 @@ uses the same bracketing. Fresh node identities avoid structural equality in gra
 tracking. This avoids cell servers, ETS ownership and creator-process lifetime
 dependencies, at the cost of ambient state and context wrappers.
 
+**Historical cell-backend findings, superseded by the main-source migration below.**
+The original regressions and implementation are retained in Git history at
+`511d5ae`; the current native graph gate passes 52 tests under the new contract.
+
 Transfer after creator exit, nested exception cleanup and independent-context
 composition have typed API tests. Review reentrancy, context installation on every
 traversal/conversion path, and the memory/copy cost of retaining entire registries.
@@ -147,12 +151,8 @@ returns a closure capturing a builder placeholder. Both self recursion and
 `recursive_pair` pass on JavaScript and fail on Erlang after decoding returns.
 Transferring the decoded closure to another process, after its creator exits,
 also fails. The native fixture reports 44 passing tests and three failures;
-the JavaScript suite reports 39 passing tests. Reproduce with:
-
-```sh
-gleam test --target javascript
-node --test verification/portability/graph-api.test.mjs
-```
+the JavaScript suite reports 39 passing tests. Those failures were reproduced at `511d5ae` with `gleam test --target javascript`
+and `node --test verification/portability/graph-api.test.mjs`.
 
 The shared tests are in `test/reference_lifetime_test.gleam`; the transfer case
 is in `verification/portability/graph_api_test.gleam`. They require the captured
@@ -193,9 +193,12 @@ callback suppression, defaults and compile-negative cases are exercised. See
 [the prototype report](immutable-recursion-prototype.md) for its API comparison,
 1,142-case independent schema checks per target, and limits. Curried record/tuple
 builders and generic helpers now compile without public schema lookup types.
-This demonstrates a
-possible **different recursion contract**; it does not fix the existing library
-or authorize a public API migration.
+The user authorized main-source integration after this experiment. The new
+construction-plan contract is now implemented in the main library; it is an
+explicit 0.2.0 API migration, not a transparent fix to the old lifetime promise.
+The migration guide documents the loss of independently runnable builder
+references while preserving ordinary closure outputs and completed-definition
+lifetimes. No code has been published.
 
 Provider helpers now cover tagged unions, nullable/dictionary children and
 modifiers. The prototype uses native node/reference identities and scope-aware
@@ -212,13 +215,15 @@ provider dropped from 889 to 310. Shared copying and emission still expand
 repeated branches. The prototype report records the tradeoff: private transient
 receipts and cached default receipts, plus standalone validation's currently
 unoptimized receipt allocation. The isolated integration now preserves the
-production checker/emitter and structured errors; the shipped API is unchanged.
+production checker/emitter and structured errors, and is now promoted to main.
 See [production integration evidence](production-recursion-integration.md).
 
 The integration uses a closed `Definition(a) = Plan(a, Nil)` specialization and
 an explicit `lift` for completed definitions inside recursive builders. This
 keeps ordinary definitions simple, while generic construction helpers acquire
-a recursion type parameter. Review that migration cost before promotion.
+a recursion type parameter. The migration guide records that helper-signature cost. Main walk adapters take
+primitive scope and node keys, avoiding inspection of compiler-private Option
+representations. Both runtimes have removed construction cells and registries.
 Temporary graph-walk caches must include binding scope as well as node identity;
 a retained captured-plan/shared-graph regression demonstrated why identity alone
 can hide an unresolved reference. No cache owns runnable references.

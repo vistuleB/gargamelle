@@ -30,6 +30,11 @@ path = "verification-guide.html"
 source = "./docs/verification-guide.md"
 
 [[documentation.pages]]
+title = "Migrating to 0.2.0"
+path = "migration-0.2.html"
+source = "./docs/migration-0.2.md"
+
+[[documentation.pages]]
 title = "MIT License"
 path = "license.html"
 source = "./docs/license.md"

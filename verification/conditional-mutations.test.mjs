@@ -7,8 +7,8 @@ import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 const root=fileURLToPath(new URL('../',import.meta.url));
 const mutations=[
- ['inverted-condition','let $ = check(probe, v, "") instanceof $Empty;\n            if ($) {\n              return check(yes, v, p);','let $ = !(check(probe, v, "") instanceof $Empty);\n            if ($) {\n              return check(yes, v, p);',`assert.equal(s.validate(d,unwrap(s.parse('1'))) instanceof Ok,true);`],
- ['else-validation-removed','return check(alternative, v, p);','return $List$Empty$const;',`assert.equal(s.validate(d,unwrap(s.parse('0.5'))) instanceof Ok,false);`],
+ ['inverted-condition','let $ = inspect(probe, v, "", bindings)[0] instanceof $Empty;\n            if ($) {\n              return inspect(yes, v, p, bindings)[0];','let $ = !(inspect(probe, v, "", bindings)[0] instanceof $Empty);\n            if ($) {\n              return inspect(yes, v, p, bindings)[0];',`assert.equal(s.validate(d,unwrap(s.parse('1'))) instanceof Ok,true);`],
+ ['else-validation-removed','return inspect(alternative, v, p, bindings)[0];','return $List$Empty$const;',`assert.equal(s.validate(d,unwrap(s.parse('0.5'))) instanceof Ok,false);`],
  ['then-emission-dropped','["then", emit(yes)]','["x-then", emit(yes)]',`assert.equal(JSON.parse(s.emit_text(d)).allOf[1].then?.const,1);`],
 ];
 test('condition selection, else validation, and then emission mutants fail assertions',()=>{

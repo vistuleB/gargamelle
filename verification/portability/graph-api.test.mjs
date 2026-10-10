@@ -7,7 +7,7 @@ import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 const root=fileURLToPath(new URL('../../',import.meta.url));
 
-test('actual Erlang Gleam API preserves typed recursion and process-independent contexts',()=>{
+test('actual Erlang Gleam API preserves typed recursion and process-independent definitions',()=>{
   const directory=mkdtempSync(join(tmpdir(),'gargamelle-erlang-graph-'));
   try {
     for(const name of ['src','test','build/packages']) cpSync(join(root,name),join(directory,name),{recursive:true});
@@ -33,6 +33,6 @@ test('actual Erlang Gleam API preserves typed recursion and process-independent 
       env:{...process.env,GIT_DIR:'',GIT_WORK_TREE:''},
     });
     assert.equal(result.status,0,result.stderr+'\n'+result.stdout);
-    assert.match(result.stdout,/47 passed, no failures/);
+    assert.match(result.stdout,/52 passed, no failures/);
   } finally {rmSync(directory,{recursive:true,force:true});}
 });

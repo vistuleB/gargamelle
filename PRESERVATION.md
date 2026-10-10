@@ -66,7 +66,7 @@ caught as validation errors.
 - **C06 one-of:** validation counts all successful child validations, rejects zero
   or multiple matches, and conversion uses the unique matching child. This
   equals emitted exactly-one acceptance. Overlap never invokes converters.
-- **C07 tagged union:** `Variant(a)` is constructible only from a bare `Record(a)`;
+- **C07 tagged union:** `Variant(a, r)` is constructible only from a bare `Record(a, r)`;
   a `Definition(a)` cannot be passed as a branch. Construction rejects duplicate
   tags, empty variants, and discriminator redeclaration. Each augmented record
   includes a required string-constant tag, so branch acceptance is disjoint.
@@ -82,46 +82,43 @@ caught as validation errors.
 
 ## Guarded recursive graphs
 
-`recursive`/`recursive_pair` allocate private single-assignment cells holding
-only typed nodes and converters. Builders run once with definitions, not decoded
-values. After binding all cells, graph finalization checks names, definitions,
-and every cycle reachable without consuming a child. Arrays, dictionary values
-and record fields break such paths because they select strict subvalues of
-finite admitted JSON. Union, nullable, name, reference, uniqueness and annotation
-wrappers do not break them. This conservative guard excludes recursive calls on
-the same input; it does not assert satisfiability or bounded resource use.
+`recursive`/`recursive_pair` build immutable schema bindings and independently
+typed conversion bodies. Builders run once with construction plans, not decoded
+values. Only `Plan(a, Nil)` is an executable `Definition(a)`; open builder plans
+cannot cross public decode, validate, emission or renderer type boundaries.
+Completed runners capture their bodies and supply typed recursion functions at
+execution time. Mutual outputs remain independently typed without generic casts.
+Completed definitions and closures capturing them survive creator-process exit.
 
-Validation follows reference cells into their finalized nodes. Induction on
-strict child values, with finite same-input paths between descents, gives the
-same structural acceptance as local schema references. Conversion follows cells
-of the same output type only after validation. Mutual pairs may have different
-output types without any generic cast. Inputs remain finite trees; no cyclic
-host objects are admitted. Operational stack/resource failures still escape.
+Graph finalization checks names, definitions and every cycle reachable without
+consuming a child. Arrays, tuple positions, dictionary values and record fields
+select strict subvalues of finite admitted JSON. Union, nullable, name, reference,
+uniqueness and annotation wrappers do not break same-input cycles. The guard is
+conservative and does not assert satisfiability or bounded resource use.
 
-Each library node carries a fresh opaque identity, retained by maps and transparent
-context wrappers. Emission visits graph nodes by that identity, registers each named/ref target,
-and emits references without expanding them. Colliding names must emit equal
-local structures, and traversal continues through every distinct node to check
-transitive conflicts. Repeated nodes terminate traversal, so recursive graphs
-produce finite `$defs`. The optional HTML renderer consumes those finite schemas
-and renders references as links.
+Validation follows immutable reference bindings. Induction on strict child
+values, with finite same-input paths between descents, gives the same structural
+acceptance as local schema references. The checker accumulates full diagnostics
+and private evidence of accepted child shapes and union selection. Conversion
+uses that evidence only after the whole input succeeds, without repeating checks
+or retaining schemas in converter closures. Defaults retain evidence from their
+construction-time structural check; they apply only on absence. Auxiliary
+constraints discard their evidence and never execute their converters.
 
-All public validation/emission checks reference readiness. Defaults cannot be
-checked against unbound references. Failed finalization invalidates all newly
-bound cells; escaped placeholders cannot decode even an empty container. The
-JavaScript FFI creates cell functions around library values and never invents
-values for user callbacks. Cell mutation ends at successful finalization.
+Each library node carries a fresh opaque identity. Walk caches key by both binding
+scope and node identity: importing a completed graph must not hide an unresolved
+foreign reference through an earlier visit of a shared node. A retained regression
+and cache mutation test exercise this distinction. Names still register globally;
+colliding names must emit equal local structures, including transitive targets.
+Emission produces finite local references. Rendering consumes that finite schema.
 
-The experimental Erlang graph runtime brackets private construction registries
-and freezes them into definition contexts. Traversal and conversion install the
-appropriate context and restore the previous one on every exit, including
-exceptions. A resulting definition owns the immutable registry through ordinary
-terms, so it survives transfer after its creator process exits. Walk-local
-identity sets and active/completed guards are likewise bracketed around validation,
-emission, default checks and graph finalization. No cell server or ETS owner is
-required. Identity/context wrappers preserve structural acceptance and input
-descent. These graph arguments do not establish complete Erlang admission or
-regex compatibility.
+Defaults cannot be checked against unresolved references. Captured construction
+plans remain open; finalization does not mutate them into completed definitions.
+There are no construction cells or reference registries. JavaScript uses temporary
+closure-owned walk maps; Erlang brackets temporary walk maps and restores earlier
+state on every exit, including exceptions. Walk caches do not own runnable
+references. These arguments do not establish native regex compatibility or bound
+shared-term copying and schema expansion.
 
 ## Admission, emission and trusted runtime
 

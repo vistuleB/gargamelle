@@ -1,6 +1,6 @@
 # Gargamelle handoff and next work
 
-Recorded 2026-10-10; updated through the production-plan integration following `fb447b7`.
+Recorded 2026-10-10; updated through main-source recursion integration following `511d5ae`.
 This is a handoff and prioritized candidate list, not a commitment to implement
 all JSON Schema features. Verify external state before acting on it.
 
@@ -43,7 +43,7 @@ parser now owns string escapes as well as structural and numeric scanning.
 Production Erlang externals are attached for admission, canonical emission,
 code-point counting and UTF-16 sorting. Public construction text is checked too: Result constructors
 return construction errors; direct constructors assert the scalar precondition.
-The working version is 0.2.0, with contract/evidence revision 4. Nothing has been
+The working version is 0.2.0, with contract/evidence revision 5. Nothing has been
 published or tagged for this milestone.
 
 The standalone native regex experiment found an empirical candidate: QuickJS
@@ -54,15 +54,16 @@ dependency or production regex binding has been added. See
 `docs/erlang-portability.md` for the decision, reproduction, archive/source hashes
 and the remaining packaging/conformance work.
 
-Next: promote the isolated production-plan integration with migration examples
-and clean consumer tests, then broaden native regex conformance and package its
-binding. Complete Erlang support remains gated on the two regex externals and
-replacement of the shipped recursive-reference ownership design.
+Immutable plans and private conversion evidence are now integrated into the
+main source, with migrated tests, public examples and a clean JavaScript consumer.
+Next: broaden native regex conformance and package its binding, then extend
+independent native oracle coverage and test an unmodified clean Erlang consumer.
+Complete Erlang support remains gated on the two regex externals.
 
-Current JavaScript validation passed: 39 Gleam tests, 144 Node tests,
+Current JavaScript validation passed: 44 Gleam tests, 144 Node tests,
 17,788 generated pairs and 109 official cases. The production-plan experiment
-passes 42 JavaScript and 49 native tests; the shipped native graph experiment
-still has three expected lifetime failures. The earlier scalar checkpoint passed
+now exercises main directly: 44 JavaScript tests, 52 native tests and twelve
+compile-negative checks. All eleven portability groups pass. The earlier scalar checkpoint passed
 nine portability groups, including 43 actual Erlang Gleam API tests with only
 regex test adapters.
 The native regex candidate passed 13,572 pairs under address/undefined-behavior
@@ -195,7 +196,8 @@ is unresolved.
 
 `npm run verify:erlang-primitives` runs eleven independent portability test groups,
 including the isolated immutable-plan and production integration experiments. The current library graph
-group fails on the three captured-placeholder regressions described below.
+group passes with the new construction-plan contract. The earlier captured-
+placeholder failures are recorded historically below.
 It requires Erlang/OTP 29 for the current evidence and is separate from the
 JavaScript verification gate, so JavaScript-only development does not gain an
 Erlang prerequisite. The runner compiles native modules in memory, exchanges JSON
@@ -236,7 +238,7 @@ is now integrated into the shared Definition/Node graph and the native runtime:
 explicit fresh identities, transparent context wrappers, frozen typed registries,
 and bracketed walk state. No generic casts, cell servers or ETS ownership are used.
 
-**Current blocker (2026-10-10):** this design does not preserve a builder
+**Historical blocker (superseded by main integration):** this design does not preserve a builder
 placeholder captured in a decoded closure. New typed tests pass on JavaScript
 but fail on Erlang for self recursion, mutual recursion and transfer after the
 creator exits. The native graph fixture now has 44 passes and three failures;
@@ -270,32 +272,27 @@ The six-layer shared transfer now occupies 5,271 receiver words (previously
 36,576); the provider occupies 310 (previously 889). Shared copying and emission
 still expand repeated branches. The report documents the evidence/memory tradeoff,
 exclusive unions, default receipts, operational failures and exact old-fixture
-comparison. The shipped library has not been rewritten.
+comparison. This design has now been promoted to the main library.
 
-The isolated production integration now preserves full DataError paths and branch
-diagnostics, naming/conflict policies and canonical schema bytes. It passes
-42 JavaScript tests, 49 native tests, twelve compile-negative checks and 3,636
-independent cases across 36 schemas. Exact schema text, decoded outputs and
-diagnostics match shipped JavaScript and the integrated native runner. The fixture
-checks the shipped source hash to prevent silent drift. Native regex still uses
-a deliberately limited test adapter. See `docs/production-recursion-integration.md`.
-Integration exposed and fixed native input-object ordering, with a shared retained
-test, and binding-scope omission in temporary graph caches, with an isolated
-captured-plan/shared-graph rejection regression. Next, promote this design with
-migration docs, real helper/lifetime tests and clean consumers. Keep the original
-native lifetime failures visible until the public API contract is migrated.
+Main now preserves full DataError paths and branch diagnostics, naming/conflict
+policies and canonical schema bytes under immutable recursion. It passes
+44 JavaScript tests, 52 native tests, twelve cross-target compile-negative checks
+and 3,636 independent cases across 36 schemas. Exact schema text, decoded outputs
+and diagnostics match the historical baseline and native runner. The runner
+checks the retained baseline source hash. Native regex still uses a limited test
+adapter; this is not an Erlang support claim. See
+`docs/production-recursion-integration.md` and `docs/migration-0.2.md`.
 
-The original Erlang fixture runs 39 shared Gleam tests and eight additional typed
-API tests against a temporary library copy. It covers recursive and mutually
-recursive outputs, transfer after creator exit, composition of independent
-contexts, defaults, rejection, conflicting names, shared graph construction,
-builder/converter exceptions and restoration of an enclosing construction scope.
-It attaches experimental scalar parsing/canonicalization and native regex only
-in that copy; it does not claim full Erlang semantics. The production source
-still rejects an Erlang build through its two unsupported regex
-externals. Integration found and fixed an unscoped default-check traversal and
-OTP signed-zero exact-equality differences in constants and number endpoints.
-Retained shared tests cover zero-sign equality and repeated exclusive bounds.
+Main removes construction cells/registries, keeps temporary scope-aware walk
+caches, and preserves native input-object ordering. Retained regressions cover
+captured-plan graph sharing, immutable process handoff, builder/converter
+exceptions, distinct mutual outputs and callback suppression. The old positive
+runnable-placeholder tests are retained in Git history at `511d5ae`; current
+compile-negative tests establish the explicit API change. Documentation and Hex
+export pass, and a fresh JavaScript archive consumer exercised recursive helpers,
+`lift`, closures, emission and rendering offline. The source still rejects an
+unmodified Erlang build through the two regex externals. Previous integration
+findings also retain zero-sign equality and repeated exclusive-bound tests.
 
 Regex counterexamples are retained in `verification/portability/regex-baseline.test.mjs`:
 native dot/whitespace handling and accepted pattern syntax differ from ECMAScript
@@ -305,15 +302,14 @@ so a native binding would introduce build/distribution work. Node v24.10.0 uses
 Unicode 16.0; engine/table-version compatibility must also be checked. No native
 engine dependency has been added and no shared subset has been selected.
 
-Next implementation work: finish exact ECMAScript regex compatibility and native
-canonical emission, then extend independent cross-target oracle
+Next implementation work: finish exact ECMAScript regex compatibility and packaging, then extend independent cross-target oracle
 verification. Keep parser/regex support gated until their admitted
 string representation and engine choices preserve the contract or receive an
 explicit versioned amendment. Do not publish or move `v0.1.0` for this work.
 
 ### Complete external inventory
 
-`src/gargamelle.gleam` now declares 18 JavaScript externals, all supplied by
+`src/gargamelle.gleam` now declares 15 JavaScript externals, all supplied by
 `src/runtime.mjs`:
 
 | External | Porting treatment |
@@ -330,11 +326,8 @@ explicit versioned amendment. Do not publish or move `v0.1.0` for this work.
 | `as_float` | Int-to-binary64 conversion; public construction arguments must be reviewed for Erlang's larger integer domain. |
 | `int_text` | Numeric text primitive; inspect all callers before replacing with Erlang integer formatting. |
 | `fresh_identity` | Implemented with JavaScript Symbols and Erlang references; `same_reference` now compares these in shared Gleam. |
-| `with_construction` | Implemented: frozen native typed registry; no-op scope on JavaScript closure cells. |
-| `with_context` | Implemented: install/restore frozen native context; no-op on JavaScript. |
 | `with_walk` | Implemented: bracket native traversal registry on all exits; no-op on JavaScript closure state. |
-| `recursive_cell` | Implemented typed once-bound reference state, irreversible rejection and frozen cross-process context. |
-| `identity_tracker` | Implemented walk-local identity set keyed by explicit node IDs. |
+| `identity_tracker` | Implemented walk-local identity set keyed by primitive binding-scope and node IDs. |
 | `recursion_guard` | Implemented active/completed state shared across roots to avoid rescanning shared subgraphs. |
 
 `runtime.mjs` imports `Ok`, `Error` and `toList` from generated `gleam.mjs`, and

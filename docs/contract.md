@@ -13,6 +13,11 @@ are opaque and constructible only through library operations. The definition is
 authoritative: schema emission and decoding are derived interpretations of it.
 There is no independent schema/decoder override or arbitrary predicate escape hatch.
 
+Constructors compose opaque `Plan(a, r)` values, where `r` is the recursion
+environment. A completed `Definition(a)` is the closed specialization
+`Plan(a, Nil)`. Only completed definitions can be validated, decoded, emitted or
+rendered. Ordinary definitions infer the closed environment from their use.
+
 String arguments to schema constructors must also contain only Unicode scalar
 values. Constructors returning `Result` report non-scalar arguments as construction
 errors. Direct constructors such as `string_constant`, `title` and `description`
@@ -201,20 +206,29 @@ digits, underscores or hyphens. Named definitions preserve acceptance and output
 while emitting finite local `$defs`/`$ref` graphs. Distinct bodies with conflicting
 names, including transitive conflicts, must not produce an ambiguous schema.
 
-Self recursion and mutually recursive pairs use typed placeholders and retain
-the declared output types; the pair’s types may differ. Every cycle must descend
+Self recursion and mutually recursive pairs use typed construction plans and retain
+the declared output types; the pair’s types may differ. Builders run exactly once
+and return plans under the supplied recursion environment. The result contains
+completed definitions. `lift` composes a completed definition inside a builder
+without giving it dependencies on that builder's recursion environment.
+Every cycle must descend
 into a strict input subvalue through an array item, tuple position, dictionary
 value or record field. Names, references, nullable, union, annotations and
 same-input constraints do not supply descent. Same-input cycles fail construction,
 including syntactically reachable cycles in otherwise unreachable branches.
 The guard is conservative; it is not a satisfiability proof.
 
-References cannot be validated, decoded, emitted or used to validate defaults
-before finalization. Rejected graph finalization invalidates its bound references.
-Unfinished or conflicting composed graphs fail operationally at public validation
-or emission boundaries. Traversal of finalized schemas must terminate through
-identity tracking; shared completed branches must not be repeatedly expanded
-by the recursion guard. Emission must remain finite even for recursive definitions.
+Construction plans cannot be validated, decoded, emitted or rendered, even after
+the builder returns. This is a type boundary, not a temporary runtime restriction.
+Defaults cannot be checked against unresolved references. Captured construction
+plans retain that type; capturing them in a callback output does not finalize
+them. Reusing an unresolved foreign reference in another construction fails
+construction. Completed definitions and closures capturing them remain usable
+after transfer and creator-process exit, without reference registries or manual
+release. Conflicting composed graphs fail operationally at public validation or
+emission boundaries. Graph walks track node identity and binding scope; shared
+completed branches must not be repeatedly expanded by the recursion guard.
+Emission must remain finite even for recursive definitions.
 
 There is no implicit decoding depth cap, input-size cap or definition-size cap
 in acceptance. Stack exhaustion, timeouts and other resource failures remain

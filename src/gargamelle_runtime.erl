@@ -2,8 +2,8 @@
 -export([integer/1, finite/1, as_int/1, as_float/1, int_text/1,
          parse_number/1, number_text/1, sorted/1, codepoints/1,
          parse_scalar_json/1, canonical_scalar_json/1, fresh_identity/0,
-         with_construction/1, with_context/2, with_walk/1, recursive_cell/2,
-         identity_tracker/2, recursion_guard/2, parse/7, canonical/1]).
+         with_walk/1,
+         identity_tracker/3, recursion_guard/3, parse/7, canonical/1]).
 
 canonical(Source) ->
     {ok, Text} = canonical_scalar_json(Source), Text.
@@ -318,15 +318,10 @@ escape_string(<<C, Rest/binary>>, Acc) ->
 hex_digit(N) when N < 10 -> $0 + N;
 hex_digit(N) -> $a + N - 10.
 
-%% Construction registries are frozen into private ContextNode wrappers. Walk
-%% registries are temporary. Both scopes restore previous state on every exit.
--define(CELLS, '$gargamelle_cells').
+%% Walk registries are temporary and restore previous state on every exit.
+%% Reference bindings and typed runners are immutable definition-owned terms.
 -define(WALK, '$gargamelle_walk').
 fresh_identity() -> make_ref().
-with_construction(Build) -> scoped(?CELLS, #{}, fun() ->
-    Value = Build(), {Value, get(?CELLS)}
-end).
-with_context(Context, Run) -> scoped(?CELLS, Context, Run).
 with_walk(Run) -> scoped(?WALK, #{}, Run).
 scoped(Key, Value, Run) ->
     Previous = get(Key),
@@ -338,42 +333,21 @@ scoped(Key, Value, Run) ->
             _ -> put(Key, Previous)
         end
     end.
-recursive_cell(Make, Missing) ->
-    Key = make_ref(),
-    cell_set(Key, unbound),
-    Read = fun() -> case cell_state(Key) of
-        {bound, Value} -> {ok, Value};
-        _ -> {error, Missing}
-    end end,
-    Bind = fun(Value) -> case cell_state(Key) of
-        unbound -> cell_set(Key, {bound, Value});
-        _ -> error(recursive_cell_already_finalized)
-    end end,
-    Reject = fun() -> cell_set(Key, rejected) end,
-    Make(Read, Bind, Reject).
-cell_state(Key) -> case get(?CELLS) of
-    Context when is_map(Context) -> maps:get(Key, Context, unavailable);
-    _ -> unavailable
-end.
-cell_set(Key, Value) -> case get(?CELLS) of
-    Context when is_map(Context) -> put(?CELLS, maps:put(Key, Value, Context)), nil;
-    _ -> error(no_construction_context)
-end.
-identity_tracker(Make, Identity) ->
+identity_tracker(Make, Scope, Identity) ->
     Key = make_ref(),
     walk_set(Key, #{}),
     Make(fun(Node) ->
-        Id = Identity(Node),
+        Id = {Scope(Node), Identity(Node)},
         Seen = walk_get(Key),
         Before = maps:is_key(Id, Seen),
         walk_set(Key, maps:put(Id, true, Seen)),
         Before
     end).
-recursion_guard(Make, Identity) ->
+recursion_guard(Make, Scope, Identity) ->
     Key = make_ref(),
     walk_set(Key, #{}),
     Make(fun(Node) ->
-        Id = Identity(Node),
+        Id = {Scope(Node), Identity(Node)},
         State = walk_get(Key),
         case maps:get(Id, State, unseen) of
             active -> 1;
@@ -381,7 +355,7 @@ recursion_guard(Make, Identity) ->
             unseen -> walk_set(Key, maps:put(Id, active, State)), 0
         end
     end, fun(Node) ->
-        walk_set(Key, maps:put(Identity(Node), complete, walk_get(Key))), nil
+        walk_set(Key, maps:put({Scope(Node), Identity(Node)}, complete, walk_get(Key))), nil
     end).
 walk_get(Key) -> maps:get(Key, get(?WALK)).
 walk_set(Key, Value) -> put(?WALK, maps:put(Key, Value, get(?WALK))), nil.

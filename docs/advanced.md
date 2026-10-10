@@ -44,8 +44,9 @@ constructed even when it accepts no binary64 value; schema and decoder agree.
 ## Recursive definitions
 
 `recursive(name, build)` creates a guarded self-recursive definition. Its builder
-runs once with a typed definition reference, never a fabricated decoded value.
-The builder returns `Result(Definition(a), ConstructionError)`. For example:
+runs once with a typed construction plan, never a fabricated decoded value.
+The builder returns a plan using the same recursion environment; `recursive`
+returns a completed `Definition(a)`. Ordinary examples infer these types:
 
 ```gleam
 import gargamelle as s
@@ -83,12 +84,13 @@ value. Names use the same restricted syntax as `named`; pair names must differ.
 Conflicting definitions sharing a name are rejected during graph finalization or
 when composed definitions are emitted/validated.
 
-Builder references are scoped to construction. They cannot be decoded/emitted
-before finalization, nor used to validate a default while unresolved. A rejected
-construction invalidates its bound placeholders; escaped placeholders cause
-operational failures even in empty arrays. Add defaults containing recursive
-values after their definitions are finalized. Nested construction cannot close
-over an unfinished outer reference; use `recursive_pair` for that relationship.
+Builder plans cannot be decoded, validated, emitted or rendered, including after
+construction completes. Add defaults containing recursive values after their
+definitions are completed. Nested construction cannot close over an unfinished
+outer reference; use `recursive_pair` for that relationship. Use `lift(completed)`
+to compose an existing definition inside a builder. Generic helpers accept
+`Plan(a, r)` and return plans with the same `r`; see the
+[0.2.0 migration guide](migration-0.2.html) for annotated examples.
 
 Schemas emit finite local `$defs`/`$ref` graphs. Decoding follows the same
 references, preserving typed values and nested error paths. Documentation renders

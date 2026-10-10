@@ -12,6 +12,8 @@ investigation informed Gargamelle's regression tests.
 This checkout is developing 0.2.0. JSON strings and object keys must contain only
 Unicode scalar values; unpaired surrogates fail admission. The published 0.1.0
 release retains its original JavaScript string domain.
+Recursive builders now use construction plans; only completed definitions can
+be decoded or emitted. See the [0.2.0 migration guide](docs/migration-0.2.md).
 
 The [technical contract](docs/contract.md)
 specifies schema/decoder equivalence, decoded-value semantics, canonical emission,

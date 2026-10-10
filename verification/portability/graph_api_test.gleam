@@ -17,7 +17,7 @@ fn tree() {
   s.recursive("tree", fn(self) { Ok(s.map(s.array(self), Tree)) })
 }
 
-pub fn captured_placeholder_handoff_test() {
+pub fn captured_completed_definition_handoff_test() {
   let assert Ok(Captured(get)) =
     handoff(fn() {
       let assert Ok(definition) = reference_lifetime_test.captured_definition()
@@ -70,7 +70,7 @@ pub fn foreign_context_composition_test() {
   let assert Ok(second) =
     handoff(fn() {
       s.recursive("second", fn(self) {
-        s.any_of([s.map(s.array(self), Tree), first])
+        s.any_of([s.map(s.array(self), Tree), s.lift(first)])
       })
     })
   let assert Ok(input) = s.parse("[[]]")
@@ -98,7 +98,7 @@ pub fn operational_cleanup_test() {
     s.decode(s.map(definition, fn(_) { panic as "converter failure" }), value)
   })
   |> should.be_true
-  // The enclosing construction registry must survive a nested failure too.
+  // A nested builder failure must not affect the enclosing immutable plan.
   let assert Ok(nested) =
     s.recursive("nested", fn(self) {
       exception_cleanup(fn() {
@@ -132,7 +132,10 @@ pub fn shared_guard_layers_test() {
   should.not_equal(definition, s.text())
 }
 
-fn layers(def: s.Definition(String), count: Int) -> s.Definition(String) {
+fn layers(
+  def: s.Plan(String, recursion),
+  count: Int,
+) -> s.Plan(String, recursion) {
   case count {
     0 -> def
     _ -> {

@@ -125,8 +125,7 @@ organization remain undecided. The proposed example also imports `gleam/result`.
 The contract change is explicit: returning a closure that captures a completed
 definition is supported; using a captured construction plan as an independently
 runnable definition is rejected by the compiler. Existing JavaScript code relying
-on the latter behavior would require migration. This change has not been applied
-to the library or published.
+on the latter behavior would require migration. This change is now integrated into main for 0.2.0; it has not been published.
 
 ## Remaining decisions and work
 
@@ -142,7 +141,8 @@ compose in an exported provider helper. A second helper tests conditional,
 exclusion, contains and property-name constraints. Detailed errors, numeric
 primitives, regex and several constructor restrictions remain outside this
 experiment. The migration assessment below distinguishes tested behavior from
-source inspection; the complete API has not been migrated.
+source inspection at the prototype stage. The later production integration
+now covers the complete API; see its report below.
 
 ## Bounded performance observations
 
@@ -259,7 +259,8 @@ the prototype's first-error String results.
 The [isolated production integration](production-recursion-integration.md) now
 connects plans and evidence to the real structural checker and emitter. It
 preserves name/conflict policies, canonical bytes and full structured errors,
-and runs shared typed fixtures on both targets. The shipped API remains unchanged.
+and runs shared typed fixtures on both targets. The design is now in the main
+library, with a public 0.2.0 migration guide; no release has been published.
 Keep shared-term transfer amplification explicit; this observation does not
 justify a permanent registry or manual release API. Regex integration remains a
 separate backend gate.

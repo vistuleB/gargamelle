@@ -7,7 +7,7 @@ import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 const root=fileURLToPath(new URL('../',import.meta.url));
 const mutations=[
- ['inverted-exclusion','let $ = check(probe, v, "") instanceof $Empty;\n            if ($) {\n              return err("excluded", p);','let $ = !(check(probe, v, "") instanceof $Empty);\n            if ($) {\n              return err("excluded", p);',`assert.equal(s.validate(d,unwrap(s.parse('1'))) instanceof Ok,true);`],
+ ['inverted-exclusion','let $ = inspect(probe, v, "", bindings)[0] instanceof $Empty;\n            if ($) {\n              return err("excluded", p);','let $ = !(inspect(probe, v, "", bindings)[0] instanceof $Empty);\n            if ($) {\n              return err("excluded", p);',`assert.equal(s.validate(d,unwrap(s.parse('1'))) instanceof Ok,true);`],
  ['exclusion-disabled','return err("excluded", p);','return $List$Empty$const;',`assert.equal(s.validate(d,unwrap(s.parse('0'))) instanceof Ok,false);`],
  ['not-emission-dropped','["not", emit(probe)]','["x-not", emit(probe)]',`assert.equal(JSON.parse(s.emit_text(d)).allOf[1].not?.const,0);`],
 ];
