@@ -4,24 +4,23 @@ Gargamelle builds a typed JSON decoder and a JSON Schema 2020-12 document from t
 same Gleam definition. Validate incoming JSON, construct application values, and
 optionally render HTML documentation with checked examples.
 
-Version 0.1.0 is being prepared for publication. JavaScript is the supported target;
-Node 24 is the verified runtime. Erlang, browsers, Bun and Deno are not verified.
+Gargamelle targets JavaScript and is tested on Node 24. Erlang, browsers, Bun and Deno are not verified.
 Gargamelle implements the schema vocabulary exposed by its constructors, not a
 validator for arbitrary imported JSON Schemas. APIs may change before 1.0.
 
 ## Getting started
 
-Before publication, use a Git dependency pinned to a reviewed commit:
+Install the package:
 
-```toml
-[dependencies]
-gargamelle = { git = "https://github.com/vistuleB/gargamelle", ref = "<full-commit-sha>" }
+```sh
+gleam add gargamelle@0.1.0
 ```
 
-Set `target = "javascript"` in the consuming project. After a Hex release exists,
-install it with `gleam add gargamelle@0.1.0`. Until publication completes,
-use the Git dependency above. The repository is private, so Git access currently
-requires permission.
+Set `target = "javascript"` in your project’s `gleam.toml`:
+
+```toml
+target = "javascript"
+```
 
 ```gleam
 import gargamelle
@@ -97,10 +96,9 @@ projection. See [release preparation](https://github.com/vistuleB/gargamelle/blo
 
 ## Verification coverage
 
-The implementation agent completed the core and generated, mutation, runtime,
-typed-output and compile-negative evidence. The coordinating agent reviewed it
-and added independent validator checks, official-suite selection, cloze payload
-comparisons and the final evidence gate. The generated suite includes 10,000
+Verification covers generated inputs, mutations, runtime behavior, typed outputs,
+compile-negative cases, independent validators, selected official JSON Schema
+cases and cloze payload compatibility. The generated suite includes 10,000
 seeded pairs, all 345 generic parent/child combinations and fourteen depth-50 chains.
 Thirty-one actual compiled-library mutations must fail behavioral assertions,
 including five numeric, three recursion, and three tuple, and three key-constraint, and three membership, and three conditional, and three exclusion mutants. The three
