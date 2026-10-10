@@ -12,7 +12,7 @@ const variants=[
  ['null-as-missing','return new Some(x);','return x instanceof JNull ? Option$None$const : new Some(x);',"assert.equal(accepted('optional','{\"a\":null}'),false)"],
  ['disabled-extra-key','if (policy instanceof Closed) {','if (false) {',"assert.equal(accepted('closed_record','{\"a\":\"x\",\"extra\":true}'),false)"],
  ['off-by-one-bound','_block = n >= x;','_block = n > x;',"assert.equal(accepted('bounded_string','\"x\"'),true)"],
- ['dropped-field','let properties = $list.map(\n      fs,','let properties = $list.map(\n      $List$Empty$const,',"assert.equal(Object.hasOwn(JSON.parse(f.fixture_schema('closed_record')).properties,'a'),true)"],
+ ['dropped-field','let properties = $list.map(\n        fs,','let properties = $list.map(\n        $List$Empty$const,',"assert.equal(Object.hasOwn(JSON.parse(f.fixture_schema('closed_record')).properties,'a'),true)"],
 ];
 const header=`import assert from 'node:assert/strict';\nimport * as f from './gargamelle/schema_fixtures.mjs';\nimport {Ok} from './gargamelle/gleam.mjs';\nfunction accepted(name,text){const r=f.fixture_decode(name,text);assert.ok(r instanceof Ok);return r[0] instanceof Ok;}\n`;
 test('actual isolated compiled mutations are killed by permanent counterexamples',()=>{

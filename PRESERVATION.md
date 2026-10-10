@@ -98,7 +98,8 @@ of the same output type only after validation. Mutual pairs may have different
 output types without any generic cast. Inputs remain finite trees; no cyclic
 host objects are admitted. Operational stack/resource failures still escape.
 
-Emission visits graph nodes by runtime identity, registers each named/ref target,
+Each library node carries a fresh opaque identity, retained by maps and transparent
+context wrappers. Emission visits graph nodes by that identity, registers each named/ref target,
 and emits references without expanding them. Colliding names must emit equal
 local structures, and traversal continues through every distinct node to check
 transitive conflicts. Repeated nodes terminate traversal, so recursive graphs
@@ -110,6 +111,17 @@ checked against unbound references. Failed finalization invalidates all newly
 bound cells; escaped placeholders cannot decode even an empty container. The
 JavaScript FFI creates cell functions around library values and never invents
 values for user callbacks. Cell mutation ends at successful finalization.
+
+The experimental Erlang graph runtime brackets private construction registries
+and freezes them into definition contexts. Traversal and conversion install the
+appropriate context and restore the previous one on every exit, including
+exceptions. A resulting definition owns the immutable registry through ordinary
+terms, so it survives transfer after its creator process exits. Walk-local
+identity sets and active/completed guards are likewise bracketed around validation,
+emission, default checks and graph finalization. No cell server or ETS owner is
+required. Identity/context wrappers preserve structural acceptance and input
+descent. These graph arguments do not establish complete Erlang admission or
+regex compatibility.
 
 ## Admission, emission and trusted runtime
 

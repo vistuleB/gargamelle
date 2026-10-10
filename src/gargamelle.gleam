@@ -59,7 +59,13 @@ pub type NumberBound {
   Exclusive(Float)
 }
 
+type Identity
+
+type Context
+
 type Node {
+  IdentifiedNode(Identity, Node)
+  ContextNode(Context, Node)
   BooleanNode
   NullNode
   StringNode(Option(Int), Option(Int), List(String))
@@ -91,8 +97,12 @@ type Seen(a) {
   Seen(fn(a) -> Bool)
 }
 
+@external(erlang, "gargamelle_runtime", "identity_tracker")
 @external(javascript, "./runtime.mjs", "identity_tracker")
-fn new_seen(make: fn(fn(a) -> Bool) -> Seen(a)) -> Seen(a)
+fn new_seen(
+  make: fn(fn(a) -> Bool) -> Seen(a),
+  key: fn(a) -> Identity,
+) -> Seen(a)
 
 fn seen_before(seen: Seen(a), value: a) -> Bool {
   let Seen(visit) = seen
@@ -103,6 +113,7 @@ type Cell(a) {
   Cell(fn() -> Result(a, ConstructionError), fn(a) -> Nil, fn() -> Nil)
 }
 
+@external(erlang, "gargamelle_runtime", "recursive_cell")
 @external(javascript, "./runtime.mjs", "recursive_cell")
 fn new_cell(
   make: fn(fn() -> Result(a, ConstructionError), fn(a) -> Nil, fn() -> Nil) ->
@@ -146,6 +157,55 @@ type Presence {
 /// A structural acceptance contract paired with a typed conversion function.
 pub opaque type Definition(a) {
   Definition(Node, fn(Value) -> a)
+}
+
+@external(erlang, "gargamelle_runtime", "fresh_identity")
+@external(javascript, "./runtime.mjs", "fresh_identity")
+fn fresh_identity() -> Identity
+
+@external(erlang, "gargamelle_runtime", "with_construction")
+@external(javascript, "./runtime.mjs", "with_construction")
+fn with_construction(build: fn() -> a) -> #(a, Context)
+
+@external(erlang, "gargamelle_runtime", "with_context")
+@external(javascript, "./runtime.mjs", "with_context")
+fn with_context(context: Context, run: fn() -> a) -> a
+
+@external(erlang, "gargamelle_runtime", "with_walk")
+@external(javascript, "./runtime.mjs", "with_walk")
+fn with_walk(run: fn() -> a) -> a
+
+fn identified(n: Node) -> Node {
+  case n {
+    IdentifiedNode(_, _) -> n
+    _ -> IdentifiedNode(fresh_identity(), n)
+  }
+}
+
+fn identity(n: Node) -> Identity {
+  case n {
+    IdentifiedNode(id, _) -> id
+    ContextNode(_, child) -> identity(child)
+    _ -> panic as "Library node has no identity"
+  }
+}
+
+fn bare(n: Node) -> Node {
+  case n {
+    IdentifiedNode(_, child) | ContextNode(_, child) -> bare(child)
+    _ -> n
+  }
+}
+
+fn definition(n: Node, convert: fn(Value) -> a) -> Definition(a) {
+  Definition(identified(n), convert)
+}
+
+fn contextual(context: Context, def: Definition(a)) -> Definition(a) {
+  let Definition(n, convert) = def
+  Definition(ContextNode(context, n), fn(v) {
+    with_context(context, fn() { convert(v) })
+  })
 }
 
 /// An unfinished record consuming a curried constructor one field at a time.
@@ -211,21 +271,25 @@ fn pattern_matches(pattern: String, text: String) -> Bool
 @external(javascript, "./runtime.mjs", "sorted")
 fn sorted(values: List(String)) -> List(String)
 
+@external(erlang, "gargamelle_runtime", "integer")
 @external(javascript, "./runtime.mjs", "integer")
 fn integer(value: Float) -> Bool
 
+@external(erlang, "gargamelle_runtime", "finite")
 @external(javascript, "./runtime.mjs", "finite")
 fn finite(value: Float) -> Bool
 
+@external(erlang, "gargamelle_runtime", "as_int")
 @external(javascript, "./runtime.mjs", "as_int")
 fn as_int(value: Float) -> Int
 
+@external(erlang, "gargamelle_runtime", "as_float")
 @external(javascript, "./runtime.mjs", "as_float")
 fn as_float(value: Int) -> Float
 
 /// Accept JSON booleans.
 pub fn boolean() -> Definition(Bool) {
-  Definition(BooleanNode, fn(v) {
+  definition(BooleanNode, fn(v) {
     case v {
       JBool(b) -> b
       _ -> panic as "validated boolean"
@@ -235,12 +299,12 @@ pub fn boolean() -> Definition(Bool) {
 
 /// Accept JSON null and decode it to `Nil`.
 pub fn null() -> Definition(Nil) {
-  Definition(NullNode, fn(_) { Nil })
+  definition(NullNode, fn(_) { Nil })
 }
 
 /// Accept JSON strings.
 pub fn text() -> Definition(String) {
-  Definition(StringNode(None, None, []), fn(v) {
+  definition(StringNode(None, None, []), fn(v) {
     case v {
       JString(s) -> s
       _ -> panic as "validated string"
@@ -250,7 +314,7 @@ pub fn text() -> Definition(String) {
 
 /// Accept integral numbers between -9007199254740991 and 9007199254740991.
 pub fn safe_integer() -> Definition(Int) {
-  Definition(IntegerNode(-9_007_199_254_740_991, 9_007_199_254_740_991), fn(v) {
+  definition(IntegerNode(-9_007_199_254_740_991, 9_007_199_254_740_991), fn(v) {
     case v {
       JNumber(n) -> as_int(n)
       _ -> panic as "validated integer"
@@ -261,7 +325,7 @@ pub fn safe_integer() -> Definition(Int) {
 /// Decode any admitted finite IEEE-754 number to Float, including integers.
 /// JSON parsing may round or underflow; decoding preserves the parsed value.
 pub fn number() -> Definition(Float) {
-  Definition(NumberNode(None, None), fn(v) {
+  definition(NumberNode(None, None), fn(v) {
     case v {
       JNumber(n) -> n
       _ -> panic as "validated number"
@@ -285,7 +349,7 @@ fn stricter_bound(
     Some(x), Some(y) -> {
       let xv = endpoint(x)
       let yv = endpoint(y)
-      case xv == yv {
+      case xv >=. yv && xv <=. yv {
         True ->
           Some(case x, y {
             Exclusive(_), _ | _, Exclusive(_) -> Exclusive(xv)
@@ -312,7 +376,8 @@ fn valid_number_bounds(
       let lo = endpoint(a)
       let hi = endpoint(b)
       lo <. hi
-      || lo == hi
+      || lo >=. hi
+      && lo <=. hi
       && case a, b {
         Inclusive(_), Inclusive(_) -> True
         _, _ -> False
@@ -334,7 +399,7 @@ pub fn number_bounds(
     True -> {
       let Definition(n, d) = def
       use next <- result.try(number_bound_node(n, lower, upper))
-      Ok(Definition(next, d))
+      Ok(definition(next, d))
     }
   }
 }
@@ -345,6 +410,10 @@ fn number_bound_node(
   upper: Option(NumberBound),
 ) -> Result(Node, ConstructionError) {
   case n {
+    IdentifiedNode(_, child) ->
+      result.map(number_bound_node(child, lower, upper), identified)
+    ContextNode(context, child) ->
+      result.map(number_bound_node(child, lower, upper), ContextNode(context, _))
     AnnotatedNode(child, k, v) ->
       result.map(number_bound_node(child, lower, upper), AnnotatedNode(_, k, v))
     NumberNode(lo, hi) -> {
@@ -385,7 +454,7 @@ pub fn string_enum(
     True -> Error(ConstructionError("empty or duplicate enum"))
     False ->
       Ok(
-        Definition(EnumNode(values), fn(v) {
+        definition(EnumNode(values), fn(v) {
           case v {
             JString(s) -> s
             _ -> panic as "validated enum"
@@ -397,17 +466,17 @@ pub fn string_enum(
 
 /// Accept exactly this string.
 pub fn string_constant(v: String) -> Definition(String) {
-  Definition(ConstNode(JString(v), "string"), fn(_) { v })
+  definition(ConstNode(JString(v), "string"), fn(_) { v })
 }
 
 /// Accept exactly this boolean.
 pub fn boolean_constant(v: Bool) -> Definition(Bool) {
-  Definition(ConstNode(JBool(v), "boolean"), fn(_) { v })
+  definition(ConstNode(JBool(v), "boolean"), fn(_) { v })
 }
 
 /// Accept exactly null.
 pub fn null_constant() -> Definition(Nil) {
-  Definition(ConstNode(JNull, "null"), fn(_) { Nil })
+  definition(ConstNode(JNull, "null"), fn(_) { Nil })
 }
 
 /// Accept exactly this safe integer; reject constants outside the safe range.
@@ -419,7 +488,7 @@ pub fn integer_constant(v: Int) -> Result(Definition(Int), ConstructionError) {
   {
     True -> Error(ConstructionError("unsafe integer"))
     False ->
-      Ok(Definition(ConstNode(JNumber(as_float(v)), "integer"), fn(_) { v }))
+      Ok(definition(ConstNode(JNumber(as_float(v)), "integer"), fn(_) { v }))
   }
 }
 
@@ -427,14 +496,14 @@ pub fn integer_constant(v: Int) -> Result(Definition(Int), ConstructionError) {
 /// runs only during successful decoding and must return the declared output type.
 pub fn map(def: Definition(a), f: fn(a) -> b) -> Definition(b) {
   let Definition(n, d) = def
-  Definition(n, fn(v) { f(d(v)) })
+  definition(n, fn(v) { f(d(v)) })
 }
 
 /// Accept null as `None`, or decode the child as `Some`. This does not make
 /// a record field optional.
 pub fn nullable(def: Definition(a)) -> Definition(Option(a)) {
   let Definition(n, d) = def
-  Definition(NullableNode(n), fn(v) {
+  definition(NullableNode(n), fn(v) {
     case v {
       JNull -> None
       _ -> Some(d(v))
@@ -445,7 +514,7 @@ pub fn nullable(def: Definition(a)) -> Definition(Option(a)) {
 /// Accept homogeneous arrays and decode every element in input order.
 pub fn array(def: Definition(a)) -> Definition(List(a)) {
   let Definition(n, d) = def
-  Definition(ArrayNode(n, None, None), fn(v) {
+  definition(ArrayNode(n, None, None), fn(v) {
     case v {
       JArray(xs) -> list.map(xs, d)
       _ -> panic as "validated array"
@@ -474,7 +543,7 @@ pub fn element(t: Tuple(fn(a) -> b), child: Definition(a)) -> Tuple(b) {
 /// Close a tuple. Short arrays and extra positions are rejected.
 pub fn finish_tuple(t: Tuple(a)) -> Definition(a) {
   let Tuple(nodes, convert) = t
-  Definition(TupleNode(nodes), convert)
+  definition(TupleNode(nodes), convert)
 }
 
 /// Require between minimum and maximum structurally matching array items.
@@ -494,13 +563,14 @@ pub fn contains(
         node,
         Membership(match_node, minimum, maximum),
       ))
-      Ok(Definition(next, convert))
+      Ok(definition(next, convert))
     }
   }
 }
 
 fn array_node(node: Node) -> Bool {
   case node {
+    IdentifiedNode(_, child) | ContextNode(_, child) -> array_node(child)
     ArrayNode(_, _, _) | TupleNode(_) -> True
     AnnotatedNode(child, _, _)
     | NamedNode(_, child)
@@ -515,13 +585,17 @@ fn contains_node(
   membership: Membership,
 ) -> Result(Node, ConstructionError) {
   case node {
+    IdentifiedNode(_, child) ->
+      result.map(contains_node(child, membership), identified)
+    ContextNode(context, child) ->
+      result.map(contains_node(child, membership), ContextNode(context, _))
     AnnotatedNode(child, key, value) ->
       result.map(contains_node(child, membership), AnnotatedNode(_, key, value))
     ContainsNode(child, checks) ->
       Ok(ContainsNode(child, list.append(checks, [membership])))
     _ ->
       case array_node(node) {
-        True -> Ok(ContainsNode(node, [membership]))
+        True -> Ok(ContainsNode(identified(node), [membership]))
         False ->
           Error(ConstructionError("contains requires an array definition"))
       }
@@ -555,12 +629,12 @@ pub fn if_then_else(
 
 fn add_condition(def: Definition(a), condition: Condition) -> Definition(a) {
   let Definition(node, convert) = def
-  let next = case node {
+  let next = case bare(node) {
     ConditionalNode(base, checks) ->
       ConditionalNode(base, list.append(checks, [condition]))
     _ -> ConditionalNode(node, [condition])
   }
-  Definition(next, convert)
+  definition(next, convert)
 }
 
 /// Reject input accepted by a forbidden structural definition.
@@ -568,18 +642,18 @@ fn add_condition(def: Definition(a), condition: Condition) -> Definition(a) {
 pub fn exclude(def: Definition(a), forbidden: Definition(b)) -> Definition(a) {
   let Definition(node, convert) = def
   let Definition(probe, _) = forbidden
-  let next = case node {
+  let next = case bare(node) {
     ExcludeNode(base, checks) -> ExcludeNode(base, list.append(checks, [probe]))
     _ -> ExcludeNode(node, [probe])
   }
-  Definition(next, convert)
+  definition(next, convert)
 }
 
 /// Accept objects whose values satisfy the child definition. Decode to a Gleam
 /// list of key/value pairs, preserving original keys rather than a JS object.
 pub fn dictionary(def: Definition(a)) -> Definition(List(#(String, a))) {
   let Definition(n, d) = def
-  Definition(DictNode(n, None, None), fn(v) {
+  definition(DictNode(n, None, None), fn(v) {
     case v {
       JObject(xs) -> list.map(xs, fn(p) { #(p.0, d(p.1)) })
       _ -> panic as "validated dictionary"
@@ -596,11 +670,12 @@ pub fn property_names(
   let Definition(node, convert) = def
   let Definition(key, _) = keys
   use next <- result.try(property_names_node(node, key))
-  Ok(Definition(next, convert))
+  Ok(definition(next, convert))
 }
 
 fn object_node(node: Node) -> Bool {
   case node {
+    IdentifiedNode(_, child) | ContextNode(_, child) -> object_node(child)
     DictNode(_, _, _) | RecordNode(_, _) -> True
     NamedNode(_, child)
     | AnnotatedNode(child, _, _)
@@ -614,13 +689,17 @@ fn property_names_node(
   key: Node,
 ) -> Result(Node, ConstructionError) {
   case node {
+    IdentifiedNode(_, child) ->
+      result.map(property_names_node(child, key), identified)
+    ContextNode(context, child) ->
+      result.map(property_names_node(child, key), ContextNode(context, _))
     AnnotatedNode(child, name, value) ->
       result.map(property_names_node(child, key), AnnotatedNode(_, name, value))
     PropertyNamesNode(child, keys) ->
       Ok(PropertyNamesNode(child, list.append(keys, [key])))
     _ ->
       case object_node(node) {
-        True -> Ok(PropertyNamesNode(node, [key]))
+        True -> Ok(PropertyNamesNode(identified(node), [key]))
         False ->
           Error(ConstructionError(
             "property_names requires an object definition",
@@ -645,7 +724,7 @@ fn make_reference(
   let converters =
     new_cell(Cell, ConstructionError("unfinalized recursive decoder: " <> name))
   let def =
-    Definition(ReferenceNode(name, nodes), fn(value) {
+    definition(ReferenceNode(name, nodes), fn(value) {
       let assert Ok(convert) = read_cell(converters)
         as "Recursive definition is not finalized"
       convert(value)
@@ -669,23 +748,27 @@ pub fn recursive(
   name: String,
   build: fn(Definition(a)) -> Result(Definition(a), ConstructionError),
 ) -> Result(Definition(a), ConstructionError) {
-  case valid_name(name) {
-    False -> Error(ConstructionError("invalid definition name"))
-    True -> {
-      let #(reference, nodes, converters) = make_reference(name)
-      use body <- result.try(build(reference))
-      bind_reference(nodes, converters, body)
-      let Definition(root, _) = reference
-      case guard_graph(root) {
-        Ok(_) -> Ok(reference)
-        Error(error) -> {
-          reject_cell(nodes)
-          reject_cell(converters)
-          Error(error)
+  let #(built, context) =
+    with_construction(fn() {
+      case valid_name(name) {
+        False -> Error(ConstructionError("invalid definition name"))
+        True -> {
+          let #(reference, nodes, converters) = make_reference(name)
+          use body <- result.try(build(reference))
+          bind_reference(nodes, converters, body)
+          let Definition(root, _) = reference
+          case guard_graph(root) {
+            Ok(_) -> Ok(reference)
+            Error(error) -> {
+              reject_cell(nodes)
+              reject_cell(converters)
+              Error(error)
+            }
+          }
         }
       }
-    }
-  }
+    })
+  result.map(built, contextual(context, _))
 }
 
 /// Build two mutually recursive definitions with distinct names and independent
@@ -696,34 +779,44 @@ pub fn recursive_pair(
   build: fn(Definition(a), Definition(b)) ->
     Result(#(Definition(a), Definition(b)), ConstructionError),
 ) -> Result(#(Definition(a), Definition(b)), ConstructionError) {
-  case
-    valid_name(first_name)
-    && valid_name(second_name)
-    && first_name != second_name
-  {
-    False -> Error(ConstructionError("invalid or duplicate recursive names"))
-    True -> {
-      let #(first, first_nodes, first_convert) = make_reference(first_name)
-      let #(second, second_nodes, second_convert) = make_reference(second_name)
-      use bodies <- result.try(build(first, second))
-      bind_reference(first_nodes, first_convert, bodies.0)
-      bind_reference(second_nodes, second_convert, bodies.1)
-      let Definition(first_root, _) = first
-      let Definition(second_root, _) = second
+  let #(built, context) =
+    with_construction(fn() {
       case
-        result.try(guard_graph(first_root), fn(_) { guard_graph(second_root) })
+        valid_name(first_name)
+        && valid_name(second_name)
+        && first_name != second_name
       {
-        Ok(_) -> Ok(#(first, second))
-        Error(error) -> {
-          reject_cell(first_nodes)
-          reject_cell(first_convert)
-          reject_cell(second_nodes)
-          reject_cell(second_convert)
-          Error(error)
+        False ->
+          Error(ConstructionError("invalid or duplicate recursive names"))
+        True -> {
+          let #(first, first_nodes, first_convert) = make_reference(first_name)
+          let #(second, second_nodes, second_convert) =
+            make_reference(second_name)
+          use bodies <- result.try(build(first, second))
+          bind_reference(first_nodes, first_convert, bodies.0)
+          bind_reference(second_nodes, second_convert, bodies.1)
+          let Definition(first_root, _) = first
+          let Definition(second_root, _) = second
+          case
+            result.try(guard_graph(first_root), fn(_) {
+              guard_graph(second_root)
+            })
+          {
+            Ok(_) -> Ok(#(first, second))
+            Error(error) -> {
+              reject_cell(first_nodes)
+              reject_cell(first_convert)
+              reject_cell(second_nodes)
+              reject_cell(second_convert)
+              Error(error)
+            }
+          }
         }
       }
-    }
-  }
+    })
+  result.map(built, fn(pair) {
+    #(contextual(context, pair.0), contextual(context, pair.1))
+  })
 }
 
 // Named definitions reuse finite structures; recursive definitions use explicit
@@ -737,7 +830,7 @@ pub fn named(
 ) -> Result(Definition(a), ConstructionError) {
   let Definition(node, convert) = def
   case valid_name(name) {
-    True -> Ok(Definition(NamedNode(name, node), convert))
+    True -> Ok(definition(NamedNode(name, node), convert))
     False -> Error(ConstructionError("invalid definition name"))
   }
 }
@@ -748,8 +841,8 @@ pub fn unique_items(
   def: Definition(List(a)),
 ) -> Result(Definition(List(a)), ConstructionError) {
   let Definition(node, convert) = def
-  case node {
-    ArrayNode(_, _, _) -> Ok(Definition(UniqueNode(node), convert))
+  case bare(node) {
+    ArrayNode(_, _, _) -> Ok(definition(UniqueNode(node), convert))
     _ -> Error(ConstructionError("unique_items requires an array definition"))
   }
 }
@@ -757,13 +850,13 @@ pub fn unique_items(
 /// Add a schema description without changing validation or decoding.
 pub fn description(def: Definition(a), s: String) -> Definition(a) {
   let Definition(n, d) = def
-  Definition(AnnotatedNode(n, "description", s), d)
+  definition(AnnotatedNode(n, "description", s), d)
 }
 
 /// Add a schema title without changing validation or decoding.
 pub fn title(def: Definition(a), s: String) -> Definition(a) {
   let Definition(n, d) = def
-  Definition(AnnotatedNode(n, "title", s), d)
+  definition(AnnotatedNode(n, "title", s), d)
 }
 
 /// Start a record with a curried constructor. Each field consumes one argument;
@@ -819,10 +912,15 @@ pub fn defaulted(
   child: Definition(a),
   value: Value,
 ) -> Result(Record(b), ConstructionError) {
+  use <- with_walk
   let Definition(n, _) = child
   // Defaults are checked during construction. A recursive placeholder cannot
   // yet supply its acceptance contract; reject it rather than invent a value.
-  use _ <- result.try(collect_definitions_result([n], [], new_seen(Seen)))
+  use _ <- result.try(collect_definitions_result(
+    [n],
+    [],
+    new_seen(Seen, identity),
+  ))
   case check(n, value, "") {
     [] -> add_field(r, name, child, Default(value))
     _ -> Error(ConstructionError("invalid default"))
@@ -857,7 +955,7 @@ pub fn optional(
 /// Finish a typed record with the chosen undeclared-key policy.
 pub fn finish(r: Record(a), policy: Policy) -> Definition(a) {
   let Record(fs, d) = r
-  Definition(RecordNode(fs, policy), d)
+  definition(RecordNode(fs, policy), d)
 }
 
 /// Finish a tagged record branch. Do not declare the discriminator as a field.
@@ -910,17 +1008,21 @@ pub fn tagged(
           let Variant(t, fs, p, _, s) = v
           #(
             t,
-            RecordNode(
+            identified(RecordNode(
               list.append(fs, [
-                Field(discriminator, ConstNode(JString(t), "string"), Required),
+                Field(
+                  discriminator,
+                  identified(ConstNode(JString(t), "string")),
+                  Required,
+                ),
               ]),
               p,
-            ),
+            )),
             s,
           )
         })
       Ok(
-        Definition(TaggedNode(discriminator, branches), fn(value) {
+        definition(TaggedNode(discriminator, branches), fn(value) {
           let assert Some(JString(tag)) = member(value, discriminator)
           let assert Ok(Variant(_, _, _, d, _)) =
             list.find(variants, fn(v) {
@@ -958,7 +1060,7 @@ fn union(
     [] -> Error(ConstructionError("empty union"))
     _ ->
       Ok(
-        Definition(
+        definition(
           UnionNode(
             list.map(defs, fn(d) {
               let Definition(n, _) = d
@@ -1025,7 +1127,7 @@ pub fn bounds(
 ) -> Result(Definition(a), ConstructionError) {
   let Definition(n, d) = def
   use next <- result.try(bound_node(n, lower, upper))
-  Ok(Definition(next, d))
+  Ok(definition(next, d))
 }
 
 fn bound_node(
@@ -1034,6 +1136,10 @@ fn bound_node(
   hi: Option(Int),
 ) -> Result(Node, ConstructionError) {
   case n {
+    IdentifiedNode(_, child) ->
+      result.map(bound_node(child, lo, hi), identified)
+    ContextNode(context, child) ->
+      result.map(bound_node(child, lo, hi), ContextNode(context, _))
     AnnotatedNode(child, k, v) ->
       result.map(bound_node(child, lo, hi), AnnotatedNode(_, k, v))
     ContainsNode(child, checks) ->
@@ -1103,12 +1209,15 @@ pub fn pattern(
   let Definition(n, d) = def
   case pattern_valid(p) {
     False -> Error(ConstructionError("invalid regex"))
-    True -> result.map(pattern_node(n, p), fn(next) { Definition(next, d) })
+    True -> result.map(pattern_node(n, p), fn(next) { definition(next, d) })
   }
 }
 
 fn pattern_node(n: Node, p: String) -> Result(Node, ConstructionError) {
   case n {
+    IdentifiedNode(_, child) -> result.map(pattern_node(child, p), identified)
+    ContextNode(context, child) ->
+      result.map(pattern_node(child, p), ContextNode(context, _))
     StringNode(a, b, ps) ->
       Ok(StringNode(a, b, list.unique(list.append(ps, [p]))))
     AnnotatedNode(c, k, v) ->
@@ -1124,14 +1233,17 @@ pub fn validate(
   def: Definition(a),
   value: Value,
 ) -> Result(Nil, List(DataError)) {
-  let Definition(n, _) = def
-  // Even an empty array must not make an escaped, rejected placeholder usable.
-  let assert Ok(_) = collect_definitions_result([n], [], new_seen(Seen))
-    as "Definition contains an unfinalized recursive reference or conflicting names"
-  case check(n, value, "") {
-    [] -> Ok(Nil)
-    errors -> Error(errors)
-  }
+  with_walk(fn() {
+    let Definition(n, _) = def
+    // Even an empty array must not make an escaped, rejected placeholder usable.
+    let assert Ok(_) =
+      collect_definitions_result([n], [], new_seen(Seen, identity))
+      as "Definition contains an unfinalized recursive reference or conflicting names"
+    case check(n, value, "") {
+      [] -> Ok(Nil)
+      errors -> Error(errors)
+    }
+  })
 }
 
 /// Validate first, then construct the typed output. Invalid input returns data
@@ -1175,6 +1287,9 @@ fn size_ok(n: Int, lo: Option(Int), hi: Option(Int)) -> Bool {
 
 fn check(n: Node, v: Value, p: String) -> List(DataError) {
   case n, v {
+    IdentifiedNode(_, child), _ -> check(child, v, p)
+    ContextNode(context, child), _ ->
+      with_context(context, fn() { check(child, v, p) })
     ReferenceNode(_, cell), _ -> {
       let assert Ok(child) = read_cell(cell)
         as "Recursive definition is not finalized"
@@ -1213,7 +1328,7 @@ fn check(n: Node, v: Value, p: String) -> List(DataError) {
         False -> err("number_constraint", p)
       }
     ConstNode(expected, _), _ ->
-      case expected == v {
+      case constant_equal(expected, v) {
         True -> []
         False -> err("constant", p)
       }
@@ -1382,18 +1497,30 @@ fn check(n: Node, v: Value, p: String) -> List(DataError) {
   }
 }
 
+// Numeric equality must identify both zero signs on every target. OTP's exact
+// term equality distinguishes them, whereas JSON Schema equality does not.
+fn constant_equal(a: Value, b: Value) -> Bool {
+  case a, b {
+    JNumber(x), JNumber(y) -> x >=. y && x <=. y
+    _, _ -> a == b
+  }
+}
+
+@external(erlang, "gargamelle_runtime", "int_text")
 @external(javascript, "./runtime.mjs", "int_text")
 fn int_text(n: Int) -> String
 
 /// Emit a JSON Schema 2020-12 document as Gargamelle’s opaque `Value`, not
 /// `gleam/json.Json`. Unfinished or conflicting reference graphs fail operationally.
 pub fn emit_json(def: Definition(a)) -> Value {
-  let Definition(n, _) = def
-  put(
-    emit_with_definitions(n),
-    "$schema",
-    JString("https://json-schema.org/draft/2020-12/schema"),
-  )
+  with_walk(fn() {
+    let Definition(n, _) = def
+    put(
+      emit_with_definitions(n),
+      "$schema",
+      JString("https://json-schema.org/draft/2020-12/schema"),
+    )
+  })
 }
 
 /// Emit canonical JSON Schema 2020-12 text, including finite local references.
@@ -1421,11 +1548,19 @@ fn emit_bound(v: Value, k: String, b: Option(Int)) -> Value {
   }
 }
 
-@external(javascript, "./runtime.mjs", "same_reference")
-fn same_reference(a: a, b: a) -> Bool
+fn same_reference(a: Node, b: Node) -> Bool {
+  identity(a) == identity(b)
+}
 
 fn node_children(n: Node) -> Result(List(Node), ConstructionError) {
   case n {
+    IdentifiedNode(_, child) -> node_children(child)
+    ContextNode(context, child) ->
+      with_context(context, fn() {
+        result.map(node_children(child), fn(children) {
+          list.map(children, ContextNode(context, _))
+        })
+      })
     ReferenceNode(_, cell) -> result.map(read_cell(cell), fn(child) { [child] })
     NamedNode(_, child)
     | ArrayNode(child, _, _)
@@ -1502,7 +1637,7 @@ fn collect_definitions_result(
           case node_children(node) {
             Error(error) -> Error(error)
             Ok(children) -> {
-              let merged = case node, children {
+              let merged = case bare(node), children {
                 NamedNode(name, _), [child] | ReferenceNode(name, _), [child] ->
                   merge_definition(name, child, definitions)
                 _, _ -> Ok(definitions)
@@ -1526,6 +1661,13 @@ fn collect_definitions_result(
 // fields instead descend into a strict child value and therefore break cycles.
 fn same_input_children(n: Node) -> Result(List(Node), ConstructionError) {
   case n {
+    IdentifiedNode(_, child) -> same_input_children(child)
+    ContextNode(context, child) ->
+      with_context(context, fn() {
+        result.map(same_input_children(child), fn(children) {
+          list.map(children, ContextNode(context, _))
+        })
+      })
     ContainsNode(child, _) | PropertyNamesNode(child, _) -> Ok([child])
     ArrayNode(_, _, _) | TupleNode(_) | DictNode(_, _, _) | RecordNode(_, _) ->
       Ok([])
@@ -1539,8 +1681,12 @@ type Guard(a) {
   Guard(fn(a) -> Int, fn(a) -> Nil)
 }
 
+@external(erlang, "gargamelle_runtime", "recursion_guard")
 @external(javascript, "./runtime.mjs", "recursion_guard")
-fn new_guard(make: fn(fn(a) -> Int, fn(a) -> Nil) -> Guard(a)) -> Guard(a)
+fn new_guard(
+  make: fn(fn(a) -> Int, fn(a) -> Nil) -> Guard(a),
+  key: fn(a) -> Identity,
+) -> Guard(a)
 
 fn guard_same_input(
   n: Node,
@@ -1564,17 +1710,19 @@ fn guard_same_input(
 }
 
 fn guard_graph(root: Node) -> Result(Nil, ConstructionError) {
-  use definitions <- result.try(collect_definitions_result(
-    [root],
-    [],
-    new_seen(Seen),
-  ))
-  let state = new_guard(Guard)
-  list.try_fold(
-    [root, ..list.map(definitions, fn(pair) { pair.1 })],
-    Nil,
-    fn(_, n) { guard_same_input(n, state) },
-  )
+  with_walk(fn() {
+    use definitions <- result.try(collect_definitions_result(
+      [root],
+      [],
+      new_seen(Seen, identity),
+    ))
+    let state = new_guard(Guard, identity)
+    list.try_fold(
+      [root, ..list.map(definitions, fn(pair) { pair.1 })],
+      Nil,
+      fn(_, n) { guard_same_input(n, state) },
+    )
+  })
 }
 
 fn collect_definitions(
@@ -1582,7 +1730,7 @@ fn collect_definitions(
   _: List(#(String, Node)),
 ) -> List(#(String, Node)) {
   let assert Ok(definitions) =
-    collect_definitions_result([n], [], new_seen(Seen))
+    collect_definitions_result([n], [], new_seen(Seen, identity))
     as "Conflicting named schema definitions or unfinalized recursive reference"
   definitions
 }
@@ -1614,6 +1762,8 @@ fn emit_number_bound(
 
 fn emit(n: Node) -> Value {
   case n {
+    IdentifiedNode(_, child) -> emit(child)
+    ContextNode(context, child) -> with_context(context, fn() { emit(child) })
     NamedNode(name, _) | ReferenceNode(name, _) ->
       obj([#("$ref", JString("#/$defs/" <> name))])
     UniqueNode(c) -> put(emit(c), "uniqueItems", JBool(True))

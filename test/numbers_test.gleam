@@ -1,5 +1,5 @@
 import gargamelle as s
-import gleam/option.{Some}
+import gleam/option.{None, Some}
 import gleeunit/should
 
 pub fn float_output_test() {
@@ -25,4 +25,21 @@ pub fn typed_number_bounds_test() {
   s.decode(def, value) |> should.equal(Ok(0.5))
   let assert Ok(value) = s.parse("0")
   s.decode(def, value) |> should.be_error
+}
+
+pub fn signed_zero_bounds_test() {
+  let assert Ok(value) = s.parse("-0")
+  let assert Ok(negative_zero) = s.decode(s.number(), value)
+  let assert Ok(exact_zero) =
+    s.number_bounds(
+      s.number(),
+      Some(s.Inclusive(negative_zero)),
+      Some(s.Inclusive(0.0)),
+    )
+  s.validate(exact_zero, value) |> should.equal(Ok(Nil))
+  let assert Ok(exclusive) =
+    s.number_bounds(s.number(), Some(s.Exclusive(negative_zero)), None)
+  let assert Ok(repeated) =
+    s.number_bounds(exclusive, Some(s.Inclusive(0.0)), None)
+  s.validate(repeated, value) |> should.be_error
 }

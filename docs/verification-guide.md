@@ -71,3 +71,20 @@ always identifies a hashed working-tree snapshot; Git commit fields are null whe
 relevant source is uncommitted, with `baseCommit` retained for context. After a
 checkpoint commit, regenerate evidence to identify the containing commit.
 
+
+## Erlang portability primitives
+
+With Erlang/OTP 29 installed, run `npm run verify:erlang-primitives` for the
+experimental native numeric, admission, serialization, and reference-cell checks.
+These compare Erlang operations directly with Node and retain native-regex
+counterexamples. They are separate from the JavaScript verification gate and do
+not establish support for a complete Erlang backend. The admission experiments
+cover Unicode-scalar strings; lone surrogates remain an unresolved compatibility
+issue.
+
+The same command runs an isolated Erlang build of the actual library and all
+shared Gleam tests, plus typed recursion, process-transfer, composition, conflict
+and exception-cleanup tests. The fixture attaches scalar admission and native
+regex adapters only to its temporary source copy. Those adapters are test
+scaffolding and do not establish ECMAScript regex or lone-surrogate parity.
+Production source retains the unsupported-target gate for those operations.

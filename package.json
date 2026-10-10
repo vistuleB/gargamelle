@@ -9,7 +9,8 @@
     "verify": "node verification/run-evidence.mjs",
     "pretest": "node verification/check-node.mjs",
     "preverify": "node verification/check-node.mjs",
-    "precheck:release": "node verification/check-node.mjs"
+    "precheck:release": "node verification/check-node.mjs",
+    "verify:erlang-primitives": "node --test verification/portability/*.test.mjs"
   },
   "devDependencies": {
     "@hyperjump/json-schema": "1.18.0",

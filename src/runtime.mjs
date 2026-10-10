@@ -81,9 +81,10 @@ export function recursive_cell(make, missing) {
 }
 
 // Tracking is local to one schema walk; it retains no process-wide cache.
-export function identity_tracker(make) {
+export function identity_tracker(make, key) {
   const seen = new Set();
   return make(value => {
+    value = key(value);
     if (seen.has(value)) return true;
     seen.add(value);
     return false;
@@ -92,12 +93,20 @@ export function identity_tracker(make) {
 
 // Tri-color DFS identity state, scoped to one recursive finalization.
 // Only completed traversals enter checked; active revisits are cycles.
-export function recursion_guard(make) {
+export function recursion_guard(make, key) {
   const visiting = new Set(), checked = new Set();
   return make(node => {
+    node = key(node);
     if (visiting.has(node)) return 1;
     if (checked.has(node)) return 2;
     visiting.add(node);
     return 0;
-  }, node => { visiting.delete(node); checked.add(node); });
+  }, node => { node = key(node); visiting.delete(node); checked.add(node); });
 }
+
+// JavaScript cells already retain their typed values in closure-owned storage.
+// Shared construction/context brackets therefore require no ambient state here.
+export const fresh_identity = () => Symbol();
+export const with_construction = build => [build(), undefined];
+export const with_context = (_context, run) => run();
+export const with_walk = run => run();
