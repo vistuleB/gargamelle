@@ -15,7 +15,7 @@ function decode(name, value) {
 const corpus = [
   null, true, false, 0, -0, 1, -3, -2, 3, 4, 1.5,
   Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER + 1,
-  '', 'a', 'b', 'ab', 'abc', 'abcd', 'a😀', '😀', 'e\u0301', '\0', '\ud800',
+  '', 'a', 'b', 'ab', 'abc', 'abcd', 'a😀', '😀', 'e\u0301', '\0', '\u{10ffff}',
   [], ['a'], ['a', 'b', 'c'], ['a', 'b', 'c', 'd'], [null], [1],
   {}, { a: 'x' }, { a: null }, { a: 1 }, { a: 'x', b: null },
   { a: 'x', b: 'y' }, { a: 'x', extra: true }, { a: 'x', b: 'y', c: 'z', d: 'w' },

@@ -1,5 +1,5 @@
 name = "gargamelle"
-version = "0.1.0"
+version = "0.2.0"
 licences = ["MIT"]
 description = "Typed JSON decoding and JSON Schema 2020-12 generation from one Gleam definition"
 repository = { type = "github", user = "vistuleB", repo = "gargamelle" }

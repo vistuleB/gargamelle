@@ -16,7 +16,7 @@ test('actual Erlang Gleam API preserves typed recursion and process-independent 
     cpSync(join(root,'verification/portability/graph_api_test.gleam'),join(directory,'test/graph_api_test.gleam'));
     const source=join(directory,'src/gargamelle.gleam');
     let text=readFileSync(source,'utf8');
-    for(const name of ['parse','canonical','codepoints','pattern_valid','pattern_matches','sorted']) {
+    for(const name of ['pattern_valid','pattern_matches']) {
       const target=['codepoints','sorted'].includes(name)?'gargamelle_runtime':'scalar_api';
       const marker=`@external(javascript, "./runtime.mjs", "${name}")`;
       assert.equal(text.split(marker).length-1,1);
@@ -33,6 +33,6 @@ test('actual Erlang Gleam API preserves typed recursion and process-independent 
       env:{...process.env,GIT_DIR:'',GIT_WORK_TREE:''},
     });
     assert.equal(result.status,0,result.stderr+'\n'+result.stdout);
-    assert.match(result.stdout,/42 passed, no failures/);
+    assert.match(result.stdout,/43 passed, no failures/);
   } finally {rmSync(directory,{recursive:true,force:true});}
 });

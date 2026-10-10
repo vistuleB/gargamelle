@@ -9,7 +9,7 @@ async function compare(d,cases){const schema=emitted(d),checks=[compileOracle(sc
 test('formula code exclusion forbids whitespace, backslash and Unicode punctuation',async()=>{
  const bad=unwrap(s.pattern(s.text(),String.raw`[\\\s\p{P}]`));
  const d=s.exclude(unwrap(s.bounds(s.text(),new Some(1),None)),bad);
- const accepted=['alpha','α','a1','+','∞','😀','e\u0301','\u200b','\ud800'];
+ const accepted=['alpha','α','a1','+','∞','😀','e\u0301','\u200b','\ue000'];
  const rejected=['',' ','a b','a\nb','a\tb','a\u00a0b','a\ufeffb','a\\b','a_b','a-b','a:b','a/b','a—b','a。b'];
  await compare(d,[...accepted.map(v=>[v,true,v]),...rejected.map(v=>[v,false]),[1,false],[null,false]]);
  assert.match(docs.render(d,'code'),/must not match/);

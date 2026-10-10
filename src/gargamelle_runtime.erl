@@ -3,11 +3,30 @@
          parse_number/1, number_text/1, sorted/1, codepoints/1,
          parse_scalar_json/1, canonical_scalar_json/1, fresh_identity/0,
          with_construction/1, with_context/2, with_walk/1, recursive_cell/2,
-         identity_tracker/2, recursion_guard/2]).
+         identity_tracker/2, recursion_guard/2, parse/7, canonical/1]).
+
+canonical(Source) ->
+    {ok, Text} = canonical_scalar_json(Source), Text.
+
+parse(Source, Null, Bool, Number, String, Array, Object) ->
+    case parse_scalar_json(Source) of
+        {ok, Value} -> {ok, admitted_value(Value, {Null, Bool, Number, String, Array, Object})};
+        {error, syntax} -> {error, {admission_error, <<"syntax">>}};
+        {error, nonfinite_number} -> {error, {admission_error, <<"non-finite number">>}};
+        {error, non_scalar_string} -> {error, {admission_error, <<"non-scalar string">>}}
+    end.
+admitted_value(null, {Make, _, _, _, _, _}) -> Make();
+admitted_value(B, {_, Make, _, _, _, _}) when is_boolean(B) -> Make(B);
+admitted_value(N, {_, _, Make, _, _, _}) when is_float(N) -> Make(N);
+admitted_value(S, {_, _, _, Make, _, _}) when is_binary(S) -> Make(S);
+admitted_value(A, {_, _, _, _, Make, _} = Factories) when is_list(A) ->
+    Make([admitted_value(V, Factories) || V <- A]);
+admitted_value(O, {_, _, _, _, _, Make} = Factories) when is_map(O) ->
+    Make([{K, admitted_value(V, Factories)} || {K, V} <- maps:to_list(O)]).
 
 %% Portability primitives and scalar-domain experiments. This module is not a
-%% complete Erlang backend; numeric and graph externals are attached, while
-%% admission, canonical strings and ECMAScript regex compatibility remain gated.
+%% complete Erlang backend; admission, scalar strings, numeric and graph externals
+%% are attached along with canonical emission; ECMAScript regex remains gated.
 integer(X) when is_float(X) -> X == trunc(X).
 finite(X) -> is_float(X).
 as_int(X) when is_float(X) -> trunc(X).
@@ -76,8 +95,7 @@ drop_trailing(Bin) ->
     end.
 zeros(N) -> binary:copy(<<"0">>, N).
 
-%% Unicode-scalar primitives. The String/lone-surrogate compatibility decision
-%% must be resolved before attaching these to a supported Erlang admission API.
+%% Unicode-scalar primitives for the authorized 0.2.0 admission domain.
 sorted(Values) ->
     [Value || {_, Value} <- lists:keysort(1, [{utf16(V), V} || V <- Values])].
 utf16(Value) ->
@@ -90,16 +108,17 @@ count_codepoints(<<>>, Count) -> Count;
 count_codepoints(<<_/utf8, Rest/binary>>, Count) ->
     count_codepoints(Rest, Count + 1).
 
-%% Experimental Unicode-scalar admission scanner, separate from public parse.
-%% OTP is used to decode string tokens and still rejects lone surrogates.
+%% Unicode-scalar admission scanner. Syntax and duplicate resolution finish
+%% before domain checking; private invalid units never become public Strings.
 parse_scalar_json(Source) ->
     try read_value(whitespace(Source)) of
         {Value, Rest} ->
             case whitespace(Rest) of
                 <<>> ->
-                    case has_nonfinite(Value) of
-                        true -> {error, nonfinite_number};
-                        false -> {ok, Value}
+                    case {has_nonfinite(Value), has_non_scalar(Value)} of
+                        {true, _} -> {error, nonfinite_number};
+                        {_, true} -> {error, non_scalar_string};
+                        _ -> {ok, Value}
                     end;
                 _ -> {error, syntax}
             end
@@ -150,21 +169,42 @@ read_object(_, _) -> syntax().
 read_object_item(<<$}, _/binary>>, _) -> syntax();
 read_object_item(Source, Map) -> read_object(Source, Map).
 
-%% OTP is used solely to decode an already-delimited scalar string token. It
-%% still rejects lone surrogates; no support claim is made for those strings.
-read_string(<<$", Rest/binary>> = Source) ->
-    Length = string_end(Rest, 1),
-    <<Token:Length/binary, Tail/binary>> = Source,
-    try {json:decode(Token), Tail}
-    catch
-        error:unexpected_end -> syntax();
-        error:{invalid_byte, _} -> syntax();
-        error:{unexpected_sequence, _} -> syntax()
-    end.
-string_end(<<$", _/binary>>, Length) -> Length + 1;
-string_end(<<$\\, _, Rest/binary>>, Length) -> string_end(Rest, Length + 2);
-string_end(<<_, Rest/binary>>, Length) -> string_end(Rest, Length + 1);
-string_end(<<>>, _) -> syntax().
+%% Preserve unpaired surrogate units privately as WTF-8 until final-domain
+%% checking. They never become public Gleam Strings. This lets duplicate-key
+%% replacement discard an invalid value before admission, just like overflow.
+read_string(<<$", Rest/binary>>) -> read_chars(Rest, []).
+read_chars(<<$", Rest/binary>>, Acc) -> {iolist_to_binary(lists:reverse(Acc)), Rest};
+read_chars(<<$\\, $u, A, B, C, D, Rest/binary>>, Acc) ->
+    Unit = (hex(A) bsl 12) bor (hex(B) bsl 8) bor (hex(C) bsl 4) bor hex(D),
+    case {Unit, Rest} of
+        {High, <<$\\, $u, E, F, G, H, Tail/binary>>} when High >= 16#d800, High =< 16#dbff ->
+            Low = (hex(E) bsl 12) bor (hex(F) bsl 8) bor (hex(G) bsl 4) bor hex(H),
+            case Low >= 16#dc00 andalso Low =< 16#dfff of
+                true ->
+                    Scalar = 16#10000 + ((High - 16#d800) bsl 10) + Low - 16#dc00,
+                    read_chars(Tail, [<<Scalar/utf8>> | Acc]);
+                false -> read_chars(Rest, [string_unit(High) | Acc])
+            end;
+        _ -> read_chars(Rest, [string_unit(Unit) | Acc])
+    end;
+read_chars(<<$\\, Escape, Rest/binary>>, Acc) ->
+    Character = case Escape of
+        $" -> $"; $\\ -> $\\; $/ -> $/;
+        $b -> 8; $f -> 12; $n -> 10; $r -> 13; $t -> 9;
+        _ -> syntax()
+    end,
+    read_chars(Rest, [Character | Acc]);
+read_chars(<<Character, Rest/binary>>, Acc) when Character >= 32 ->
+    read_chars(Rest, [Character | Acc]);
+read_chars(_, _) -> syntax().
+hex(C) when C >= $0, C =< $9 -> C - $0;
+hex(C) when C >= $a, C =< $f -> C - $a + 10;
+hex(C) when C >= $A, C =< $F -> C - $A + 10;
+hex(_) -> syntax().
+string_unit(Unit) when Unit >= 16#d800, Unit =< 16#dfff ->
+    <<(16#e0 bor (Unit bsr 12)), (16#80 bor ((Unit bsr 6) band 63)),
+      (16#80 bor (Unit band 63))>>;
+string_unit(Unit) -> <<Unit/utf8>>.
 
 read_number(Source) ->
     Length = number_end(Source, 0),
@@ -189,6 +229,17 @@ has_nonfinite(Value) when is_list(Value) -> lists:any(fun has_nonfinite/1, Value
 has_nonfinite(Value) when is_map(Value) ->
     lists:any(fun has_nonfinite/1, maps:values(Value));
 has_nonfinite(_) -> false.
+
+has_non_scalar(Value) when is_binary(Value) ->
+    case unicode:characters_to_binary(Value, utf8, utf8) of
+        B when is_binary(B) -> false;
+        _ -> true
+    end;
+has_non_scalar(Value) when is_list(Value) -> lists:any(fun has_non_scalar/1, Value);
+has_non_scalar(Value) when is_map(Value) ->
+    lists:any(fun has_non_scalar/1, maps:keys(Value)) orelse
+    lists:any(fun has_non_scalar/1, maps:values(Value));
+has_non_scalar(_) -> false.
 
 canonical_scalar_json(Source) ->
     case parse_scalar_json(Source) of

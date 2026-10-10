@@ -23,7 +23,7 @@ pub opaque type Value {
   JObject(List(#(String, Value)))
 }
 
-/// JSON syntax or nonfinite-number admission failure.
+/// JSON syntax, nonfinite-number or non-scalar-string admission failure.
 pub type AdmissionError {
   AdmissionError(String)
 }
@@ -225,10 +225,20 @@ pub opaque type Variant(a) {
 
 /// Admit JSON text without invoking a definition or converter. Duplicate object
 /// keys use the parser’s last value; numeric values use IEEE-754 binary64.
+/// String values and object keys must contain only Unicode scalar values.
 pub fn parse(text: String) -> Result(Value, AdmissionError) {
   parse_runtime(text, fn() { JNull }, JBool, JNumber, JString, JArray, JObject)
 }
 
+// Schema text must inhabit the same String domain as admitted JSON. Constructors
+// with Result return ConstructionError; direct constructors assert this precondition.
+fn scalar_argument(text: String) -> Result(Nil, ConstructionError) {
+  parse(json.to_string(json.string(text)))
+  |> result.map(fn(_) { Nil })
+  |> result.map_error(fn(_) { ConstructionError("non-scalar string argument") })
+}
+
+@external(erlang, "gargamelle_runtime", "parse")
 @external(javascript, "./runtime.mjs", "parse")
 fn parse_runtime(
   text: String,
@@ -256,9 +266,11 @@ fn json_value(v: Value) -> json.Json {
   }
 }
 
+@external(erlang, "gargamelle_runtime", "canonical")
 @external(javascript, "./runtime.mjs", "canonical")
 fn canonical(text: String) -> String
 
+@external(erlang, "gargamelle_runtime", "codepoints")
 @external(javascript, "./runtime.mjs", "codepoints")
 fn codepoints(text: String) -> Int
 
@@ -268,6 +280,7 @@ fn pattern_valid(text: String) -> Bool
 @external(javascript, "./runtime.mjs", "pattern_matches")
 fn pattern_matches(pattern: String, text: String) -> Bool
 
+@external(erlang, "gargamelle_runtime", "sorted")
 @external(javascript, "./runtime.mjs", "sorted")
 fn sorted(values: List(String)) -> List(String)
 
@@ -450,6 +463,9 @@ fn number_ok(
 pub fn string_enum(
   values: List(String),
 ) -> Result(Definition(String), ConstructionError) {
+  use _ <- result.try(
+    list.try_fold(values, Nil, fn(_, text) { scalar_argument(text) }),
+  )
   case values == [] || list.length(list.unique(values)) != list.length(values) {
     True -> Error(ConstructionError("empty or duplicate enum"))
     False ->
@@ -466,6 +482,8 @@ pub fn string_enum(
 
 /// Accept exactly this string.
 pub fn string_constant(v: String) -> Definition(String) {
+  let assert Ok(_) = scalar_argument(v)
+    as "String argument must contain Unicode scalar values"
   definition(ConstNode(JString(v), "string"), fn(_) { v })
 }
 
@@ -849,12 +867,16 @@ pub fn unique_items(
 
 /// Add a schema description without changing validation or decoding.
 pub fn description(def: Definition(a), s: String) -> Definition(a) {
+  let assert Ok(_) = scalar_argument(s)
+    as "String argument must contain Unicode scalar values"
   let Definition(n, d) = def
   definition(AnnotatedNode(n, "description", s), d)
 }
 
 /// Add a schema title without changing validation or decoding.
 pub fn title(def: Definition(a), s: String) -> Definition(a) {
+  let assert Ok(_) = scalar_argument(s)
+    as "String argument must contain Unicode scalar values"
   let Definition(n, d) = def
   definition(AnnotatedNode(n, "title", s), d)
 }
@@ -871,6 +893,7 @@ fn add_field(
   child: Definition(a),
   presence: Presence,
 ) -> Result(Record(b), ConstructionError) {
+  use _ <- result.try(scalar_argument(name))
   let Record(fs, construct) = r
   let Definition(node, convert) = child
   case
@@ -934,6 +957,7 @@ pub fn optional(
   name: String,
   child: Definition(a),
 ) -> Result(Record(b), ConstructionError) {
+  use _ <- result.try(scalar_argument(name))
   let Record(fs, construct) = r
   let Definition(n, d) = child
   case
@@ -960,12 +984,16 @@ pub fn finish(r: Record(a), policy: Policy) -> Definition(a) {
 
 /// Finish a tagged record branch. Do not declare the discriminator as a field.
 pub fn variant(tag: String, r: Record(a), policy: Policy) -> Variant(a) {
+  let assert Ok(_) = scalar_argument(tag)
+    as "String argument must contain Unicode scalar values"
   let Record(fs, d) = r
   Variant(tag, fs, policy, d, None)
 }
 
 /// Describe a tagged branch without changing its acceptance contract.
 pub fn variant_description(v: Variant(a), s: String) -> Variant(a) {
+  let assert Ok(_) = scalar_argument(s)
+    as "String argument must contain Unicode scalar values"
   let Variant(t, f, p, d, _) = v
   Variant(t, f, p, d, Some(s))
 }
@@ -982,6 +1010,7 @@ pub fn tagged(
   discriminator: String,
   variants: List(Variant(a)),
 ) -> Result(Definition(a), ConstructionError) {
+  use _ <- result.try(scalar_argument(discriminator))
   let tags =
     list.map(variants, fn(v) {
       let Variant(t, _, _, _, _) = v
@@ -1206,6 +1235,7 @@ pub fn pattern(
   def: Definition(String),
   p: String,
 ) -> Result(Definition(String), ConstructionError) {
+  use _ <- result.try(scalar_argument(p))
   let Definition(n, d) = def
   case pattern_valid(p) {
     False -> Error(ConstructionError("invalid regex"))

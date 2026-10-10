@@ -6,7 +6,7 @@ import { AdmissionError } from './gargamelle.mjs';
 function convert(value, factories) {
   if (value === null) return factories[0]();
   if (typeof value === 'boolean') return factories[1](value);
-  if (typeof value === 'string') return factories[3](value);
+  if (typeof value === 'string') { scalar_string(value); return factories[3](value); }
   if (typeof value === 'number') {
     if (!Number.isFinite(value)) throw new RangeError('non-finite number');
     return factories[2](value);
@@ -14,7 +14,14 @@ function convert(value, factories) {
   if (Array.isArray(value)) {
     return factories[4](toList(value.map(item => convert(item, factories))));
   }
-  return factories[5](toList(Object.keys(value).map(key => [key, convert(value[key], factories)])));
+  return factories[5](toList(Object.keys(value).map(key => {
+    scalar_string(key);
+    return [key, convert(value[key], factories)];
+  })));
+}
+
+function scalar_string(text) {
+  if (!text.isWellFormed()) throw new RangeError('non-scalar string');
 }
 
 export function parse(text, ...factories) {
@@ -28,7 +35,7 @@ export function parse(text, ...factories) {
   try {
     return new Ok(convert(value, factories));
   } catch (error) {
-    if (error instanceof RangeError && error.message === 'non-finite number') {
+    if (error instanceof RangeError && ['non-finite number', 'non-scalar string'].includes(error.message)) {
       return new Error(new AdmissionError(error.message));
     }
     throw error;

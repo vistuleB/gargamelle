@@ -79,12 +79,15 @@ experimental native numeric, admission, serialization, and reference-cell checks
 These compare Erlang operations directly with Node and retain native-regex
 counterexamples. They are separate from the JavaScript verification gate and do
 not establish support for a complete Erlang backend. The admission experiments
-cover Unicode-scalar strings; lone surrogates remain an unresolved compatibility
-issue.
+cover the authorized 0.2.0 scalar domain, including rejection of unpaired
+surrogates after syntax and duplicate-key resolution.
 
 The same command runs an isolated Erlang build of the actual library and all
 shared Gleam tests, plus typed recursion, process-transfer, composition, conflict
-and exception-cleanup tests. The fixture attaches scalar admission and native
-regex adapters only to its temporary source copy. Those adapters are test
-scaffolding and do not establish ECMAScript regex or lone-surrogate parity.
-Production source retains the unsupported-target gate for those operations.
+and exception-cleanup tests. Admission uses the production native parser. The
+fixture attaches native regex adapters only to its temporary source copy.
+Those adapters do not establish ECMAScript regex parity. Admission, canonical
+emission, numeric primitives, scalar strings and graph operations use production
+externals. The unsupported-target gate remains on regex. See
+[the portability investigation](erlang-portability.md) for the
+opt-in standalone QuickJS engine corpus and its source/archive hashes.

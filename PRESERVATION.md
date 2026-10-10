@@ -126,11 +126,19 @@ regex compatibility.
 ## Admission, emission and trusted runtime
 
 Public `Value` is opaque. The public admission operation accepts JSON text,
-parses using JavaScript `JSON.parse`, rejects non-finite parsed numbers, and
+parses using JavaScript `JSON.parse`, rejects non-finite parsed numbers and
+unpaired surrogates in final string values or object keys, and
 recursively invokes library-owned constructors with actual parsed values. It
-never invokes definition-author functions. Syntax/non-finite failures are typed
+never invokes definition-author functions. Syntax and final-domain failures are typed
 admission errors. Other runtime exceptions, including recursion exhaustion, escape
 as operational failures; callers/harness must not count them as rejection.
+
+The 0.2.0 Erlang parser owns JSON structural, numeric and string-token scanning.
+Surrogate pairs become their UTF-8 scalar encoding. Unpaired units are retained
+privately until syntax and duplicate replacement finish, then rejected as domain
+errors; they never escape as Gleam Strings. Numeric overflow likewise remains
+private until final-domain checking. Thus overwritten invalid values do not
+cause admission failure, and later malformed syntax is still a syntax error.
 
 Conversion to emitted text builds Gleam JSON, parses its string, recursively
 creates null-prototype objects with sorted keys, then uses JSON.stringify.

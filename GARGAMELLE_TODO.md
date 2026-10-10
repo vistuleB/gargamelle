@@ -7,10 +7,11 @@ all JSON Schema features. Verify external state before acting on it.
 
 ## Current checkpoint
 
-- Package: `gargamelle`, version `0.1.0`, MIT license.
+- Package: `gargamelle`, version `0.2.0` in development, MIT license.
 - Repository: https://github.com/vistuleB/gargamelle (private when last checked).
-- `main` and annotated tag `v0.1.0` now point to `0d15a7a`
-  (`Improve onboarding, lineage, and renderer documentation`); both were pushed.
+- Annotated tag `v0.1.0` remains at `0d15a7a`
+  (`Improve onboarding, lineage, and renderer documentation`); it was pushed.
+  Graph integration was committed locally on `main` as `08fd1b2`.
   The previous code/evidence checkpoint is `ef8841b`.
 - Documentation cleanup is complete: onboarding precedes the contract, the intro
   credits glon's influence and independent implementation, the comparison is
@@ -30,7 +31,39 @@ all JSON Schema features. Verify external state before acting on it.
   Hex tarball export and release checks passed. Earlier clean consumers of the
   extracted archive built and exercised decoding, validation, schema emission
   and documentation without the app checkout or npm verification tools.
-- This handoff remains untracked and is not in `v0.1.0`.
+- This handoff was committed in `08fd1b2` and is not in `v0.1.0`.
+
+## Current 0.2.0 work
+
+The user authorized a common Unicode-scalar string/key domain on 2026-10-10.
+Unpaired surrogates are final-domain admission errors on JavaScript and Erlang;
+valid pairs are preserved exactly. Syntax and duplicate replacement precede
+domain checking, so an overwritten invalid value is discarded. The native
+parser now owns string escapes as well as structural and numeric scanning.
+Production Erlang externals are attached for admission, canonical emission,
+code-point counting and UTF-16 sorting. Public construction text is checked too: Result constructors
+return construction errors; direct constructors assert the scalar precondition.
+The working version is 0.2.0, with contract/evidence revision 4. Nothing has been
+published or tagged for this milestone.
+
+The standalone native regex experiment found an empirical candidate: QuickJS
+2026-06-04 regex code with the two Unicode table files from 2025-09-13 agrees with
+Node 24/Unicode 16 in 13,572 pairs, including operational-failure handling through
+an Erlang port. Each unmodified release has retained counterexamples. No native
+dependency or production regex binding has been added. See
+`docs/erlang-portability.md` for the decision, reproduction, archive/source hashes
+and the remaining packaging/conformance work.
+
+Next: broaden native regex conformance and package its binding, then extend
+independent cross-target oracles and clean consumer tests. Complete Erlang support
+remains gated on the two regex externals.
+
+Current checkpoint validation passed: 36 JavaScript-target Gleam tests, 144 Node
+tests, 17,788 generated pairs and 109 official cases; nine native portability
+checks, including 43 actual Erlang Gleam API tests with only regex test adapters.
+The native regex candidate passed 13,572 pairs under address/undefined-behavior
+sanitizers. Docs generation, Hex export and a fresh JavaScript consumer of the
+extracted 0.2.0 archive passed using the pinned dependency sources offline.
 
 ## Read these first
 
@@ -100,6 +133,9 @@ and callback-suppression checks. Claim Erlang support only after evidence exists
 
 ## Initial Erlang portability audit — 2026-10-10
 
+The following records the initial audit and implementation stages. The current
+0.2.0 work above supersedes unresolved string-domain and attachment status here.
+
 Status: initial audit complete; numeric and graph Erlang externals implemented,
 with primitive and actual typed API experiments verified. The full backend remains unavailable. No JavaScript public
 semantics or support claims changed.
@@ -149,7 +185,7 @@ JSON admission/canonical serialization. The admission/canonical/string helpers
 are deliberately not attached to the public API while surrogate compatibility
 is unresolved.
 
-`npm run verify:erlang-primitives` runs eight independent native-OTP/Node tests.
+`npm run verify:erlang-primitives` runs nine independent native-OTP/Node tests.
 It requires Erlang/OTP 29 for the current evidence and is separate from the
 JavaScript verification gate, so JavaScript-only development does not gain an
 Erlang prerequisite. The runner compiles native modules in memory, exchanges JSON
@@ -210,8 +246,8 @@ so a native binding would introduce build/distribution work. Node v24.10.0 uses
 Unicode 16.0; engine/table-version compatibility must also be checked. No native
 engine dependency has been added and no shared subset has been selected.
 
-Next implementation work: resolve admitted string representation and exact
-ECMAScript regex compatibility, then extend independent cross-target oracle
+Next implementation work: finish exact ECMAScript regex compatibility and native
+canonical emission, then extend independent cross-target oracle
 verification. Keep parser/regex support gated until their admitted
 string representation and engine choices preserve the contract or receive an
 explicit versioned amendment. Do not publish or move `v0.1.0` for this work.
@@ -294,12 +330,13 @@ identity is a separate question from canonical schema byte identity.
 
 ### Decisions required before implementation
 
-- **Lone surrogates:** the published domain explicitly admits them, but ordinary
+- **Lone surrogates (resolved for 0.2.0):** the published 0.1.0 domain explicitly admits them, but ordinary
   Erlang Gleam Strings use UTF-8. Rejection on Erlang alone breaks parity, and
   replacement characters break preservation. A shared domain amendment or a
   carefully specified representation/API change is required. Recommendation:
   investigate a common Unicode-scalar admission domain for a new version; do not
-  silently narrow 0.1.0 or claim the current String output contract survives it.
+  silently narrow 0.1.0. The user subsequently authorized the common scalar domain
+  for 0.2.0; see the current-work section above.
 - **Regex:** native `re` substitution fails even the small probe above. Choose an
   exact ECMAScript-compatible implementation or explicitly amend the contract to
   a defined shared subset in a new version. Recommendation: investigate an exact

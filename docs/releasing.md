@@ -1,6 +1,8 @@
 # Preparing and publishing Gargamelle
 
-The 0.1.0 working tree is a release candidate, not a published Hex release.
+The working tree is developing 0.2.0. Version 0.1.0 was published separately and
+its tag must remain unchanged. Complete Erlang verification before a 0.2.0 support
+claim or publication.
 
 The package was renamed from Concord to Gargamelle because Hex’s `concord`
 name is owned by an unrelated Elixir package. The maintainer checked Gargamelle’s
@@ -33,11 +35,11 @@ install the Gleam package; they do not need the npm verification dependencies.
 6. Verify that the Hex name is available and that the publishing account can own it.
    Package names are global. Repository visibility and source links should be
    reviewed before publishing; this preparation does not change visibility.
-7. Commit the reviewed candidate and tag it `v0.1.0`. Regenerate evidence after a
+7. Commit the reviewed candidate and tag its version. Regenerate evidence after a
    commit if the report needs to identify that exact commit.
 8. When publication is explicitly requested, run `gleam publish`. This uploads the
    package and generated documentation. Verify the Hex release, then test a new
-   consumer with `gargamelle = "== 0.1.0"` and update the README’s availability statement.
+   consumer pinned to the published version and update the README’s availability statement.
 
 ## Support and compatibility
 

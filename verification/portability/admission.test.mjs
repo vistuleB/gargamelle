@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {run} from './runner.mjs';
 const bits=value=>{const v=new DataView(new ArrayBuffer(8));v.setFloat64(0,value);return v.getBigUint64(0).toString();};
 
-// Unicode-scalar domain only. These tests do not establish lone-surrogate parity.
+// Unicode-scalar domain; final unpaired surrogates are domain errors.
 function canonical(value) {
   if(value===null || typeof value!=='object') return value;
   if(Array.isArray(value)) return value.map(canonical);
@@ -57,7 +57,7 @@ test('scalar JSON adapter preserves duplicate keys, hostile keys and canonical t
     const reply=replies[i];
     // Explicitly retain this incompatibility until the admitted domain is decided.
     if(source==='"\\ud800"' || source==='"\\udc00"') {
-      assert.equal(reply.error,'syntax');
+      assert.equal(reply.error,'non_scalar_string');
       continue;
     }
     let value;
