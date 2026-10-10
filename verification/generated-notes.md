@@ -20,9 +20,9 @@ not the generator, determines validity. Extra-key, missing-field, wrong-type,
 length and numeric mutations are proposals, never assumed invalid. Arbitrary
 JSON values supplement them. Proposals vary union branch, nullable presence,
 optional/defaulted presence, names and tags, including hostile keys. Coverage
-requires both outcomes for every root and nested constructor and all 308 generic parent/child constructor combinations.
+requires both outcomes for every root and nested constructor and all 345 generic parent/child constructor combinations.
 
-Thirteen additional depth-50 chains use linear structure. Arrays/dictionaries have
+Fourteen additional depth-50 chains use linear structure. Arrays/dictionaries have
 nonempty witnesses; nullable chains use non-null witnesses; each also has an
 invalid leaf so validation reaches the deepest child. Coverage JSON records
 counts, seeds, edges, outcomes and requested random depths. The artifact is
@@ -121,3 +121,10 @@ recipes vary presence of an alternative. Generic edges and depth-50 chains use
 primitive inspectors to avoid duplicating nested body contracts. Targeted cases
 exercise dependent object fields, incompatible condition types, both branch
 selections, defaults, auxiliary callbacks, recursion, and repeated constraints.
+
+Exclusion recipes compare the independent base output and negate the independent
+forbidden acceptance. Generic edges and depth-50 chains use a primitive forbidden
+schema, while targeted tests exercise formula-code syntax, repeated constraints,
+projection/default semantics, incompatible types, recursion, and callbacks.
+Condition and exclusion share an internal probe check; their mutation targets
+include branch-specific context so each change still applies exactly once.

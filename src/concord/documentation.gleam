@@ -267,6 +267,12 @@ fn node(
         aliases,
       )
     })
+  let exclusions = case get(s, "not") {
+    Object(_) as child -> [
+      node(child, "must not match", depth + 1, "", id, aliases),
+    ]
+    _ -> []
+  }
   let conditionals =
     [
       #("if", "if condition"),
@@ -315,6 +321,7 @@ fn node(
       maps,
       unions,
       conditionals,
+      exclusions,
     ])
     |> string.join("")
   let kind = case has(s, "oneOf"), has(s, "anyOf"), has(s, "allOf") {

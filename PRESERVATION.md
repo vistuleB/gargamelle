@@ -133,15 +133,15 @@ conversion. There is no generic FFI cast or forged typed provider value.
 
 ## Current evidence and remaining work
 
-`gleam test` currently runs 33 tests, including concrete typed records/custom
+`gleam test` currently runs 34 tests, including concrete typed records/custom
 variants, dictionaries/arrays, glon regressions, optional/null states, callback
 suppression, hostile keys, Unicode, tags, constraints, constants and defaults.
 `schema_fixtures` supplies 25 authored independent-oracle fixtures.
 
 `verification/generated*.test.mjs` adds 10,000 seeded definition/input pairs,
-all 308 generic parent/child combinations, nonempty depth-50 chains, independently
+all 345 generic parent/child combinations, nonempty depth-50 chains, independently
 specified output/error fixtures, admission/operational tests, callback counters,
-and actual isolated mutations for all five required defect classes. Nineteen
+and actual isolated mutations for all five required defect classes. Twenty
 compile-negative programs establish the public opaque/static API boundary.
 Generated coverage and retained findings are documented in
 `verification/generated-notes.md`; operational failures are not rejections.
@@ -230,3 +230,20 @@ Collection and same-input guard traversal visit the base, condition, consequence
 and optional alternative. This rejects non-progressing cycles even in unreachable
 branches and checks unfinalized references/name conflicts before any emission or
 decoding. Conditionals do not introduce input descent or a hidden depth cap.
+
+## Structural exclusion
+
+Exclusion accepts exactly when the base accepts and every forbidden node rejects
+the same admitted input. Each emitted `not` negates precisely that forbidden
+schema, and `allOf` conjoins those negations with the base. Repeated constraints
+therefore intersect rather than overwrite keywords. No conversion result is
+used to choose exclusion; defaults, projection, and maps do not alter input.
+
+Only the base converter is retained, so accepted values decode to the unchanged
+base output type. Forbidden callbacks are neither invoked nor given invented
+values. A forbidden acceptance yields an `excluded` error at the current path;
+forbidden rejection contributes no error. Operational exceptions escape instead
+of establishing forbidden rejection. Graph collection and same-input guards
+visit both base and forbidden nodes, rejecting unresolved references, conflicting
+names, and non-progressing recursive cycles. Negation does not introduce descent
+or a decoding-depth cap and does not require a satisfiability solver.

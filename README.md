@@ -49,11 +49,11 @@ The implementation agent completed the core and generated, mutation, runtime,
 typed-output and compile-negative evidence. The coordinating agent reviewed it
 and added independent validator checks, official-suite selection, cloze payload
 comparisons and the final evidence gate. The generated suite includes 10,000
-seeded pairs, all 308 generic parent/child combinations and thirteen depth-50 chains.
-Twenty-eight actual compiled-library mutations must fail behavioral assertions,
-including five numeric, three recursion, and three tuple, and three key-constraint, and three membership, and three conditional mutants. The three
+seeded pairs, all 345 generic parent/child combinations and fourteen depth-50 chains.
+Thirty-one actual compiled-library mutations must fail behavioral assertions,
+including five numeric, three recursion, and three tuple, and three key-constraint, and three membership, and three conditional, and three exclusion mutants. The three
 new revision-3 mutations run the full foundation, typed-value and hardening suites.
-Nineteen forbidden Gleam programs must fail compilation after a positive baseline.
+Twenty forbidden Gleam programs must fail compilation after a positive baseline.
 
 The official suite is pinned to commit
 `7de0e6a06031ede80028583dd45d0cd41105ae5b`. All 46 core files are retained with
@@ -389,3 +389,38 @@ The equation provider's `editor.initialAnswerVisible` rule supplies a consumer
 example: when that flag is explicitly true, require a sequence. A decoder default
 of true on an absent flag would not trigger this input-level condition. The app's
 existing semantic check and dependency pin remain unchanged.
+
+## Structural exclusion
+
+`exclude(base, forbidden)` requires the base to accept and the forbidden
+structural definition to reject the original admitted input. It returns the
+base's output type unchanged. The forbidden definition may have any output type;
+its converters and mappings never run. For example, forbid integer-valued
+numbers while retaining fractional `Float` values:
+
+```gleam
+let fractional = concord.exclude(concord.number(), concord.safe_integer())
+```
+
+This example excludes only safe integers; it does not impose arbitrary-precision
+numeric semantics or reject every integer-valued IEEE-754 number. Exclusion
+always follows the exact structural contract supplied by the caller.
+
+Repeated exclusions intersect their requirements. Emission conjoins the base
+and each separate `not` schema in `allOf`, preserving earlier exclusions and
+annotations. Exclusion failures use `excluded` at the input path. The forbidden
+schema's own failures are not reported: its rejection is the condition for
+passing this constraint. Operational exceptions still escape rather than being
+interpreted as rejection. Base conversion runs only after all validation passes.
+
+Defaults and projections do not affect exclusion selection because checks run
+on original JSON. All references are collected even if the forbidden definition
+could never accept a valid base input. Same-input recursive cycles, including
+cycles through exclusion, are conservatively rejected. Excluding a definition
+from itself can legitimately produce an unsatisfiable contract; construction does
+not solve satisfiability. Apply primitive modifiers to the base before exclusion.
+
+The verbatim provider's formula-code syntax supplies a consumer example:
+nonempty strings excluding those matching whitespace, backslash, or Unicode
+punctuation. Prefix-free code uniqueness remains a provider check. No app
+validator or dependency pin was changed.

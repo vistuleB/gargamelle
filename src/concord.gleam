@@ -55,6 +55,7 @@ type Node {
   TupleNode(List(Node))
   ContainsNode(Node, List(Membership))
   ConditionalNode(Node, List(Condition))
+  ExcludeNode(Node, List(Node))
   DictNode(Node, Option(Int), Option(Int))
   RecordNode(List(Field), Policy)
   PropertyNamesNode(Node, List(Node))
@@ -521,6 +522,18 @@ fn add_condition(def: Definition(a), condition: Condition) -> Definition(a) {
     ConditionalNode(base, checks) ->
       ConditionalNode(base, list.append(checks, [condition]))
     _ -> ConditionalNode(node, [condition])
+  }
+  Definition(next, convert)
+}
+
+/// Reject input accepted by a forbidden structural definition.
+/// Preserve the base output; forbidden-definition converters never run.
+pub fn exclude(def: Definition(a), forbidden: Definition(b)) -> Definition(a) {
+  let Definition(node, convert) = def
+  let Definition(probe, _) = forbidden
+  let next = case node {
+    ExcludeNode(base, checks) -> ExcludeNode(base, list.append(checks, [probe]))
+    _ -> ExcludeNode(node, [probe])
   }
   Definition(next, convert)
 }
@@ -1141,6 +1154,16 @@ fn check(n: Node, v: Value, p: String) -> List(DataError) {
           list.index_map(xs, fn(x, i) { check(child, x, path(p, int_text(i))) })
           |> list.flatten
       }
+    ExcludeNode(base, checks), _ ->
+      list.append(
+        check(base, v, p),
+        list.flat_map(checks, fn(probe) {
+          case check(probe, v, "") == [] {
+            True -> err("excluded", p)
+            False -> []
+          }
+        }),
+      )
     ConditionalNode(base, checks), _ ->
       list.append(
         check(base, v, p),
@@ -1339,6 +1362,7 @@ fn node_children(n: Node) -> Result(List(Node), ConstructionError) {
           child
         }),
       )
+    ExcludeNode(base, checks) -> Ok([base, ..checks])
     ConditionalNode(base, checks) ->
       Ok([
         base,
@@ -1552,6 +1576,16 @@ fn emit(n: Node) -> Value {
       |> put("items", emit(c))
       |> emit_bound("minItems", lo)
       |> emit_bound("maxItems", hi)
+    ExcludeNode(base, checks) ->
+      obj([
+        #(
+          "allOf",
+          JArray([
+            emit(base),
+            ..list.map(checks, fn(probe) { obj([#("not", emit(probe))]) })
+          ]),
+        ),
+      ])
     ConditionalNode(base, checks) -> {
       let branches =
         list.map(checks, fn(condition) {

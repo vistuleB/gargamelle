@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.9 — 2026-10-10
+
+- Add `exclude(base, forbidden)` structural exclusion, emitting JSON Schema `not` and retaining the base typed output.
+- Intersect repeated exclusions and render forbidden structures in documentation.
+- Extend typed, compile-negative, independent-validator, generated, recursion, and mutation verification.
+
 ## 0.0.8 — 2026-10-10
 
 - Add structural `if_then` and `if_then_else` constraints while preserving the base definition's typed output.
