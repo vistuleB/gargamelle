@@ -189,7 +189,9 @@ JSON admission/canonical serialization. The admission/canonical/string helpers
 are deliberately not attached to the public API while surrogate compatibility
 is unresolved.
 
-`npm run verify:erlang-primitives` runs nine independent native-OTP/Node tests.
+`npm run verify:erlang-primitives` runs ten independent portability test groups,
+including the isolated immutable-plan experiment. The current library graph
+group fails on the three captured-placeholder regressions described below.
 It requires Erlang/OTP 29 for the current evidence and is separate from the
 JavaScript verification gate, so JavaScript-only development does not gain an
 Erlang prerequisite. The runner compiles native modules in memory, exchanges JSON
@@ -229,6 +231,26 @@ process exits. The prototype is retained as a direct primitive check. Its design
 is now integrated into the shared Definition/Node graph and the native runtime:
 explicit fresh identities, transparent context wrappers, frozen typed registries,
 and bracketed walk state. No generic casts, cell servers or ETS ownership are used.
+
+**Current blocker (2026-10-10):** this design does not preserve a builder
+placeholder captured in a decoded closure. New typed tests pass on JavaScript
+but fail on Erlang for self recursion, mutual recursion and transfer after the
+creator exits. The native graph fixture now has 43 passes and three failures;
+the JavaScript suite has 38 passes. Keep these as failing Erlang regressions,
+replace the reference ownership design, and demonstrate reclamation as well as
+process-independent use before claiming Erlang support. Do not silently restrict
+callback outputs or introduce a permanent cell registry. See decision 5 in
+`docs/erlang-portability.md` for the mechanism and alternatives. This supersedes
+the successful root-transfer evidence below for independently captured references.
+
+The isolated plan/environment prototype in `verification/portability/plans`
+now passes six behavioral tests per target, compile-negative checks, native
+creator-exit handoff and 261 independent schema cases per target. Run
+`node --test verification/portability/immutable-plans.test.mjs`. See
+`docs/immutable-recursion-prototype.md` for the realistic API comparison and
+acceptance results. The library has not been rewritten. Next, test the proposed
+types with full record/tuple composition and helper-function inference before
+deciding whether to migrate the public recursion API.
 
 The actual Erlang fixture runs 35 shared Gleam tests and seven additional typed
 API tests against a temporary library copy. It covers recursive and mutually

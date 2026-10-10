@@ -33,6 +33,6 @@ test('actual Erlang Gleam API preserves typed recursion and process-independent 
       env:{...process.env,GIT_DIR:'',GIT_WORK_TREE:''},
     });
     assert.equal(result.status,0,result.stderr+'\n'+result.stdout);
-    assert.match(result.stdout,/43 passed, no failures/);
+    assert.match(result.stdout,/46 passed, no failures/);
   } finally {rmSync(directory,{recursive:true,force:true});}
 });

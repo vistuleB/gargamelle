@@ -1,6 +1,7 @@
 import gargamelle as s
 import gleam/result
 import gleeunit/should
+import reference_lifetime_test.{Captured}
 
 @external(erlang, "scalar_api", "handoff")
 fn handoff(build: fn() -> a) -> a
@@ -14,6 +15,17 @@ pub type Tree {
 
 fn tree() {
   s.recursive("tree", fn(self) { Ok(s.map(s.array(self), Tree)) })
+}
+
+pub fn captured_placeholder_handoff_test() {
+  let assert Ok(Captured(get)) =
+    handoff(fn() {
+      let assert Ok(definition) = reference_lifetime_test.captured_definition()
+      let assert Ok(input) = s.parse("\"value\"")
+      s.decode(definition, input)
+    })
+  let assert Ok(input) = s.parse("\"value\"")
+  s.validate(get(), input) |> should.equal(Ok(Nil))
 }
 
 pub fn process_handoff_test() {

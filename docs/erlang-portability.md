@@ -131,7 +131,7 @@ we intend to support. Serialization still encodes through gleam_json, reparses,
 then emits canonical text; a direct Value serializer could reduce allocations
 and remove that intermediate dependency without changing the byte rules.
 
-### 5. Scoped process dictionaries and frozen contexts — implemented
+### 5. Scoped process dictionaries and frozen contexts — incomplete
 
 Private construction state is bracketed in the process dictionary, frozen into
 the returned definition, then installed/restored around operations. Walk state
@@ -142,12 +142,58 @@ dependencies, at the cost of ambient state and context wrappers.
 Transfer after creator exit, nested exception cleanup and independent-context
 composition have typed API tests. Review reentrancy, context installation on every
 traversal/conversion path, and the memory/copy cost of retaining entire registries.
-The important remaining lifetime case is a builder placeholder captured separately
-from the returned root, including a converter that returns a closure capturing
-`self`. Erlang placeholder reads require an installed context; JavaScript cells
-retain their bindings directly. The existing tests do not establish equivalent
-behavior when such a closure is invoked later. This is a potential compatibility
-gap to investigate, not an intentional restriction on callbacks or returned types.
+Typed regression tests now establish a compatibility failure when a converter
+returns a closure capturing a builder placeholder. Both self recursion and
+`recursive_pair` pass on JavaScript and fail on Erlang after decoding returns.
+Transferring the decoded closure to another process, after its creator exits,
+also fails. The native fixture reports 43 passing tests and three failures;
+the JavaScript suite reports 38 passing tests. Reproduce with:
+
+```sh
+gleam test --target javascript
+node --test verification/portability/graph-api.test.mjs
+```
+
+The shared tests are in `test/reference_lifetime_test.gleam`; the transfer case
+is in `verification/portability/graph_api_test.gleam`. They require the captured
+definition to remain usable. The native gate deliberately fails until that
+requirement is met; the failures are not reclassified as expected successes.
+
+The root contains a frozen context, but the original placeholder captured by
+user code does not. Its cell reads a key from the current process dictionary.
+Once decoding restores the previous context, validation fails with
+`ConstructionError("unfinalized recursive reference: captured")` (or `second`
+for the pair). Keeping the context installed would violate scope cleanup and
+would still not transfer it with the decoded closure. Adding context wrappers
+to the returned root cannot change a placeholder already captured by user code.
+
+**Decision requiring review:** preserve the existing callback and output-type
+contract, and treat independently escaping placeholders as an Erlang release
+blocker. A builder-only placeholder restriction would be a public semantic
+change; it has not been adopted. Re-running builders or inspecting arbitrary
+decoded outputs would also violate existing guarantees.
+
+The replacement reference backend needs bindings that remain reachable from
+the original placeholder, survive creator exit, and can be reclaimed after all
+users release them. This is an ownership problem, not another missing traversal
+wrapper. A global ETS registry could provide lookup but needs an explicit
+lifetime policy: [OTP documents](https://www.erlang.org/docs/28/apps/stdlib/ets.html)
+that tables are not garbage-collected when references disappear. A permanent
+registry has not been added. NIF resources have
+[garbage-collected resource terms](https://www.erlang.org/doc/apps/erts/erl_nif.html),
+but a proposed cell implementation must also demonstrate collection when stored
+converter closures refer back to their own cells; resource reclamation alone
+does not establish that property. No replacement ownership design is implemented
+or claimed leak-free.
+
+An isolated replacement experiment now compiles and passes on both targets.
+It uses typed construction plans, explicit recursion environments and immutable
+completed bodies. Self recursion, an independently typed pair, native handoff,
+callback suppression, defaults and compile-negative cases are exercised. See
+[the prototype report](immutable-recursion-prototype.md) for its API comparison,
+261-case independent schema checks per target, and limits. This demonstrates a
+possible **different recursion contract**; it does not fix the existing library
+or authorize a public API migration.
 
 ### 6. QuickJS code with older Unicode tables — experimental candidate
 
