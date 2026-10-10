@@ -1,7 +1,6 @@
 # Gargamelle handoff and next work
 
-Recorded 2026-10-10; updated after documentation commit `0d15a7a` and the initial
-Erlang portability audit.
+Recorded 2026-10-10; updated through development checkpoint `eaae20a`.
 This is a handoff and prioritized candidate list, not a commitment to implement
 all JSON Schema features. Verify external state before acting on it.
 
@@ -12,6 +11,7 @@ all JSON Schema features. Verify external state before acting on it.
 - Annotated tag `v0.1.0` remains at `0d15a7a`
   (`Improve onboarding, lineage, and renderer documentation`); it was pushed.
   Graph integration was committed locally on `main` as `08fd1b2`.
+  Scalar admission and native regex research were committed as `eaae20a`.
   The previous code/evidence checkpoint is `ef8841b`.
 - Documentation cleanup is complete: onboarding precedes the contract, the intro
   credits glon's influence and independent implementation, the comparison is
@@ -68,7 +68,7 @@ extracted 0.2.0 archive passed using the pinned dependency sources offline.
 ## Read these first
 
 1. `README.md`: concise overview, contract, installation, examples and glon comparison.
-2. `docs/contract.md`: complete intended 0.1.0 technical semantics, without
+2. `docs/contract.md`: complete intended 0.2.0 development semantics, without
    implementation history or verification procedures. This is the public contract.
 3. `PRESERVATION.md`: constructor-by-constructor design arguments, not formal proofs.
 4. `docs/verification-guide.md` and `verification/generated-notes.md`: evidence,
@@ -79,6 +79,10 @@ extracted 0.2.0 archive passed using the pinned dependency sources offline.
    It retains specification-time status and some obsolete deferred-feature lists;
    use `docs/contract.md` for consolidated public semantics.
 7. `docs/advanced.md` and generated API documentation: advanced construction examples.
+8. `docs/erlang-portability.md`, “Decisions for independent review”: implemented
+   choices, experimental candidates, alternatives and remaining evidence gaps.
+   In particular, investigate successful builder placeholders captured in returned
+   closures before claiming reference-lifetime parity.
 
 ## Recommended next priority: Erlang support
 

@@ -3,7 +3,7 @@
 Recorded 2026-10-10 after graph integration commit `08fd1b2`. This is development
 research, not an Erlang support claim or a change to the published contract.
 
-## String boundary and proposed 0.2.0 decision
+## String boundary and authorized 0.2.0 decision
 
 The 0.1.0 contract admits lone UTF-16 surrogates and promises exact decoded
 `String` values. Gleam's Erlang String is a UTF-8 binary. The retained
@@ -64,6 +64,136 @@ dependency is a possible way to compile/distribute a native helper; Gleam suppor
 [rebar3 dependency packages](https://gleam.run/documentation/gleam-toml-reference/).
 Clean-consumer builds, executable lookup, platform support, request lifecycle,
 resource failure handling and caching still need implementation and verification.
+
+## Decisions for independent review
+
+Implementation checkpoint: `eaae20a`. “Implemented” below describes the working
+code, not an approved release. The scalar-domain change was explicitly authorized
+by the user; the remaining implementation choices were made by the agent or are
+still proposals. Review these before claiming complete Erlang support.
+
+### 1. Scalar domain and constructor failures — implemented
+
+The authorized domain change preserves ordinary Gleam String outputs by rejecting
+unpaired surrogates on both targets. It also excludes object keys containing
+them. The compatibility cost is real: some JSON accepted by 0.1.0 is rejected by
+0.2.0, even when an open record would otherwise ignore the affected field.
+
+I extended the scalar requirement to schema text arguments so emitted schemas
+remain in the admitted domain. Result-returning constructors produce construction
+errors; direct constructors such as `string_constant` and `title` assert the
+precondition. This preserves their return types but adds an operational failure
+for invalid text. Review whether those direct constructors should instead return
+Result in 0.2.0, and whether a dedicated scalar-string predicate should replace
+the current JSON encode/parse check. The latter is simple but adds allocation and
+couples constructor checking to the admission parser.
+
+### 2. Final-tree domain checking — implemented
+
+Syntax parsing and last-key-wins replacement finish before domain checks. Thus
+`{"x":"\ud800","x":1}` is admitted, while the reverse order is rejected.
+The native parser temporarily represents unpaired units as private WTF-8 bytes;
+they must never reach public Value factories. This also preserves distinct keys
+until their validity is checked. Review the scanner's escape handling and the
+boundary between private intermediate data and typed public strings.
+
+If a final tree contains both a nonfinite number and a non-scalar string, Erlang
+currently prioritizes the numeric error; JavaScript reports the first encountered
+domain error during conversion. Both reject admission, but their messages can
+differ. I have not treated message precedence as part of parity. Decide whether
+callers need a stable error category/precedence beyond AdmissionError.
+
+### 3. Owning the native JSON scanner — implemented
+
+OTP's default parser loses integer-token negative zero, chooses the wrong
+duplicate-key value, rejects surrogates during syntax parsing, and can reclassify
+number callback exceptions. I chose a dedicated structural/number/string scanner
+rather than attempting to repair those results afterward. The cost is maintaining
+a JSON parser and its error boundary. Native corpus checks include syntax,
+duplicates, numeric extremes, every surrogate unit and generated escaped strings;
+they are not exhaustive parser verification. Review whether an existing parser
+with original-token access and deferred string-domain checks can replace this
+code without weakening semantics. No additional public depth limit was added;
+stack/resource failures remain operational.
+
+### 4. Numeric formatting and canonical bytes — implemented
+
+Erlang uses original decimal tokens with `binary_to_float`, and adapts OTP's
+shortest float digits to ECMAScript notation thresholds. Canonical emission keeps
+UTF-16 ordering, index-key enumeration and lowercase control escapes. I retained
+the JavaScript byte contract rather than switching to native Erlang formatting
+or accepting only value-equivalent schemas.
+
+The seeded rounding/formatting corpus passed on OTP 29. It does not prove every
+binary64 case or establish a minimum supported OTP release. Review ties in
+shortest-digit selection and extreme decimal rounding across the OTP versions
+we intend to support. Serialization still encodes through gleam_json, reparses,
+then emits canonical text; a direct Value serializer could reduce allocations
+and remove that intermediate dependency without changing the byte rules.
+
+### 5. Scoped process dictionaries and frozen contexts — implemented
+
+Private construction state is bracketed in the process dictionary, frozen into
+the returned definition, then installed/restored around operations. Walk state
+uses the same bracketing. Fresh node identities avoid structural equality in graph
+tracking. This avoids cell servers, ETS ownership and creator-process lifetime
+dependencies, at the cost of ambient state and context wrappers.
+
+Transfer after creator exit, nested exception cleanup and independent-context
+composition have typed API tests. Review reentrancy, context installation on every
+traversal/conversion path, and the memory/copy cost of retaining entire registries.
+The important remaining lifetime case is a builder placeholder captured separately
+from the returned root, including a converter that returns a closure capturing
+`self`. Erlang placeholder reads require an installed context; JavaScript cells
+retain their bindings directly. The existing tests do not establish equivalent
+behavior when such a closure is invoked later. This is a potential compatibility
+gap to investigate, not an intentional restriction on callbacks or returned types.
+
+### 6. QuickJS code with older Unicode tables — experimental candidate
+
+The mixed-source candidate resolves the two observed release gaps and passed the
+13,572-pair corpus under sanitizers. I have not selected it as a production
+dependency. Review compatibility between the newer Unicode algorithms and older
+generated tables, property aliases/script data, duplicate-group semantics and
+broader Test262 coverage. Archive and source hashes identify the experiment;
+the stale version macro must be corrected if this combination is packaged.
+
+Pinning Unicode 16 would make the native engine match the tested Node runtime.
+The public phrase “ECMAScript Unicode u” does not by itself specify a Unicode
+table version. We still need an explicit upgrade policy and tests for supported
+Node/OTP versions. I would not automatically update either engine or its tables
+while continuing to claim cross-target parity.
+
+### 7. Port, NIF and build packaging — undecided
+
+The experiment uses a port to a standalone native executable. It demonstrates
+matching without a JavaScript subprocess; it does not settle production lifecycle
+or performance. A port isolates native failures but adds messaging and executable
+distribution. A NIF avoids that transport but needs careful scheduler, crash and
+resource handling. A rebar3 dependency could provide native build hooks, with a C
+toolchain and potentially a separate Hex package as additional requirements.
+Review deployment targets and expected validation volume before selecting the
+binding, port ownership, pattern caching or packaging approach.
+
+The probe's 16 MiB packet limit, 512 KiB stack check, execution tick budget and
+five-second response wait are research settings, not proposed public limits.
+Production resource failures must remain operational; they must not become syntax
+errors, no-match results, or conditional/exclusion branch selection.
+
+### 8. Support and evidence boundaries — implemented gate
+
+The actual Erlang API fixture temporarily attaches native re adapters for the two
+unported regex externals. All other core operations use production implementations.
+Passing those tests proves the exercised structural/typed paths under the fixture;
+it does not prove ECMAScript regex parity through the production API. The QuickJS
+experiment is a separate native-engine check. Independent schema-oracle runs
+against an actual Erlang library runner, complete cross-target cases, clean Erlang
+consumers and platform builds remain required before a support claim.
+
+I moved working metadata to 0.2.0 and evidence to contract revision 4 to identify
+the authorized domain change. The 0.1.0 tag is unchanged. Review compatibility
+notes and release criteria before publication; neither a 0.2.0 release nor a
+production native dependency has been published.
 
 ## Reproduction
 
