@@ -296,3 +296,11 @@ nullable objects, and unfinished recursive object placeholders are rejected by
 this constructor. Apply constraints to the dictionary body inside a recursive
 builder instead. Key definitions themselves may use names, unions, and maps.
 `patternProperties` and generalized additional-property handling remain deferred.
+
+A mapped numeric definition may legally have output type `String` while retaining
+its numeric acceptance schema. Used for property names, it accepts only empty
+objects because actual names are strings. Ajv's `strictTypes` lint refuses this
+valid unsatisfiable key contract. Verification retains an exact-schema exception
+for that audit fixture, explicitly disables only `strictTypes`, and compares
+Concord with both Ajv and Hyperjump. The ordinary oracle remains strict; no
+automatic fallback or runtime behavior change is introduced.

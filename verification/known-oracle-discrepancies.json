@@ -3,16 +3,49 @@
     "id": "ajv-8.20.0-declared-proto-property",
     "schema": {
       "type": "object",
-      "properties": { "__proto__": { "type": "string" } },
-      "required": ["__proto__"],
+      "properties": {
+        "__proto__": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "__proto__"
+      ],
       "additionalProperties": false
     },
-    "instance": { "__proto__": "x" },
+    "instance": {
+      "__proto__": "x"
+    },
     "expectedAcceptance": true,
     "observedAjvAcceptance": false,
     "status": "resolved-with-supplementary-independent-validator",
     "resolution": "Pinned Hyperjump 1.18.0 independently accepts the valid instance and rejects missing, wrong-type and extra-key variants. Ajv behavior remains characterized, never copied into decoder semantics. See supplementary-oracle.test.mjs.",
     "reason": "The instance has its only property explicitly declared and its string value satisfies the child schema. Ajv 8.20.0 allSchemaProperties excludes __proto__, causing additionalProperties rejection.",
     "source": "node_modules/ajv/dist/vocabularies/code.js: allSchemaProperties"
+  },
+  {
+    "id": "ajv-8.20.0-numeric-property-names-strict-types",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": {
+        "type": "number"
+      },
+      "propertyNames": {
+        "type": "number"
+      }
+    },
+    "expectedAcceptance": {
+      "emptyObject": true,
+      "nonemptyObjects": false,
+      "nonobjects": false
+    },
+    "observedAjvCompilation": "strict mode: type \"number\" not allowed by context \"string\" at \"#/propertyNames\" (strictTypes)",
+    "status": "valid-schema-lint-exception-characterized-with-two-validators",
+    "oracleOptionsOverride": {
+      "strictTypes": false
+    },
+    "resolution": "Normal compileOracle remains strict. compileNumericPropertyNamesOracle checks exact schema equality before disabling only strictTypes for this fixture. Hyperjump and that explicit Ajv instance independently agree with Concord. Mapped key converters never run. See property-names.test.mjs.",
+    "reason": "property_names accepts any String-output definition, including map(number(), Float -> String). Mapping preserves structural acceptance; every actual object key is a string, so only an empty object satisfies this key contract."
   }
 ]

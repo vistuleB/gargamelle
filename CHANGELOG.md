@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.6 — 2026-10-10
+
+- Retain the v0.0.5 mapped-number property-name audit case with an explicit exact-fixture Ajv strictTypes lint exception and Hyperjump comparison.
+
 ## 0.0.5 — 2026-10-10
 
 - Add `property_names` constraints for dictionaries and records, preserving their typed outputs.

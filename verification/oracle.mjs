@@ -1,4 +1,5 @@
 import Ajv2020 from 'ajv/dist/2020.js';
+import assert from 'node:assert/strict';
 
 // Independent of the Gleam implementation. Keep these options in evidence reports.
 export const oracleOptions = Object.freeze({
@@ -13,7 +14,23 @@ export const oracleOptions = Object.freeze({
 });
 
 export function compileOracle(schema) {
-  const ajv = new Ajv2020(oracleOptions);
+  return compileWithOptions(schema, oracleOptions);
+}
+
+// Explicit, exact-fixture exception: property names are strings, so a numeric
+// key schema rejects every present key. This is valid, albeit unsatisfiable for
+// nonempty objects. Ajv strictTypes lints it as incompatible with its context.
+export function compileNumericPropertyNamesOracle(schema) {
+  assert.deepEqual(schema, {
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    type: 'object', additionalProperties: { type: 'number' },
+    propertyNames: { type: 'number' },
+  }, 'Numeric propertyNames exception is limited to the retained audit fixture');
+  return compileWithOptions(schema, { ...oracleOptions, strictTypes: false });
+}
+
+function compileWithOptions(schema, options) {
+  const ajv = new Ajv2020(options);
   if (!ajv.validateSchema(schema)) {
     throw new Error(`Invalid emitted schema: ${ajv.errorsText()}`);
   }

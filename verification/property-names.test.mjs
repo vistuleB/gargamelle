@@ -46,3 +46,22 @@ test('named constraints and recursive dictionary values compose with key validat
  assert.throws(()=>s.emit_text(escaped),/unfinalized/);assert.throws(()=>evaluate(escaped,{}),/unfinalized/);
  const conflict=unwrap(s.property_names(unwrap(s.named('same',s.dictionary(s.number()))),unwrap(s.named('same',s.text()))));assert.throws(()=>s.emit_text(conflict),/Conflicting/);
 });
+
+test('mapped numeric key definition accepts only empty objects with an explicit strictTypes oracle exception',async()=>{
+ const {compileNumericPropertyNamesOracle}=await import('./oracle.mjs');
+ let calls=0;
+ const keys=s.map(s.number(),()=>{calls++;return 'mapped';});
+ const d=dict(keys),schema=emitted(d);
+ assert.throws(()=>compileOracle(schema),/type "number" not allowed by context "string".*propertyNames.*strictTypes/);
+ const checks=[compileNumericPropertyNamesOracle(schema),await compileSupplementary(schema)];
+ const values=[{}, {en:1}, {'1':1}, {'':0}, {'😀':1}, Object.fromEntries([['__proto__',1]]), {en:'bad'}, [], [1], null, true, 1, 'x'];
+ for(const value of values){
+  const accepted=value!==null&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).length===0;
+  const actual=evaluate(d,value);assert.equal(actual.accepted,accepted);
+  for(const check of checks)assert.equal(check(value).accepted,accepted);
+  if(accepted)assert.deepEqual(actual.value,{});
+ }
+ assert.equal(calls,0);
+ assert.throws(()=>compileNumericPropertyNamesOracle({...schema,propertyNames:{type:'number',minimum:0}}),/limited to the retained audit fixture/);
+ assert.throws(()=>compileNumericPropertyNamesOracle({...schema,additionalProperties:{type:'string'}}),/limited to the retained audit fixture/);
+});
