@@ -4,14 +4,55 @@ Gargamelle builds a typed JSON decoder and a JSON Schema 2020-12 document from t
 same Gleam definition. Validate incoming JSON, construct application values, and
 optionally render HTML documentation with checked examples.
 
-The [technical contract](https://github.com/vistuleB/gargamelle/blob/main/docs/contract.md)
+Gargamelle began as an investigation into improving [glon](https://hexdocs.pm/glon/). It became an independent
+implementation rather than a fork: no [glon](https://hexdocs.pm/glon/) source code was copied. [Glon](https://hexdocs.pm/glon/) inspired
+the combined typed-decoder/schema approach, and issues found during that
+investigation informed Gargamelle's regression tests.
+
+The [technical contract](https://hexdocs.pm/gargamelle/0.1.0/contract.html)
 specifies schema/decoder equivalence, decoded-value semantics, canonical emission,
 and the assumptions and limits of those guarantees.
 
-Gargamelle targets JavaScript and is tested on Node 24. Erlang, browsers, Bun and
-Deno are not verified.
-Gargamelle implements the schema vocabulary exposed by its constructors, not a
-validator for arbitrary imported JSON Schemas. APIs may change before 1.0.
+Gargamelle targets JavaScript and is tested on Node 24. APIs may change before 1.0.
+
+## Getting started
+
+Install the package:
+
+```sh
+gleam add gargamelle@0.1.0
+```
+
+Set `target = "javascript"` in your project’s `gleam.toml`:
+
+```toml
+target = "javascript"
+```
+
+```gleam
+import gargamelle
+
+pub fn read_names(source: String) {
+  let assert Ok(value) = gargamelle.parse(source)
+  gargamelle.decode(gargamelle.array(gargamelle.text()), value)
+}
+
+pub fn names_schema() {
+  gargamelle.emit_text(gargamelle.array(gargamelle.text()))
+}
+```
+
+For input `["Ada", "Grace"]`, `read_names` returns `Ok(["Ada", "Grace"])`.
+`names_schema()` returns the following schema text:
+
+```json
+{"$schema":"https://json-schema.org/draft/2020-12/schema","items":{"type":"string"},"type":"array"}
+```
+
+Handle admission errors separately from validation errors in application code;
+these assertions only keep the introductory example short. `validate` checks
+acceptance without invoking converters. `decode` validates before constructing
+output. See the typed record example below, the [recursive examples](https://hexdocs.pm/gargamelle/0.1.0/advanced.html), and the [API reference](https://hexdocs.pm/gargamelle/0.1.0/gargamelle.html).
 
 ## Design and contract
 
@@ -56,42 +97,10 @@ as a JSON value. This is a schema serialization round trip; there is no typed
 encoder or decode/encode inversion guarantee. Defaults, projection and maps can
 lose information, and some output values may be unreachable.
 
-The [technical contract](https://github.com/vistuleB/gargamelle/blob/main/docs/contract.md)
-specifies the complete intended semantics. [Preservation arguments](https://github.com/vistuleB/gargamelle/blob/main/PRESERVATION.md)
+The [technical contract](https://hexdocs.pm/gargamelle/0.1.0/contract.html)
+specifies the complete intended semantics. [Preservation arguments](https://github.com/vistuleB/gargamelle/blob/v0.1.0/PRESERVATION.md)
 and differential tests support these invariants; they are not a machine-checked
 proof or a claim of full JSON Schema dialect support.
-
-## Getting started
-
-Install the package:
-
-```sh
-gleam add gargamelle@0.1.0
-```
-
-Set `target = "javascript"` in your project’s `gleam.toml`:
-
-```toml
-target = "javascript"
-```
-
-```gleam
-import gargamelle
-
-pub fn read_names(source: String) {
-  let assert Ok(value) = gargamelle.parse(source)
-  gargamelle.decode(gargamelle.array(gargamelle.text()), value)
-}
-
-pub fn names_schema() {
-  gargamelle.emit_text(gargamelle.array(gargamelle.text()))
-}
-```
-
-Handle admission errors separately from validation errors in application code;
-these assertions only keep the introductory example short. `validate` checks
-acceptance without invoking converters. `decode` validates before constructing
-output. See the record and recursive examples below and the generated API docs.
 
 ## Typed records
 
@@ -116,29 +125,32 @@ The safe-integer and trusted-callback limitations are part of the contract.
 
 ## Comparison with glon
 
-[glon](https://hexdocs.pm/glon/) also derives a typed decoder and schema from one
-definition. Gargamelle uses static curried record builders and a different error
-model, so adopting it requires changes to definitions and call sites.
-`safe_integer` deliberately restricts integers to JavaScript’s safe range; `number` accepts finite binary64 values.
-`one_of` rejects overlapping matches; `any_of` converts the first matching branch.
-Defaults are validated JSON inputs decoded through the field definition.
-`optional` distinguishes absence from null; combine it with `nullable` when both
-are allowed (the result is `Option(Option(a))`). Map or flatten that output if the
-application wants one option. Parse text before decoding; `emit_json` returns
-Gargamelle’s `Value`, while `emit_text` returns portable schema text.
+Both libraries derive a typed decoder and JSON Schema from one definition.
+Gargamelle uses static curried record builders, checked JSON defaults, and separate
+admission and validation errors. Its contract explicitly defines numeric limits,
+optional-field presence, union matching, and callback execution.
 
-Gargamelle also supports numeric/size bounds, patterns, dictionaries, guarded
-recursion, exact tuples, property names, membership, conditionals and exclusion.
-It does not currently provide arbitrary schema import, general intersections,
-format assertions, `multipleOf`, fractional constants, encoding or migrations.
+## Limitations
+
+- Erlang, browsers, Bun, and Deno are not verified.
+- Only the JSON Schema features exposed by the constructors are supported.
+  Gargamelle does not validate arbitrary imported schemas or implement the full
+  Draft 2020-12 dialect.
+- General typed intersections, format assertions, `multipleOf`, and fractional
+  constants are not supported.
+- Numbers use parsed binary64 values; `safe_integer` is limited to JavaScript's
+  safe-integer range.
+- Conversion callbacks must be pure and total. Exceptions and resource exhaustion
+  remain operational failures; runtime resource use is not bounded.
+- There is no typed encoder, automatic decode/encode inverse, or migration API.
 
 ## Further documentation
 
-- [Technical contract](https://github.com/vistuleB/gargamelle/blob/main/docs/contract.md): complete intended acceptance, output, emission and error semantics.
-- [Advanced definitions](https://github.com/vistuleB/gargamelle/blob/main/docs/advanced.md): numeric constraints, recursion, tuples, key constraints, membership, conditionals, exclusion and HTML documentation.
-- [Verification and development](https://github.com/vistuleB/gargamelle/blob/main/docs/verification-guide.md): setup commands, independent validators, generated coverage, retained discrepancies and release evidence.
-- [Preservation arguments](https://github.com/vistuleB/gargamelle/blob/main/PRESERVATION.md): reasoning about how constructors preserve the contract.
-- [Release checklist](https://github.com/vistuleB/gargamelle/blob/main/docs/releasing.md): packaging and publication checks.
+- [Technical contract](https://hexdocs.pm/gargamelle/0.1.0/contract.html): complete intended acceptance, output, emission and error semantics.
+- [Advanced definitions](https://hexdocs.pm/gargamelle/0.1.0/advanced.html): numeric constraints, recursion, tuples, key constraints, membership, conditionals, exclusion and HTML documentation.
+- [Verification and development](https://hexdocs.pm/gargamelle/0.1.0/verification-guide.html): setup commands, independent validators, generated coverage, retained discrepancies and release evidence.
+- [Preservation arguments](https://github.com/vistuleB/gargamelle/blob/v0.1.0/PRESERVATION.md): reasoning about how constructors preserve the contract.
+- [Release checklist](https://github.com/vistuleB/gargamelle/blob/v0.1.0/docs/releasing.md): packaging and publication checks.
 
 ## Verification
 
@@ -150,5 +162,5 @@ commands, coverage and known validator discrepancies.
 
 ## License
 
-Gargamelle is distributed under the [MIT License](LICENSE). The retained JSON Schema
-test-suite fixtures carry their own [license](https://github.com/vistuleB/gargamelle/blob/main/verification/official/LICENSE).
+Gargamelle is distributed under the [MIT License](https://hexdocs.pm/gargamelle/0.1.0/license.html). The retained JSON Schema
+test-suite fixtures carry their own [license](https://github.com/vistuleB/gargamelle/blob/v0.1.0/verification/official/LICENSE).

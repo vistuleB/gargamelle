@@ -28,3 +28,13 @@ source = "./docs/advanced.md"
 title = "Verification and development"
 path = "verification-guide.html"
 source = "./docs/verification-guide.md"
+
+[[documentation.pages]]
+title = "MIT License"
+path = "license.html"
+source = "./docs/license.md"
+
+[[documentation.pages]]
+title = "Renderer sample"
+path = "renderer-sample.html"
+source = "./docs/renderer-sample.md"

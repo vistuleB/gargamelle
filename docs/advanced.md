@@ -1,7 +1,7 @@
 # Advanced definitions and documentation
 
 These examples extend the core record and array workflows. Acceptance and output
-semantics are specified in the [technical contract](https://github.com/vistuleB/gargamelle/blob/main/docs/contract.md).
+semantics are specified in the [technical contract](https://hexdocs.pm/gargamelle/0.1.0/contract.html).
 
 ## Fractional numbers
 
@@ -103,11 +103,11 @@ fragments. It is independent of the decoding module: applications that only
 validate data need not import or ship it.
 
 ```gleam
-import gargamelle as gargamelle
+import gargamelle
 import gargamelle/documentation
 
-let name = gargamelle.text() |> gargamelle.description("Name shown to the learner")
-let fragment = documentation.render(name, "learner-name")
+let name = gargamelle.text() |> gargamelle.description("Display name")
+let fragment = documentation.render(name, "display-name")
 ```
 
 `render(definition, id)` returns an `<article>` fragment. Give each article a unique
@@ -125,13 +125,53 @@ refer to existing definitions and may not chain. They only compress presentation
 the caller must explain any omitted distinctions. No domain-specific aliases are
 built into Gargamelle.
 
-Use `documentation/reference.css` for the supplied page styling and
-`documentation/reference.js` for optional expand/collapse and print restoration.
-Native `<details>` folding needs no JavaScript. Buttons with `data-fold="expand"`
-and `data-fold="collapse"` control all rendered branches. The script expands all
-branches for printing and restores their previous state afterward. A host can
-supply its own stylesheet or embed the fragment in an existing page. Page title,
-navigation, article grouping and surrounding prose belong to the caller.
+The supplied [stylesheet](https://github.com/vistuleB/gargamelle/blob/v0.1.0/documentation/reference.css)
+and [script](https://github.com/vistuleB/gargamelle/blob/v0.1.0/documentation/reference.js)
+are separate assets in the source repository; they are not included in the Hex
+package. Download the release-tagged files into the directory where you will
+save your HTML page (repository access is required):
+
+```sh
+mkdir -p public
+curl -fL https://raw.githubusercontent.com/vistuleB/gargamelle/v0.1.0/documentation/reference.css -o public/reference.css
+curl -fL https://raw.githubusercontent.com/vistuleB/gargamelle/v0.1.0/documentation/reference.js -o public/reference.js
+```
+
+Save this complete page as `public/index.html`, replacing the marked comment with
+the string returned by `documentation.render` in the example above. Insert that
+string as HTML rather than escaping it:
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Display name reference</title>
+  <link rel="stylesheet" href="reference.css">
+  <script src="reference.js" defer></script>
+</head>
+<body>
+  <header><h1>Display name reference</h1></header>
+  <div class="controls">
+    <button type="button" data-fold="expand">Expand all</button>
+    <button type="button" data-fold="collapse">Collapse all</button>
+  </div>
+  <main>
+    <!-- Insert the rendered article here. -->
+  </main>
+</body>
+</html>
+```
+
+Open `public/index.html` in a browser. See the [rendered sample](https://hexdocs.pm/gargamelle/0.1.0/renderer-sample.html)
+for the article produced by this definition.
+
+Native `<details>` folding needs no JavaScript. The optional script implements
+the expand/collapse buttons, expands branches for printing, and restores their
+previous state afterward. A host can supply its own stylesheet or embed the
+fragment in an existing page. Page title, navigation, article grouping and
+surrounding prose belong to the caller.
 
 ## Fixed-position arrays
 
@@ -163,7 +203,7 @@ reject tuple nodes, including tuples mapped to lists.
 
 `property_names(object_definition, key_definition)` returns a construction
 result with the same decoded output type as the original object. For example,
-a locale dictionary can share the app's existing locale-field syntax:
+a translation dictionary can require locale-shaped keys:
 
 ```gleam
 let assert Ok(locale) = gargamelle.pattern(
@@ -232,10 +272,10 @@ operations require an unwrapped homogeneous array. Recursive membership checks
 consume array items; no depth cap is introduced. Complex overlapping body and
 match schemas may repeat validation work; there is no shared input cache.
 
-The verbatim provider's existing nonempty-answer check supplies a consumer
-example: an answer must contain non-whitespace text (`\S`) or a formula-reference
-object. Formula-ID existence is still a provider responsibility. The app has not
-been migrated to this feature.
+A content array can require at least one non-whitespace text item using a
+matching text definition with the pattern `\S`. Other items still follow the
+base item definition. If items include reference objects, checking whether those
+references exist belongs in application code after decoding.
 
 ## Structural conditionals
 
@@ -278,10 +318,10 @@ All condition and branch references participate in graph finalization even when
 a branch cannot be selected. Same-input recursive cycles are conservatively
 rejected, including unreachable branches; no satisfiability analysis is performed.
 
-The equation provider's `editor.initialAnswerVisible` rule supplies a consumer
-example: when that flag is explicitly true, require a sequence. A decoder default
-of true on an absent flag would not trigger this input-level condition. The app's
-existing semantic check and dependency pin remain unchanged.
+A settings record can require a `sequence` field when `showPreview` is explicitly
+true. Use an open inspector record requiring `showPreview` with a `True` constant
+as the condition, and another requiring `sequence` as the consequence. A decoder
+default of true on an absent flag does not trigger this input-level condition.
 
 ## Structural exclusion
 
@@ -313,9 +353,9 @@ cycles through exclusion, are conservatively rejected. Excluding a definition
 from itself can legitimately produce an unsatisfiable contract; construction does
 not solve satisfiability. Apply primitive modifiers to the base before exclusion.
 
-The verbatim provider's formula-code syntax supplies a consumer example:
-nonempty strings excluding those matching whitespace, backslash, or Unicode
-punctuation. Prefix-free code uniqueness remains a provider check. 
+An identifier can use a nonempty text definition as its base and exclude strings
+matching whitespace. Uniqueness across separately decoded records remains an
+application check.
 
 ## Checked documentation examples
 
