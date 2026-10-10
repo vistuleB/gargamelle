@@ -322,7 +322,7 @@ hex_digit(N) -> $a + N - 10.
 %% Reference bindings and typed runners are immutable definition-owned terms.
 -define(WALK, '$gargamelle_walk').
 fresh_identity() -> make_ref().
-with_walk(Run) -> scoped(?WALK, #{}, Run).
+with_walk(Run) -> gargamelle_regex:with_scope(fun() -> scoped(?WALK, #{}, Run) end).
 scoped(Key, Value, Run) ->
     Previous = get(Key),
     put(Key, Value),

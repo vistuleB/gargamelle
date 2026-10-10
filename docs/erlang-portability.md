@@ -264,10 +264,13 @@ updates must not silently change the native Unicode behavior.
 
 ### 7. Port ownership and explicit native build — implemented candidate
 
-Each regex call starts a private worker that owns one native helper. It closes
-the port before returning a result; caller process flags and mailboxes remain
-unchanged. A crash, allocation failure, exhausted execution budget or timeout
-raises an operational error. Auxiliary condition, exclusion, contains, property
+Each validation walk lazily starts a private worker that owns one native helper
+and reuses it across regex requests. It closes the port before conversion callbacks
+execute. Standalone requests receive their own scope; nested scopes restore the
+outer session. Owner death closes idle and active ports. Caller dictionaries,
+process flags and mailboxes remain unchanged after the operation. A crash,
+allocation failure, exhausted execution budget or timeout raises an operational
+error. Auxiliary condition, exclusion, contains, property
 name and default checks preserve that boundary. No permanent service, reference
 registry, pattern cache or manual release obligation was introduced.
 
@@ -285,12 +288,19 @@ must run an explicit build and install the helper for release deployment. Gleam
 rebar3/Hex dependency could automate distribution, but introduces another package;
 it has not been created.
 
-The direct production-binding check measured approximately 7.5 ms per pair,
-including separate helper starts for syntax and matching. This cost may be too high
-for many patterned fields. Review realistic provider workloads before declaring
-support. A bounded operation-owned helper/cache is a possible next optimization;
-it must retain crash isolation, cleanup, reentrancy and process-independent
-completed definitions. A NIF remains an alternative with scheduler/crash costs.
+The initial direct-binding check measured about 7.5 ms per pair, including
+separate helper starts for syntax and matching. Provider-shaped workloads then
+confirmed that startup dominated these workloads: 64 records with four patterned fields
+took about 887 ms to decode. Operation-scoped reuse reduced that observation to
+10.5 ms, with no shared Gleam or JavaScript changes. The same plain record control
+took about 0.3 ms. See `docs/regex-workload-measurements.md` for raw-report
+reproduction, methods and the retained per-call baseline.
+
+Review this temporary transport scope: it must not become definition/reference
+ownership, survive an operation or remain active during user conversion callbacks.
+No compiled-pattern cache was added. The per-request budget and deadline remain
+unchanged. Native regex is still slower than the tested built-in JavaScript path;
+representative workloads and platform/deployment evidence remain required.
 
 ### 8. Support and evidence boundaries — implemented gate
 

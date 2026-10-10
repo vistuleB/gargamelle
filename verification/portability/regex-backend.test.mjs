@@ -40,6 +40,8 @@ test('production native regex preserves syntax/search and operational failures',
     }));
     for(const flag of Object.values(result.failures)) assert.equal(flag,true);
     assert.equal(result.ports_restored,true);assert.equal(result.mailbox_restored,true);
+    assert.equal(result.scoped_cases_equal,true);assert.equal(result.dictionary_restored,true);
+    assert.equal(result.flags_restored,true);
     t.diagnostic(`${cases.length} cases through the production binding; ${Math.round(result.microseconds/cases.length)} microseconds/case including helper starts (observation, no threshold)`);
   } finally {rmSync(directory,{recursive:true,force:true});}
 });

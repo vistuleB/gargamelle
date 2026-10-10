@@ -53,9 +53,12 @@ Node 24 reference. JavaScript uses its host's Unicode tables; parity with other
 hosts requires verification. `priv/regex-src/PROVENANCE.json` records the sources,
 hashes and patches, and `LICENSE.quickjs` preserves the upstream MIT license.
 
-Each regex operation starts a helper. The direct binding check measured about
-7.5 ms per pattern/input pair, including both syntax and match helper starts.
-Workloads with many patterned values need performance measurements before native
-adoption. Linux, Windows, other OTP versions and release deployment remain
+Each native validation walk lazily starts one helper and reuses it until the walk
+finishes. The helper closes before conversion callbacks run. Standalone pattern
+checks still start a helper per call. A synthetic decode of 64 records with four
+patterned fields measured about 10.5 ms on the tested machine, versus 887 ms with
+the original helper-per-call transport. This is an observation, not a timing
+guarantee; representative application workloads still need measurements. Linux,
+Windows, other OTP versions and release deployment remain
 unverified; the current helper uses POSIX APIs. The differential corpus provides
 bounded evidence rather than complete ECMAScript conformance.

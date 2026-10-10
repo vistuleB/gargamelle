@@ -1,6 +1,6 @@
 # Gargamelle handoff and next work
 
-Recorded 2026-10-10; updated through the native regex binding after `900040e`.
+Recorded 2026-10-10; updated through scoped native regex transport after `af9acc5`.
 This is a handoff and prioritized candidate list, not a commitment to implement
 all JSON Schema features. Verify external state before acting on it.
 
@@ -68,11 +68,19 @@ consumer exposed an integer/float decoding bug in optional rendering, now fixed
 with a shared regression. See `docs/native-erlang.md` and the reviewed decisions
 in `docs/erlang-portability.md`.
 
-Next: measure regex-heavy provider workloads and assess a bounded operation-owned
-helper/cache if startup cost is material (direct binding observation: about 7.5 ms
-per syntax/match pair). Extend independent native oracle coverage and verify Linux,
-OTP version bounds and release deployment. Windows is unverified and the helper
-currently uses POSIX APIs. Complete Erlang support remains gated on these checks.
+Provider-shaped workload measurements found about 887 ms for decoding 64 records
+with four patterned fields. A native-only change now lazily reuses one helper per
+validation walk, reducing that observation to about 10.5 ms. The plain control
+remains about 0.3 ms. Shared Gleam and JavaScript sources/API are unchanged from
+`af9acc5`. Port cleanup precedes conversion callbacks; nested scopes, exceptions,
+resource failure recovery and idle/active owner exit have retained regressions.
+See `docs/regex-workload-measurements.md` for methods and reproduction. No compiled
+pattern cache or permanent worker service was introduced.
+
+Next: extend independent native oracle coverage and verify Linux, OTP version
+bounds and release deployment. Measure representative application workloads
+before optimizing further. Windows is unverified and the helper currently uses
+POSIX APIs. Complete Erlang support remains gated on these checks.
 Do not publish or move `v0.1.0` for this work.
 
 ## Read these first

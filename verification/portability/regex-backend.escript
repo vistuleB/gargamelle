@@ -7,13 +7,20 @@ main([Package, Root, Inputs]) ->
     Cases = json:decode(Json),
     Ports = length(erlang:ports()),
     {message_queue_len, Messages} = process_info(self(), message_queue_len),
+    Dictionary = lists:sort(get()),
+    {trap_exit, Trapping} = process_info(self(), trap_exit),
     {Micros, Results} = timer:tc(fun() -> [check(C) || C <- Cases] end),
+    Results = gargamelle_regex:with_scope(fun() -> [check(C) || C <- Cases] end),
+    scoped_lifetime(Ports),
     Failures = failures(Package),
     true = Ports =:= length(erlang:ports()),
     {message_queue_len, Messages} = process_info(self(), message_queue_len),
+    Dictionary = lists:sort(get()),
+    {trap_exit, Trapping} = process_info(self(), trap_exit),
     io:put_chars(json:encode(#{cases => Results, failures => Failures,
                               microseconds => Micros, ports_restored => true,
-                              mailbox_restored => true})).
+                              mailbox_restored => true, scoped_cases_equal => true,
+                              dictionary_restored => true, flags_restored => true})).
 
 check(#{<<"pattern">> := Pattern, <<"text">> := Text}) ->
     case gargamelle_regex:pattern_valid(Pattern) of
@@ -23,6 +30,77 @@ check(#{<<"pattern">> := Pattern, <<"text">> := Text}) ->
 
 raised(Run) ->
     try Run(), false catch error:_ -> true end.
+
+scoped_lifetime(Ports) ->
+    gargamelle_runtime:with_walk(fun() ->
+        true = Ports =:= length(erlang:ports()), %% lazy: no port yet
+        true = gargamelle_regex:pattern_matches(<<"a">>, <<"a">>),
+        Outer = get('$gargamelle_regex_session'),
+        true = Ports + 1 =:= length(erlang:ports()),
+        gargamelle_regex:with_scope(fun() ->
+            true = gargamelle_regex:pattern_matches(<<"b">>, <<"b">>),
+            true = Ports + 2 =:= length(erlang:ports()),
+            true = get('$gargamelle_regex_session') =/= Outer
+        end),
+        Outer = get('$gargamelle_regex_session'),
+        true = Ports + 1 =:= length(erlang:ports()),
+        Text = <<(binary:copy(<<"a">>, 32))/binary, "!">>,
+        true = raised(fun() -> gargamelle_regex:pattern_matches(<<"(a+)+$">>, Text) end),
+        true = Ports =:= length(erlang:ports()),
+        true = gargamelle_regex:pattern_matches(<<"a">>, <<"a">>)
+    end),
+    true = Ports =:= length(erlang:ports()),
+    true = raised(fun() -> gargamelle_regex:with_scope(fun() ->
+        true = gargamelle_regex:pattern_matches(<<"a">>, <<"a">>),
+        error(deliberate_scope_exception)
+    end) end),
+    true = Ports =:= length(erlang:ports()),
+    {ok, Probe} = gargamelle:pattern(gargamelle:text(), <<"a">>),
+    {ok, Input} = gargamelle:parse(<<"\"a\"">>),
+    Mapped = gargamelle:map(Probe, fun(Value) ->
+        true = Ports =:= length(erlang:ports()), %% closed before user conversion
+        {ok, Value} = gargamelle:decode(Probe, Input),
+        Value
+    end),
+    {ok, <<"a">>} = gargamelle:decode(Mapped, Input),
+    owner_exit(false),
+    true = Ports =:= length(erlang:ports()).
+
+owner_exit(Blocked) ->
+    Parent = self(),
+    {Owner, OwnerMonitor} = spawn_monitor(fun() ->
+        gargamelle_regex:with_scope(fun() ->
+            case Blocked of
+                false ->
+                    true = gargamelle_regex:pattern_matches(<<"a">>, <<"a">>),
+                    Parent ! {ready, self()},
+                    receive remain_open -> ok end;
+                true -> gargamelle_regex:pattern_matches(<<"a">>, <<"a">>)
+            end
+        end)
+    end),
+    case Blocked of
+        false -> receive {ready, Owner} -> ok after 5000 -> error(owner_not_ready) end;
+        true -> ok
+    end,
+    {Worker, Port} = await_worker(Owner, 200),
+    WorkerMonitor = monitor(process, Worker),
+    exit(Owner, kill),
+    receive {'DOWN', OwnerMonitor, process, Owner, killed} -> ok after 5000 -> error(owner_exit_timeout) end,
+    receive {'DOWN', WorkerMonitor, process, Worker, _} -> ok after 5000 -> error(worker_exit_timeout) end,
+    undefined = erlang:port_info(Port).
+
+await_worker(_, 0) -> error(worker_not_ready);
+await_worker(Owner, Left) ->
+    {dictionary, Dictionary} = process_info(Owner, dictionary),
+    case proplists:get_value('$gargamelle_regex_session', Dictionary) of
+        {Worker, _} ->
+            case [Port || Port <- erlang:ports(), erlang:port_info(Port, connected) =:= {connected, Worker}] of
+                [Port] -> {Worker, Port};
+                [] -> receive after 10 -> await_worker(Owner, Left - 1) end
+            end;
+        _ -> receive after 10 -> await_worker(Owner, Left - 1) end
+    end.
 
 failures(Package) ->
     true = raised(fun() -> gargamelle_regex:pattern_matches(<<"[">>, <<>>) end),
@@ -54,7 +132,10 @@ failures(Package) ->
         true = raised(fun() -> gargamelle_regex:pattern_valid(<<"a">>) end),
         %% A no-match reply is invalid for a syntax-only request, not bad syntax.
         ok = file:write_file(Executable, <<"#!/bin/sh\nprintf '\\000\\000\\000\\001\\001'\n">>),
-        true = raised(fun() -> gargamelle_regex:pattern_valid(<<"a">>) end)
+        true = raised(fun() -> gargamelle_regex:pattern_valid(<<"a">>) end),
+        %% Owner death must close a port even while its worker awaits a response.
+        ok = file:write_file(Executable, <<"#!/bin/sh\nexec cat >/dev/null\n">>),
+        owner_exit(true)
     after
         file:delete(Executable),
         ok = file:rename(Saved, Executable)
@@ -62,4 +143,4 @@ failures(Package) ->
     true = gargamelle_regex:pattern_matches(<<"a">>, <<"a">>),
     #{invalid_match_raises => true, resource_raises => true, missing_helper_raises => true,
       native_exit_raises => true, protocol_raises => true,
-      auxiliary_failures_escape => true, recovery => true}.
+      auxiliary_failures_escape => true, owner_exit_cleanup => true, recovery => true}.
