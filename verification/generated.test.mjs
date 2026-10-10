@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import {reference} from './reference.mjs';
+import {sha256} from './evidence.mjs';
 import {compileSupplementary} from './supplementary-oracle.mjs';
 import {classifySplit} from './oracle-classification.mjs';
 import { compileOracle } from './oracle.mjs';
@@ -9,28 +10,8 @@ import { minimize,minimizeAsync } from './generated-shrink.mjs';
 import { retainOperationalFailure, checkpointCase, clearCheckpoint } from './generated-retention.mjs';
 import { build,evaluate,evaluateText,emitted,s,allKinds,childNodes,proposal,specimen } from './generated-api.mjs';
 
-const seeds=[0x10203040,0x91abcdef,0x12345678,0xdeadbeef,0x71423,0x55555555,0xabcdef01,0x37891,0x76543210,0xfedcba98];
-const common=[null,true,false,0,1,-1,1.5,'','x','a','ab','😀','e\u0301','\0','\u{10ffff}',[],{},[null],{value:null},Number.MAX_SAFE_INTEGER+1];
-function random(seed){let x=seed>>>0;return n=>{x^=x<<13;x^=x>>>17;x^=x<<5;return (x>>>0)%n;};}
-function generated(r,depth){
- if(depth===0){const a=specimen(allKinds[r(8)]);if(a.kind==='constant')a.value=[null,true,false,'c',-1,0,1][r(7)];if(a.kind==='string'&&r(2)){a.min=r(2);a.max=3;if(r(2))a.patterns=['a','b','a'];}if(a.kind==='integer'&&r(2)){a.min=-3;a.max=3;}if(a.kind==='number'&&r(2)){a.min=-1.5;a.max=2.5;a.exclusiveMin=!!r(2);a.exclusiveMax=!!r(2);}return a;}
- const kind=allKinds[8+r(allKinds.length-8)];
- const a=specimen(kind,generated(r,depth-1));
- const names=['__proto__','constructor','toString','','a/b','~1','10','2','01','😀'];
- if(kind==='conditional'&&r(2))a.alternative={kind:'boolean'};
- if(kind==='record'){a.open=!!r(2);const offset=r(names.length);a.fields.forEach((f,i)=>f.name=names[(offset+i)%names.length]);}
- if(kind==='tagged'){a.tag=names[r(names.length)];a.branches.forEach((b,i)=>b.tag=names[(i+r(3)*2)%names.length]);if(a.branches[0].tag===a.branches[1].tag)a.branches[1].tag+='-other';}
+import {seeds,common,random,generated,mutations} from './generated-corpus.mjs';
 
- if(kind==='any'||kind==='one'){if(r(2))a.children.push(specimen('boolean'));if(r(4)===0)a.children.push(a.children[0]);}
- return a;
-}
-function mutations(v){
- if(Array.isArray(v))return [[],[...v,...v,...v,...v],v.map((x,i)=>i===0?false:x)];
- if(v&&typeof v==='object'){const entries=Object.entries(v);return [{},{...v,unexpected:true},Object.fromEntries(entries.slice(1)),Object.fromEntries(entries.map(([k,x],i)=>[k,i===0?false:x]))];}
- if(typeof v==='string')return ['',v+'!',v+v+v+v,v.length? v.slice(1):'x'];
- if(typeof v==='number')return [v-1,v+1,v+0.5];
- return [null,false,'x'];
-}
 // Greedy structural shrinking retains a discrepancy, not an assumed validity class.
 async function discrepancy(recipe,value){value=JSON.parse(JSON.stringify(value));const d=build(recipe),schema=emitted(d),oracle=(await compileSupplementary(schema))(value),actual=evaluate(d,value);return oracle.accepted!==actual.accepted?{schema,oracle,actual}:null;}
 async function retainFailure(recipe,value,context,details){
@@ -43,9 +24,11 @@ async function retainFailure(recipe,value,context,details){
  writeFileSync(file,JSON.stringify(report,null,2)+'\n');
  throw new Error(`Differential mismatch retained at ${file.pathname}`);
 }
+const executedCorpus=[];
 const coverage={constructors:{},edges:{},outcomes:{},depths:{},pairs:0,definitions:0,seeds,depth50:0,nestedOutcomes:{},nodePaths:{},oracleSplits:{},decodedValues:0};
 function observe(a){coverage.constructors[a.kind]=(coverage.constructors[a.kind]??0)+1;for(const c of childNodes(a)){const key=a.kind+'>'+c.kind;coverage.edges[key]=(coverage.edges[key]??0)+1;observe(c);}}
 async function run(recipe,values,context){
+ executedCorpus.push({recipe,inputs:values.map(value=>JSON.stringify(value)),context});
  const checkpoint=checkpointCase(recipe,values,context);
  let d,check,second,text;
  try {
@@ -107,6 +90,7 @@ test('separate depth-50 nesting corpus',async()=>{
 test('emit coverage artifact and assert boundary corpus evidence',async()=>{
  const bounds=[{kind:'integer',min:-2,max:2},{kind:'string',min:1,max:2},{kind:'array',child:{kind:'string'},min:1,max:2},{kind:'dictionary',child:{kind:'string'},min:1,max:2}];
  for(const a of bounds){const values=a.kind==='integer'?[-3,-2,-1,1,2,3]:a.kind==='string'?['','x','xx','xxx']:a.kind==='array'?[[],['x'],['x','x'],['x','x','x']]:[{}, {a:'x'},{a:'x',b:'x'},{a:'x',b:'x',c:'x'}];await run(a,values,{seed:'bounds',index:a.kind});}
+ coverage.corpusSha256=sha256(JSON.stringify(executedCorpus));
  coverage.boundaryCategories=['b-1','b','b+1','safe-integer','missing','null','extra-key','wrong-type','empty','unicode','overlap'];
  writeFileSync(new URL('./generated-coverage.json',import.meta.url),JSON.stringify(coverage,null,2)+'\n');
 });

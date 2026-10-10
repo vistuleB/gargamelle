@@ -308,13 +308,18 @@ All main-source externals now have native implementations. The actual Erlang API
 and production-plan fixtures compile the vendored helper and use the real regex
 binding. They pass 53 native tests, twelve cross-target compile-negative checks and
 3,636 independent schema cases, including exact historical and cross-target
-schema/output/diagnostic comparisons. All twelve portability groups pass. A
+schema/output/diagnostic comparisons. All fifteen portability groups pass. A
 separate binding check covers 594 syntax/search cases and operational failures.
 
 The native setup is tested on macOS with OTP 29, Node 24 and a C compiler. Linux,
-Windows, minimum OTP versions and deployment packaging still need verification;
-the helper currently uses POSIX APIs. Broader native oracle coverage and workload
-performance remain release gates. Working metadata is 0.2.0, contract revision 5.
+Windows and minimum OTP versions still need verification; the helper currently
+uses POSIX APIs. The generated native gate checks 886 definitions and 17,788
+inputs with two independent schema validators, including 6,459 independently
+interpreted decoded outputs. Five public API paths detect an always-match regex
+adapter mutation. A macOS Gleam shipment passes after explicit helper installation
+and removal of source checkouts. See `native-oracle-evidence.md`. Native coverage
+of the full official suite, broader operator mutations, other release tooling and
+representative workload performance remain release gates. Working metadata is 0.2.0, contract revision 5.
 The 0.1.0 tag is unchanged. No native dependency or new version has been published.
 
 ## Reproduction

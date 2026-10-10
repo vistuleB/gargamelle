@@ -40,6 +40,22 @@ that installed location. During development it also resolves the source `priv`
 symlink and checks the dependency's `build/native` directory. Release tooling
 must copy the helper explicitly; compiling Gleam alone does not install it.
 
+For a downloaded dependency, a minimal Gleam shipment is:
+
+```sh
+gleam deps download
+make -C build/packages/gargamelle/priv/regex-src
+gleam export erlang-shipment
+cp build/packages/gargamelle/build/native/gargamelle_regex_port build/erlang-shipment/gargamelle/priv/
+chmod +x build/erlang-shipment/gargamelle/priv/gargamelle_regex_port
+sh build/erlang-shipment/entrypoint.sh run
+```
+
+For a path dependency, copy the helper from that dependency's `build/native`
+directory. This shipment has been tested on macOS arm64 with OTP 29 after removing
+all source and build checkouts. The retained deployment test also verifies that
+omitting the helper raises an operational error.
+
 A missing helper or a native crash raises an operational error. Execution budget,
 stack, packet and timeout limits also raise operational errors, including within
 conditional and exclusion checks. They do not become pattern syntax errors or
@@ -59,6 +75,6 @@ checks still start a helper per call. A synthetic decode of 64 records with four
 patterned fields measured about 10.5 ms on the tested machine, versus 887 ms with
 the original helper-per-call transport. This is an observation, not a timing
 guarantee; representative application workloads still need measurements. Linux,
-Windows, other OTP versions and release deployment remain
-unverified; the current helper uses POSIX APIs. The differential corpus provides
+Windows, other OTP versions and release tooling beyond the tested Gleam shipment
+remain unverified; the current helper uses POSIX APIs. The differential corpus provides
 bounded evidence rather than complete ECMAScript conformance.

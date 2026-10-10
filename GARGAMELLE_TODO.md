@@ -59,7 +59,7 @@ All core externals now have native implementations. Native fixtures use the real
 regex helper, without regex test adapters. Current validation: 45 JavaScript
 Gleam tests, 144 Node tests, 17,788 generated pairs and 109 official schema cases;
 53 native tests, twelve cross-target compile-negative checks and 3,636 independent
-cases across 36 schemas. All twelve portability groups pass.
+cases across 36 schemas. All fifteen portability groups pass.
 
 Fresh consumers of the extracted 0.2.0 archive pass on both targets using pinned
 dependency sources offline. Native setup requires an explicit C build. Generated
@@ -77,8 +77,16 @@ resource failure recovery and idle/active owner exit have retained regressions.
 See `docs/regex-workload-measurements.md` for methods and reproduction. No compiled
 pattern cache or permanent worker service was introduced.
 
-Next: extend independent native oracle coverage and verify Linux, OTP version
-bounds and release deployment. Measure representative application workloads
+The generated native gate now covers the same 886 definitions and 17,788 input
+cases as the JavaScript corpus, with Ajv and Hyperjump checking emitted schemas
+and an independent interpreter checking 6,459 decoded outputs. Typed cross-target
+runs agree on schemas, outputs and full diagnostics. An always-match native
+regex mutation is detected through five API paths. A macOS Gleam shipment works
+after the helper is explicitly installed and all source checkouts are removed.
+See `docs/native-oracle-evidence.md` for scope and reproduction.
+
+Next: verify Linux and OTP version bounds, extend native official-suite and
+operator mutation coverage, and check other release tooling. Measure representative application workloads
 before optimizing further. Windows is unverified and the helper currently uses
 POSIX APIs. Complete Erlang support remains gated on these checks.
 Do not publish or move `v0.1.0` for this work.
@@ -207,7 +215,7 @@ JSON admission/canonical serialization. The admission/canonical/string helpers
 are deliberately not attached to the public API while surrogate compatibility
 is unresolved.
 
-`npm run verify:erlang-primitives` runs twelve independent portability test groups,
+`npm run verify:erlang-primitives` runs fifteen independent portability test groups,
 including the isolated immutable-plan and production integration experiments. The current library graph
 group passes with the new construction-plan contract. The earlier captured-
 placeholder failures are recorded historically below.
