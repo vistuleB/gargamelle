@@ -13,3 +13,18 @@ gleam_json = "== 3.1.0"
 
 [dev-dependencies]
 gleeunit = "== 1.11.0"
+
+[[documentation.pages]]
+title = "Technical contract"
+path = "contract.html"
+source = "./docs/contract.md"
+
+[[documentation.pages]]
+title = "Advanced definitions"
+path = "advanced.html"
+source = "./docs/advanced.md"
+
+[[documentation.pages]]
+title = "Verification and development"
+path = "verification-guide.html"
+source = "./docs/verification-guide.md"
