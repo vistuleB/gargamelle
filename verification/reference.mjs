@@ -20,6 +20,12 @@ export function reference(a,v,visit=()=>{},path='$') {
   else if(Array.isArray(v)){const results=v.map((x,i)=>child(a,x,path+'/child/'+i));if(results.every(x=>x.accepted))r=yes({children:results.map(x=>x.value)});}
   break;
  }
+ case 'conditional': {
+  const base=child(a.child,v,path+'/child'),condition=child(a.condition,v,path+'/condition');
+  const branch=condition.accepted?a.consequence:a.alternative;
+  const accepted=branch?child(branch,v,path+'/selected').accepted:true;
+  if(base.accepted&&accepted)r=base;break;
+ }
  case 'contains': {
   if(!Array.isArray(v))break;
   const items=v.map(x=>child(a.child,x,path+'/child'));

@@ -54,6 +54,7 @@ type Node {
   ArrayNode(Node, Option(Int), Option(Int))
   TupleNode(List(Node))
   ContainsNode(Node, List(Membership))
+  ConditionalNode(Node, List(Condition))
   DictNode(Node, Option(Int), Option(Int))
   RecordNode(List(Field), Policy)
   PropertyNamesNode(Node, List(Node))
@@ -105,6 +106,10 @@ fn bind_cell(cell: Cell(a), value: a) -> Nil {
 fn reject_cell(cell: Cell(a)) -> Nil {
   let Cell(_, _, reject) = cell
   reject()
+}
+
+type Condition {
+  Condition(Node, Node, Option(Node))
 }
 
 type Membership {
@@ -483,6 +488,41 @@ fn contains_node(
           Error(ConstructionError("contains requires an array definition"))
       }
   }
+}
+
+/// Validate the consequence only when the structural condition accepts input.
+/// Retain the base output; condition/consequence converters never run.
+pub fn if_then(
+  def: Definition(a),
+  condition: Definition(b),
+  consequence: Definition(c),
+) -> Definition(a) {
+  let Definition(probe, _) = condition
+  let Definition(yes, _) = consequence
+  add_condition(def, Condition(probe, yes, None))
+}
+
+/// Validate exactly the selected structural branch, retaining the base decoder.
+pub fn if_then_else(
+  def: Definition(a),
+  condition: Definition(b),
+  consequence: Definition(c),
+  alternative: Definition(d),
+) -> Definition(a) {
+  let Definition(probe, _) = condition
+  let Definition(yes, _) = consequence
+  let Definition(no, _) = alternative
+  add_condition(def, Condition(probe, yes, Some(no)))
+}
+
+fn add_condition(def: Definition(a), condition: Condition) -> Definition(a) {
+  let Definition(node, convert) = def
+  let next = case node {
+    ConditionalNode(base, checks) ->
+      ConditionalNode(base, list.append(checks, [condition]))
+    _ -> ConditionalNode(node, [condition])
+  }
+  Definition(next, convert)
 }
 
 pub fn dictionary(def: Definition(a)) -> Definition(List(#(String, a))) {
@@ -1101,6 +1141,21 @@ fn check(n: Node, v: Value, p: String) -> List(DataError) {
           list.index_map(xs, fn(x, i) { check(child, x, path(p, int_text(i))) })
           |> list.flatten
       }
+    ConditionalNode(base, checks), _ ->
+      list.append(
+        check(base, v, p),
+        list.flat_map(checks, fn(condition) {
+          let Condition(probe, yes, no) = condition
+          case check(probe, v, "") == [] {
+            True -> check(yes, v, p)
+            False ->
+              case no {
+                Some(alternative) -> check(alternative, v, p)
+                None -> []
+              }
+          }
+        }),
+      )
     ContainsNode(child, checks), _ -> {
       let errors = check(child, v, p)
       case v {
@@ -1284,6 +1339,17 @@ fn node_children(n: Node) -> Result(List(Node), ConstructionError) {
           child
         }),
       )
+    ConditionalNode(base, checks) ->
+      Ok([
+        base,
+        ..list.flat_map(checks, fn(condition) {
+          let Condition(probe, yes, no) = condition
+          case no {
+            Some(alternative) -> [probe, yes, alternative]
+            None -> [probe, yes]
+          }
+        })
+      ])
     ContainsNode(child, checks) ->
       Ok([
         child,
@@ -1486,6 +1552,18 @@ fn emit(n: Node) -> Value {
       |> put("items", emit(c))
       |> emit_bound("minItems", lo)
       |> emit_bound("maxItems", hi)
+    ConditionalNode(base, checks) -> {
+      let branches =
+        list.map(checks, fn(condition) {
+          let Condition(probe, yes, no) = condition
+          let schema = obj([#("if", emit(probe)), #("then", emit(yes))])
+          case no {
+            Some(alternative) -> put(schema, "else", emit(alternative))
+            None -> schema
+          }
+        })
+      obj([#("allOf", JArray([emit(base), ..branches]))])
+    }
     ContainsNode(child, checks) -> {
       let schemas =
         list.filter_map(checks, fn(membership) {

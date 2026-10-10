@@ -17,6 +17,7 @@ function generated(r,depth){
  const kind=allKinds[8+r(allKinds.length-8)];
  const a=specimen(kind,generated(r,depth-1));
  const names=['__proto__','constructor','toString','','a/b','~1','10','2','01','😀'];
+ if(kind==='conditional'&&r(2))a.alternative={kind:'boolean'};
  if(kind==='record'){a.open=!!r(2);const offset=r(names.length);a.fields.forEach((f,i)=>f.name=names[(offset+i)%names.length]);}
  if(kind==='tagged'){a.tag=names[r(names.length)];a.branches.forEach((b,i)=>b.tag=names[(i+r(3)*2)%names.length]);if(a.branches[0].tag===a.branches[1].tag)a.branches[1].tag+='-other';}
 
@@ -83,7 +84,7 @@ test('generated definitions: ten fixed seeds, 10000 pairs, depths 0–6',async()
 });
 
 test('every supported generic parent/child combination has differential evidence',async()=>{
- const wrappers=['array','dictionary','record','nullable','any','one','tagged','description','title','map','tuple','property_names','contains'];
+ const wrappers=['array','dictionary','record','nullable','any','one','tagged','description','title','map','tuple','property_names','contains','conditional'];
  for(const parent of wrappers)for(const child of allKinds){const a=specimen(parent,specimen(child));await run(a,[proposal(a),...common],{seed:'edges',index:parent+'-'+child});assert.ok(coverage.edges[parent+'>'+child]);}
  for(const k of allKinds){const a=specimen(k);await run({kind:'array',child:a},[proposal(a),...common].map(v=>[v]),{seed:'nested',index:k});}
  for(const k of allKinds){assert.ok(coverage.nestedOutcomes[k+':true'],k+' nested accepts');assert.ok(coverage.nestedOutcomes[k+':false'],k+' nested rejects');}
@@ -94,13 +95,13 @@ test('every supported generic parent/child combination has differential evidence
 
 test('separate depth-50 nesting corpus',async()=>{
  const corruptLeaf=v=>Array.isArray(v)?v.map(corruptLeaf):v&&typeof v==='object'?Object.fromEntries(Object.entries(v).map(([k,x])=>[k,corruptLeaf(x)])):false;
- for(const kind of ['array','dictionary','record','nullable','any','one','description','title','map','tuple','property_names','contains']){
+ for(const kind of ['array','dictionary','record','nullable','any','one','description','title','map','tuple','property_names','contains','conditional']){
   let a={kind:'string'};
   for(let depth=0;depth<50;depth++)a=kind==='record'?{kind,fields:[{name:'nested',child:a}]}:kind==='array'||kind==='dictionary'?{kind,child:a,min:1,max:2}:specimen(kind,a);
   const valid=kind==='nullable'?'x':proposal(a);
   await run(a,[valid,corruptLeaf(valid),null],{seed:'depth50',index:kind});coverage.depth50++;
  }
- assert.equal(coverage.depth50,12);
+ assert.equal(coverage.depth50,13);
 });
 
 test('emit coverage artifact and assert boundary corpus evidence',async()=>{

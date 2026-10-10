@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.8 — 2026-10-10
+
+- Add structural `if_then` and `if_then_else` constraints while preserving the base definition's typed output.
+- Conjoin repeated conditions and render condition/then/else branches in documentation.
+- Add typed, compile-negative, independent-validator, generated-composition, recursion, and mutation evidence.
+
 ## 0.0.7 — 2026-10-10
 
 - Add structural array membership with `contains`, `minContains`, and `maxContains`, preserving original typed outputs.

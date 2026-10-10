@@ -20,9 +20,9 @@ not the generator, determines validity. Extra-key, missing-field, wrong-type,
 length and numeric mutations are proposals, never assumed invalid. Arbitrary
 JSON values supplement them. Proposals vary union branch, nullable presence,
 optional/defaulted presence, names and tags, including hostile keys. Coverage
-requires both outcomes for every root and nested constructor and all 273 generic parent/child constructor combinations.
+requires both outcomes for every root and nested constructor and all 308 generic parent/child constructor combinations.
 
-Twelve additional depth-50 chains use linear structure. Arrays/dictionaries have
+Thirteen additional depth-50 chains use linear structure. Arrays/dictionaries have
 nonempty witnesses; nullable chains use non-null witnesses; each also has an
 invalid leaf so validation reaches the deepest child. Coverage JSON records
 counts, seeds, edges, outcomes and requested random depths. The artifact is
@@ -114,3 +114,10 @@ was stopped because it induces exponential repeated validation. Such schemas
 remain legal; bounded composition evidence is not a complexity guarantee.
 Consumer and targeted tests cover nontrivial matches, zero counts, upper limits,
 duplicates, different matcher output types, and repeated constraints.
+
+The conditional recipe preserves the independently interpreted base output,
+checks the condition, and validates only the selected requirement. Generated
+recipes vary presence of an alternative. Generic edges and depth-50 chains use
+primitive inspectors to avoid duplicating nested body contracts. Targeted cases
+exercise dependent object fields, incompatible condition types, both branch
+selections, defaults, auxiliary callbacks, recursion, and repeated constraints.

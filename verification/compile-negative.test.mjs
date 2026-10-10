@@ -7,6 +7,8 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 const root=fileURLToPath(new URL('../',import.meta.url));
 const cases=[
+ ['conditional_output_type','pub fn main() -> s.Definition(String) { s.if_then(s.number(),s.text(),s.boolean()) }','Type mismatch'],
+ ['private_condition','pub fn main() { s.Condition(Nil,Nil,gleam_option.None) }','Unknown module value'],
  ['membership_count_type','pub fn main() { s.contains(s.array(s.text()),s.text(),True,gleam_option.None) }','Type mismatch'],
  ['key_definition_type','pub fn main() { s.property_names(s.dictionary(s.text()),s.number()) }','Type mismatch'],
  ['tuple_position_type','pub fn main() { s.element(s.tuple(fn(x: Int){x}),s.text()) }','Type mismatch'],
@@ -25,7 +27,7 @@ const cases=[
  ['optional_is_option','pub fn main() { s.optional(s.record(fn(x: String){x}),"x",s.text()) }','Type mismatch'],
  ['no_predicate_escape','pub fn main() { s.predicate(s.text(),fn(_){False}) }','Unknown module value'],
 ];
-test('compile-time boundary: positive baseline and seventeen forbidden API programs',()=>{
+test('compile-time boundary: positive baseline and nineteen forbidden API programs',()=>{
  const dir=mkdtempSync(join(tmpdir(),'schema-contract-negative-'));
  try{
  mkdirSync(join(dir,'src'));

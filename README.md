@@ -49,11 +49,11 @@ The implementation agent completed the core and generated, mutation, runtime,
 typed-output and compile-negative evidence. The coordinating agent reviewed it
 and added independent validator checks, official-suite selection, cloze payload
 comparisons and the final evidence gate. The generated suite includes 10,000
-seeded pairs, all 273 generic parent/child combinations and twelve depth-50 chains.
-Twenty-five actual compiled-library mutations must fail behavioral assertions,
-including five numeric, three recursion, and three tuple, and three key-constraint, and three membership mutants. The three
+seeded pairs, all 308 generic parent/child combinations and thirteen depth-50 chains.
+Twenty-eight actual compiled-library mutations must fail behavioral assertions,
+including five numeric, three recursion, and three tuple, and three key-constraint, and three membership, and three conditional mutants. The three
 new revision-3 mutations run the full foundation, typed-value and hardening suites.
-Seventeen forbidden Gleam programs must fail compilation after a positive baseline.
+Nineteen forbidden Gleam programs must fail compilation after a positive baseline.
 
 The official suite is pinned to commit
 `7de0e6a06031ede80028583dd45d0cd41105ae5b`. All 46 core files are retained with
@@ -343,3 +343,49 @@ The verbatim provider's existing nonempty-answer check supplies a consumer
 example: an answer must contain non-whitespace text (`\S`) or a formula-reference
 object. Formula-ID existence is still a provider responsibility. The app has not
 been migrated to this feature.
+
+## Structural conditionals
+
+`if_then(base, condition, consequence)` applies the consequence when the
+condition accepts the input. `if_then_else(base, condition, consequence,
+alternative)` validates exactly the selected branch. Both return a definition
+with the base's original output type; the auxiliary definitions may have
+independent output types. For example:
+
+```gleam
+let assert Ok(positive) = concord.number_bounds(
+  concord.number(), Some(concord.Exclusive(0.0)), None,
+)
+let checked = concord.if_then(
+  concord.number(), positive, concord.safe_integer(),
+)
+// Positive numbers must be safe integers; nonpositive finite numbers remain valid.
+```
+
+All checks inspect the original admitted JSON. Defaults, projection, or mapping
+from the base decoder do not change condition selection. Auxiliary conversion
+callbacks never run. Only the base converter runs, after the base and selected
+requirements all accept. Unselected branch data errors are not reported; condition
+errors select `else` or impose no further requirement when there is no `else`.
+Operational exceptions still escape and are not treated as condition failure.
+Selected-branch errors preserve their ordinary categories and input paths.
+
+Repeated calls intersect their requirements. Emission uses `allOf` with the
+base schema and separate `if`/`then`/optional `else` schemas, so nested conditions
+cannot overwrite earlier ones. There is no general typed `allOf` constructor in
+this extension. Primitive modifiers, array/object constraints, and defaults
+should be defined on the base before adding conditionals; existing modifiers
+reject unsupported wrapper nodes rather than dropping conditional checks.
+
+For object inspection, use required fields to make presence part of the
+condition. Open inspector records can require selected fields without rejecting
+other fields of the base input. A closed inspector imposes its full closed shape.
+A failed condition does not itself reject input, but the base must still accept.
+All condition and branch references participate in graph finalization even when
+a branch cannot be selected. Same-input recursive cycles are conservatively
+rejected, including unreachable branches; no satisfiability analysis is performed.
+
+The equation provider's `editor.initialAnswerVisible` rule supplies a consumer
+example: when that flag is explicitly true, require a sequence. A decoder default
+of true on an absent flag would not trigger this input-level condition. The app's
+existing semantic check and dependency pin remain unchanged.

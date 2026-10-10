@@ -133,15 +133,15 @@ conversion. There is no generic FFI cast or forged typed provider value.
 
 ## Current evidence and remaining work
 
-`gleam test` currently runs 32 tests, including concrete typed records/custom
+`gleam test` currently runs 33 tests, including concrete typed records/custom
 variants, dictionaries/arrays, glon regressions, optional/null states, callback
 suppression, hostile keys, Unicode, tags, constraints, constants and defaults.
 `schema_fixtures` supplies 25 authored independent-oracle fixtures.
 
 `verification/generated*.test.mjs` adds 10,000 seeded definition/input pairs,
-all 273 generic parent/child combinations, nonempty depth-50 chains, independently
+all 308 generic parent/child combinations, nonempty depth-50 chains, independently
 specified output/error fixtures, admission/operational tests, callback counters,
-and actual isolated mutations for all five required defect classes. Seventeen
+and actual isolated mutations for all five required defect classes. Nineteen
 compile-negative programs establish the public opaque/static API boundary.
 Generated coverage and retained findings are documented in
 `verification/generated-notes.md`; operational failures are not rejections.
@@ -208,3 +208,25 @@ array item, so graph guards follow only the base as a same-input edge while
 collection still visits every matcher to reject unresolved/conflicting names.
 Repeated evaluation of overlapping complex schemas may be expensive; this
 extension does not claim linear validation cost for arbitrary compositions.
+
+## Structural conditionals
+
+A conditional retains the base's acceptance and inspects the same admitted input
+with its condition node. If that node accepts, the consequence must accept;
+otherwise the optional alternative must accept. Absent alternatives impose no
+additional constraint. This is the same selection rule as emitted JSON Schema
+`if`/`then`/`else`. Repeated conditions are conjoined in `allOf` alongside the
+base, rather than replacing schema keywords. Typed node validation remains the
+source of both condition selection and selected-branch acceptance.
+
+Only the base converter is retained. Auxiliary converters are never called, so
+conditions cannot mutate input, insert defaults, project fields, or change the
+output type through their conversion maps. Defaults of the base are materialized
+only after all input validation succeeds. Condition failures do not become data
+errors; selected-branch errors retain ordinary paths. Operational exceptions do
+not select the alternative branch.
+
+Collection and same-input guard traversal visit the base, condition, consequence,
+and optional alternative. This rejects non-progressing cycles even in unreachable
+branches and checks unfinalized references/name conflicts before any emission or
+decoding. Conditionals do not introduce input descent or a hidden depth cap.

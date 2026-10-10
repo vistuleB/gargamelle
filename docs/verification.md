@@ -105,6 +105,7 @@ These are conceptual constructors, not committed API spellings.
 | C05 | Any-of | At least one child accepts | Select the first successful branch in declaration order |
 | C06 | One-of | Exactly one child accepts | Decode that unique branch; reject overlapping matches |
 | C07 | Tagged union | Object branches with required, distinct string-constant discriminators; equivalent to their emitted one-of | Select the matching variant; discriminator is consumed, not duplicated in branch output |
+| C12 | Structural conditional | Base accepts; if condition accepts, consequence accepts; otherwise optional alternative accepts | Retain base output; auxiliary converters never run |
 | C11 | Array membership | Typed array/tuple body and inclusive count limits on structurally matching positions | Retain original output; never invoke matching converters |
 | C10 | Property names | Dictionary/record input; each present own key satisfies every supplied string-output key definition | Retain original output and keys; never invoke key converters |
 | C09 | Exact-length tuple | Array of exactly N elements; position i satisfies child i | Apply the curried typed constructor in positional order |
@@ -208,6 +209,7 @@ the in-memory JSON representation.
 | Safe integer | `{"type":"integer","minimum":effective_min,"maximum":effective_max}`; always include safe bounds or tighter bounds |
 | String enum | `{"type":"string","enum":[declared values]}` |
 | Constant | `{"type":corresponding_type,"const":value}`; safe-integer constants use type `integer` |
+| Conditional | `allOf` containing the base and separate `if`/`then`/optional `else` schemas |
 | Membership | Array body plus `contains`, explicit `minContains`, optional `maxContains`; repeated requirements use `allOf`; vacuous zero/no-maximum requirement omitted |
 | Property names | Object body plus `propertyNames: key`; repeated constraints use `allOf`; explicit object type beside named references |
 | Tuple | `{"type":"array","prefixItems":[children],"items":false,"minItems":N}`; omit `prefixItems` for N=0 |

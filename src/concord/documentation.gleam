@@ -267,6 +267,18 @@ fn node(
         aliases,
       )
     })
+  let conditionals =
+    [
+      #("if", "if condition"),
+      #("then", "then requirement"),
+      #("else", "else requirement"),
+    ]
+    |> list.filter_map(fn(pair) {
+      case has(s, pair.0) {
+        True -> Ok(node(get(s, pair.0), pair.1, depth + 1, "", id, aliases))
+        False -> Error(Nil)
+      }
+    })
   let membership = case get(s, "contains") {
     Object(_) as child -> [
       node(child, "matching items", depth + 1, "", id, aliases),
@@ -294,7 +306,16 @@ fn node(
       })
     })
   let children =
-    list.flatten([fields, items, positions, membership, key_names, maps, unions])
+    list.flatten([
+      fields,
+      items,
+      positions,
+      membership,
+      key_names,
+      maps,
+      unions,
+      conditionals,
+    ])
     |> string.join("")
   let kind = case has(s, "oneOf"), has(s, "anyOf"), has(s, "allOf") {
     True, _, _ -> "exactly one alternative"
