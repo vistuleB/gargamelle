@@ -49,11 +49,11 @@ The implementation agent completed the core and generated, mutation, runtime,
 typed-output and compile-negative evidence. The coordinating agent reviewed it
 and added independent validator checks, official-suite selection, cloze payload
 comparisons and the final evidence gate. The generated suite includes 10,000
-seeded pairs, all 180 generic parent/child combinations and nine depth-50 chains.
-Sixteen actual compiled-library mutations must fail behavioral assertions,
-including five numeric and three recursion mutants. The three
+seeded pairs, all 209 generic parent/child combinations and ten depth-50 chains.
+Nineteen actual compiled-library mutations must fail behavioral assertions,
+including five numeric, three recursion, and three tuple mutants. The three
 new revision-3 mutations run the full foundation, typed-value and hardening suites.
-Thirteen forbidden Gleam programs must fail compilation after a positive baseline.
+Fifteen forbidden Gleam programs must fail compilation after a positive baseline.
 
 The official suite is pinned to commit
 `7de0e6a06031ede80028583dd45d0cd41105ae5b`. All 46 core files are retained with
@@ -239,3 +239,29 @@ and `data-fold="collapse"` control all rendered branches. The script expands all
 branches for printing and restores their previous state afterward. A host can
 supply its own stylesheet or embed the fragment in an existing page. Page title,
 navigation, article grouping and surrounding prose belong to the caller.
+
+## Fixed-position arrays
+
+`tuple` starts an opaque builder with a curried constructor. Each `element`
+consumes one constructor argument; `finish_tuple` closes the array at exactly
+that length. The result may be a Gleam tuple, a custom type, or another typed
+value:
+
+```gleam
+let entry = concord.tuple(fn(label) { fn(weight) { #(label, weight) } })
+  |> concord.element(concord.text())
+  |> concord.element(concord.number())
+  |> concord.finish_tuple
+// ["x", 1.25] decodes to #(String, Float); shorter/longer arrays are rejected.
+```
+
+An empty builder accepts only `[]` and returns its supplied constructor value.
+Emission uses `prefixItems`, `items: false`, and `minItems` equal to the length;
+the empty tuple omits `prefixItems` to remain meta-schema valid. Positional errors
+use paths such as `/1`. Positions guard recursive edges by descending into the
+input. Conversion callbacks run only after the whole input passes validation.
+
+There are no optional trailing positions or rest elements. Use a disjoint union
+of exact-length definitions, mapped to one output type, for two alternative
+lengths. `bounds` and `unique_items` remain homogeneous-array operations and
+reject tuple nodes, including tuples mapped to lists.

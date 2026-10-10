@@ -7,6 +7,8 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 const root=fileURLToPath(new URL('../',import.meta.url));
 const cases=[
+ ['tuple_position_type','pub fn main() { s.element(s.tuple(fn(x: Int){x}),s.text()) }','Type mismatch'],
+ ['opaque_tuple','pub fn main() { s.Tuple([],fn(x){x}) }','Unknown module value'],
  ['recursive_output_type','pub fn main() { s.recursive("tree",fn(self: s.Definition(Int)) { Ok(s.text()) }) }','Type mismatch'],
  ['mutual_output_types','pub fn main() { s.recursive_pair("a","b",fn(a: s.Definition(Int),b: s.Definition(String)) { Ok(#(b,a)) }) }','Type mismatch'],
  ['private_reference_node','pub fn main() { s.ReferenceNode("tree",Nil) }','Unknown module value'],
@@ -21,7 +23,7 @@ const cases=[
  ['optional_is_option','pub fn main() { s.optional(s.record(fn(x: String){x}),"x",s.text()) }','Type mismatch'],
  ['no_predicate_escape','pub fn main() { s.predicate(s.text(),fn(_){False}) }','Unknown module value'],
 ];
-test('compile-time boundary: positive baseline and thirteen forbidden API programs',()=>{
+test('compile-time boundary: positive baseline and fifteen forbidden API programs',()=>{
  const dir=mkdtempSync(join(tmpdir(),'schema-contract-negative-'));
  try{
  mkdirSync(join(dir,'src'));

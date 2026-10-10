@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.0.4 — 2026-10-10
+
+- Add typed exact-length tuple builders and positional HTML documentation.
+- Add tuple typed-output, oracle, generated composition, and mutation evidence.
+- Fix exponential recursion-guard traversal of shared union branches using local active/checked identity sets.
+- Add shared-graph performance and cycle-rejection regressions.
+
 ## 0.0.3 — 2026-10-10
 
 - Add guarded self-recursive definitions and mutually recursive pairs with distinct typed outputs.

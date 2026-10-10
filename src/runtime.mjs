@@ -89,3 +89,15 @@ export function identity_tracker(make) {
     return false;
   });
 }
+
+// Tri-color DFS identity state, scoped to one recursive finalization.
+// Only completed traversals enter checked; active revisits are cycles.
+export function recursion_guard(make) {
+  const visiting = new Set(), checked = new Set();
+  return make(node => {
+    if (visiting.has(node)) return 1;
+    if (checked.has(node)) return 2;
+    visiting.add(node);
+    return 0;
+  }, node => { visiting.delete(node); checked.add(node); });
+}

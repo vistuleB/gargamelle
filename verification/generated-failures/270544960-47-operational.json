@@ -1,0 +1,64 @@
+{
+  "contractRevision": 3,
+  "classification": "operational-failure",
+  "context": {
+    "seed": 270544960,
+    "index": 47,
+    "depth": 5,
+    "inputIndex": 0,
+    "stage": "oracle-decode"
+  },
+  "recipe": {
+    "kind": "tuple",
+    "children": [
+      {
+        "kind": "nullable",
+        "child": {
+          "kind": "title",
+          "child": {
+            "kind": "any",
+            "children": [
+              {
+                "kind": "tagged",
+                "tag": "__proto__",
+                "branches": [
+                  {
+                    "tag": "__proto__",
+                    "fields": [
+                      {
+                        "name": "value",
+                        "child": {
+                          "kind": "null"
+                        }
+                      }
+                    ],
+                    "description": "variant a"
+                  },
+                  {
+                    "tag": "constructor",
+                    "fields": []
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      {
+        "kind": "string"
+      }
+    ]
+  },
+  "value": [
+    {
+      "__proto__": "__proto__",
+      "value": null
+    },
+    "x"
+  ],
+  "error": {
+    "name": "AssertionError",
+    "message": "Unclassified oracle disagreement: no declared __proto__ property",
+    "stack": "AssertionError [ERR_ASSERTION]: Unclassified oracle disagreement: no declared __proto__ property\n    at classifySplit (file:///Users/jpsteinb/github.com/vistuleB/concord/verification/oracle-classification.mjs:20:9)\n    at run (file:///Users/jpsteinb/github.com/vistuleB/concord/verification/generated.test.mjs:62:25)\n    at async TestContext.<anonymous> (file:///Users/jpsteinb/github.com/vistuleB/concord/verification/generated.test.mjs:81:332)\n    at async Test.run (node:internal/test_runner/test:1113:7)\n    at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)"
+  }
+}

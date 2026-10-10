@@ -136,6 +136,13 @@ fn constraints(s: Value) {
       }
     })
   let extras = [
+    case text(get(s, "type")), get(s, "items") {
+      "array", Boolean(False) ->
+        "exactly "
+        <> show(get(s, "minItems"))
+        <> " positions; extra positions rejected"
+      _, _ -> ""
+    },
     case has(s, "exclusiveMinimum") {
       True -> "value > " <> show(get(s, "exclusiveMinimum"))
       False -> ""
@@ -247,6 +254,18 @@ fn node(
     Object(_) as item -> [node(item, "each item", depth + 1, "", id, aliases)]
     _ -> []
   }
+  let positions =
+    values(get(s, "prefixItems"))
+    |> list.index_map(fn(child, i) {
+      node(
+        child,
+        "position " <> int.to_string(i),
+        depth + 1,
+        "required",
+        id,
+        aliases,
+      )
+    })
   let maps = case get(s, "additionalProperties") {
     Object(_) as item -> [
       node(item, "each map value", depth + 1, "", id, aliases),
@@ -261,7 +280,8 @@ fn node(
         node(branch, branch_label(branch, i, key), depth + 1, "", id, aliases)
       })
     })
-  let children = list.flatten([fields, items, maps, unions]) |> string.join("")
+  let children =
+    list.flatten([fields, items, positions, maps, unions]) |> string.join("")
   let kind = case has(s, "oneOf"), has(s, "anyOf"), has(s, "allOf") {
     True, _, _ -> "exactly one alternative"
     _, True, _ -> "any matching alternative"

@@ -52,6 +52,7 @@ type Node {
   ConstNode(Value, String)
   EnumNode(List(String))
   ArrayNode(Node, Option(Int), Option(Int))
+  TupleNode(List(Node))
   DictNode(Node, Option(Int), Option(Int))
   RecordNode(List(Field), Policy)
   NullableNode(Node)
@@ -120,6 +121,10 @@ pub opaque type Definition(a) {
 
 pub opaque type Record(a) {
   Record(List(Field), fn(Value) -> a)
+}
+
+pub opaque type Tuple(a) {
+  Tuple(List(Node), fn(Value) -> a)
 }
 
 pub opaque type Variant(a) {
@@ -397,6 +402,30 @@ pub fn array(def: Definition(a)) -> Definition(List(a)) {
       _ -> panic as "validated array"
     }
   })
+}
+
+/// Start an exact-length positional array with a curried typed constructor.
+pub fn tuple(constructor: a) -> Tuple(a) {
+  Tuple([], fn(_) { constructor })
+}
+
+/// Append one required position, consuming one constructor argument.
+pub fn element(t: Tuple(fn(a) -> b), child: Definition(a)) -> Tuple(b) {
+  let Tuple(nodes, construct) = t
+  let Definition(node, convert) = child
+  let index = list.length(nodes)
+  Tuple(list.append(nodes, [node]), fn(v) {
+    let assert JArray(values) = v as "validated tuple"
+    let assert Ok(value) = list.first(list.drop(values, index))
+      as "validated tuple position"
+    construct(v)(convert(value))
+  })
+}
+
+/// Close a tuple. Short arrays and extra positions are rejected.
+pub fn finish_tuple(t: Tuple(a)) -> Definition(a) {
+  let Tuple(nodes, convert) = t
+  Definition(TupleNode(nodes), convert)
 }
 
 pub fn dictionary(def: Definition(a)) -> Definition(List(#(String, a))) {
@@ -969,6 +998,16 @@ fn check(n: Node, v: Value, p: String) -> List(DataError) {
           list.index_map(xs, fn(x, i) { check(child, x, path(p, int_text(i))) })
           |> list.flatten
       }
+    TupleNode(children), JArray(xs) ->
+      case list.length(children) == list.length(xs) {
+        False -> err("tuple_size", p)
+        True ->
+          list.zip(children, xs)
+          |> list.index_map(fn(pair, i) {
+            check(pair.0, pair.1, path(p, int_text(i)))
+          })
+          |> list.flatten
+      }
     DictNode(child, lo, hi), JObject(xs) ->
       case size_ok(list.length(xs), lo, hi) {
         False -> err("property_count", p)
@@ -1041,6 +1080,7 @@ fn check(n: Node, v: Value, p: String) -> List(DataError) {
     StringNode(_, _, _), _ | EnumNode(_), _ -> err("string_type", p)
     IntegerNode(_, _), _ -> err("integer_type", p)
     NumberNode(_, _), _ -> err("number_type", p)
+    TupleNode(_), _ -> err("tuple_type", p)
     ArrayNode(_, _, _), _ -> err("array_type", p)
   }
 }
@@ -1100,7 +1140,7 @@ fn node_children(n: Node) -> Result(List(Node), ConstructionError) {
           child
         }),
       )
-    UnionNode(children, _) -> Ok(children)
+    TupleNode(children) | UnionNode(children, _) -> Ok(children)
     TaggedNode(_, branches) -> Ok(list.map(branches, fn(b) { b.1 }))
     _ -> Ok([])
   }
@@ -1165,22 +1205,38 @@ fn collect_definitions_result(
 // fields instead descend into a strict child value and therefore break cycles.
 fn same_input_children(n: Node) -> Result(List(Node), ConstructionError) {
   case n {
-    ArrayNode(_, _, _) | DictNode(_, _, _) | RecordNode(_, _) -> Ok([])
+    ArrayNode(_, _, _) | TupleNode(_) | DictNode(_, _, _) | RecordNode(_, _) ->
+      Ok([])
     _ -> node_children(n)
   }
 }
 
+// Per-finalization DFS state: active nodes detect back edges; fully checked
+// nodes skip shared subgraphs. State is shared across all definition roots.
+type Guard(a) {
+  Guard(fn(a) -> Int, fn(a) -> Nil)
+}
+
+@external(javascript, "./runtime.mjs", "recursion_guard")
+fn new_guard(make: fn(fn(a) -> Int, fn(a) -> Nil) -> Guard(a)) -> Guard(a)
+
 fn guard_same_input(
   n: Node,
-  ancestors: List(Node),
+  state: Guard(Node),
 ) -> Result(Nil, ConstructionError) {
-  case list.any(ancestors, same_reference(n, _)) {
-    True -> Error(ConstructionError("non-progressing recursive definition"))
-    False -> {
+  let Guard(enter, finish) = state
+  case enter(n) {
+    1 -> Error(ConstructionError("non-progressing recursive definition"))
+    2 -> Ok(Nil)
+    _ -> {
       use children <- result.try(same_input_children(n))
-      list.try_fold(children, Nil, fn(_, child) {
-        guard_same_input(child, [n, ..ancestors])
-      })
+      use _ <- result.try(
+        list.try_fold(children, Nil, fn(_, child) {
+          guard_same_input(child, state)
+        }),
+      )
+      finish(n)
+      Ok(Nil)
     }
   }
 }
@@ -1191,10 +1247,11 @@ fn guard_graph(root: Node) -> Result(Nil, ConstructionError) {
     [],
     new_seen(Seen),
   ))
+  let state = new_guard(Guard)
   list.try_fold(
     [root, ..list.map(definitions, fn(pair) { pair.1 })],
     Nil,
-    fn(_, n) { guard_same_input(n, []) },
+    fn(_, n) { guard_same_input(n, state) },
   )
 }
 
@@ -1275,6 +1332,16 @@ fn emit(n: Node) -> Value {
       |> put("items", emit(c))
       |> emit_bound("minItems", lo)
       |> emit_bound("maxItems", hi)
+    TupleNode(children) -> {
+      let schema =
+        typ("array")
+        |> put("items", JBool(False))
+        |> emit_bound("minItems", Some(list.length(children)))
+      case children {
+        [] -> schema
+        _ -> put(schema, "prefixItems", JArray(list.map(children, emit)))
+      }
+    }
     DictNode(c, lo, hi) ->
       typ("object")
       |> put("additionalProperties", emit(c))

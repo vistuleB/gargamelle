@@ -13,6 +13,9 @@ above describes the specification checkpoint; current automated results are in
 `multipleOf` and fractional constants remain outside scope. Guarded self-recursion
 and mutually recursive pairs are also implemented with finite local reference
 graphs. Same-input cycles fail construction; no decoder depth cap is introduced.
+C09 exact-length typed tuples are implemented with positional `prefixItems`,
+closed tails, and empty-tuple support. Same-input guard traversal shares active
+and completed identity sets to avoid repeated shared-branch verification.
 
 ## 1. Product and scope
 
@@ -102,7 +105,8 @@ These are conceptual constructors, not committed API spellings.
 | C05 | Any-of | At least one child accepts | Select the first successful branch in declaration order |
 | C06 | One-of | Exactly one child accepts | Decode that unique branch; reject overlapping matches |
 | C07 | Tagged union | Object branches with required, distinct string-constant discriminators; equivalent to their emitted one-of | Select the matching variant; discriminator is consumed, not duplicated in branch output |
-| C08 | Guarded recursion | Local `$defs`/`$ref` graphs; every cycle must descend through an item, dictionary value, or record field | Preserve the declared recursive output type; mutually recursive pairs may have distinct output types |
+| C09 | Exact-length tuple | Array of exactly N elements; position i satisfies child i | Apply the curried typed constructor in positional order |
+| C08 | Guarded recursion | Local `$defs`/`$ref` graphs; every cycle must descend through an item, tuple position, dictionary value, or record field | Preserve the declared recursive output type; mutually recursive pairs may have distinct output types |
 | A01 | Description/title | Annotation only; no change in accepted inputs or decoded values | Preserve child result |
 | A02 | Total map | No change to schema or acceptance | Apply mapping to successfully decoded value; mapping cannot add rejection rules |
 
@@ -202,6 +206,7 @@ the in-memory JSON representation.
 | Safe integer | `{"type":"integer","minimum":effective_min,"maximum":effective_max}`; always include safe bounds or tighter bounds |
 | String enum | `{"type":"string","enum":[declared values]}` |
 | Constant | `{"type":corresponding_type,"const":value}`; safe-integer constants use type `integer` |
+| Tuple | `{"type":"array","prefixItems":[children],"items":false,"minItems":N}`; omit `prefixItems` for N=0 |
 | Array | `{"type":"array","items":child}` plus supplied `minItems`/`maxItems` |
 | Record | `{"type":"object","properties":{...},"required":[...],"additionalProperties":true_or_false}`; include empty properties/required |
 | Dictionary | `{"type":"object","additionalProperties":child}` plus supplied `minProperties`/`maxProperties` |

@@ -133,15 +133,15 @@ conversion. There is no generic FFI cast or forged typed provider value.
 
 ## Current evidence and remaining work
 
-`gleam test` currently runs 29 tests, including concrete typed records/custom
+`gleam test` currently runs 30 tests, including concrete typed records/custom
 variants, dictionaries/arrays, glon regressions, optional/null states, callback
 suppression, hostile keys, Unicode, tags, constraints, constants and defaults.
 `schema_fixtures` supplies 25 authored independent-oracle fixtures.
 
 `verification/generated*.test.mjs` adds 10,000 seeded definition/input pairs,
-all 180 generic parent/child combinations, nonempty depth-50 chains, independently
+all 209 generic parent/child combinations, nonempty depth-50 chains, independently
 specified output/error fixtures, admission/operational tests, callback counters,
-and actual isolated mutations for all five required defect classes. Thirteen
+and actual isolated mutations for all five required defect classes. Fifteen
 compile-negative programs establish the public opaque/static API boundary.
 Generated coverage and retained findings are documented in
 `verification/generated-notes.md`; operational failures are not rejections.
@@ -151,3 +151,22 @@ oracle discrepancy resolution, fingerprinted report and overall release gate.
 These preservation arguments do not independently claim V01–V13 completion or
 browser support. Independent review and counterexamples may expose implementation
 errors despite the reasoning and tests.
+
+## Exact-length tuples and shared recursion guards
+
+A tuple with N positional children accepts precisely arrays of length N whose
+position i satisfies child i. Its schema combines array type, N prefix schemas,
+`items: false`, and `minItems: N`; together these require the same length and
+positional acceptance. N=0 omits the nonempty-only prefix keyword. Only after all
+positions validate does the curried constructor consume each child's decoded
+value in declaration order. No element is defaulted or fabricated. Tuple edges
+consume a strict input child and therefore guard recursion.
+
+Guard finalization uses identity sets local to the traversal. A revisit of an
+active node establishes a same-input back edge and is rejected. A completed node
+has already had every same-input outgoing edge checked, so revisiting it cannot
+introduce a new cycle; it may safely be skipped. Only successful completion marks
+a node checked. Both sets are shared across all collected definition roots and
+discarded when finalization returns. Shared union layers therefore no longer
+recheck each duplicate branch exponentially. This does not change schema emission
+or impose a decoding-depth limit.

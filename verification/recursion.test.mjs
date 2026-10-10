@@ -1,4 +1,5 @@
 import test from 'node:test';
+import {spawnSync} from 'node:child_process';
 import assert from 'node:assert/strict';
 import {s,unwrap,toList,Some,None,Ok,emitted,evaluate,evaluateText} from './generated-api.mjs';
 import {compileOracle} from './oracle.mjs';
@@ -137,5 +138,23 @@ test('dictionary recursion preserves own hostile keys and rejects invalid leaves
  for(const value of [{},{a:{b:{}}},JSON.parse('{"__proto__":{"constructor":{}}}'),{a:1},null,[]]){
   const actual=evaluate(d,value);for(const check of checks)assert.equal(actual.accepted,check(value).accepted);
   if(actual.accepted)assert.deepEqual(actual.value,value);
+ }
+});
+
+test('shared union layers finalize without exponential guard traversal',()=>{
+ const code=`import {s,Ok,unwrap,toList} from ${JSON.stringify(new URL('./generated-api.mjs',import.meta.url).href)};
+ const start=performance.now();
+ const d=unwrap(s.recursive('tree',self=>{let d=s.map(s.array(self),()=>0);for(let i=0;i<32;i++)d=unwrap(s.named('layer-'+i,unwrap(s.any_of(toList([d,d])))));return new Ok(d);}));
+ console.log(JSON.stringify({ms:performance.now()-start,bytes:s.emit_text(d).length}));`;
+ const run=spawnSync(process.execPath,['--input-type=module','-e',code],{encoding:'utf8',timeout:5000});
+ assert.ifError(run.error);assert.equal(run.status,0,run.stderr);
+ const report=JSON.parse(run.stdout);assert.ok(report.bytes<4000);
+});
+
+test('guard completion is local to finalization and does not hide active back edges',()=>{
+ for(let i=0;i<3;i++){
+  const good=unwrap(s.recursive('same-name',self=>new Ok(s.array(self))));assert.equal(evaluate(good,[]).accepted,true);
+  assert.equal(s.recursive('same-name',self=>s.any_of(toList([self,self]))) instanceof Ok,false);
+  assert.equal(s.recursive_pair('first','second',(a,b)=>new Ok([s.description(b,'shared'),unwrap(s.any_of(toList([a,a])))])) instanceof Ok,false);
  }
 });

@@ -11,7 +11,7 @@ export function classifySplit(schema,value,ajv,hyperjump) {
   const out={...s};
   if(s.properties){out.properties=Object.fromEntries(Object.entries(s.properties).map(([k,c])=>{if(k==='__proto__')found=true;return [k==='__proto__'?replacement:k,rewrite(c)];}));}
   if(s.required)out.required=s.required.map(k=>k==='__proto__'?replacement:k);
-  for(const k of ['anyOf','oneOf','allOf'])if(s[k])out[k]=s[k].map(rewrite);
+  for(const k of ['anyOf','oneOf','allOf','prefixItems'])if(s[k])out[k]=s[k].map(rewrite);
   for(const k of ['items','additionalProperties'])if(s[k]&&typeof s[k]==='object')out[k]=rewrite(s[k]);
   return out;
  }

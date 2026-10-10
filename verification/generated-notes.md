@@ -20,9 +20,9 @@ not the generator, determines validity. Extra-key, missing-field, wrong-type,
 length and numeric mutations are proposals, never assumed invalid. Arbitrary
 JSON values supplement them. Proposals vary union branch, nullable presence,
 optional/defaulted presence, names and tags, including hostile keys. Coverage
-requires both outcomes for every root and nested constructor and all 180 generic parent/child constructor combinations.
+requires both outcomes for every root and nested constructor and all 209 generic parent/child constructor combinations.
 
-Nine additional depth-50 chains use linear structure. Arrays/dictionaries have
+Ten additional depth-50 chains use linear structure. Arrays/dictionaries have
 nonempty witnesses; nullable chains use non-null witnesses; each also has an
 invalid leaf so validation reaches the deepest child. Coverage JSON records
 counts, seeds, edges, outcomes and requested random depths. The artifact is
@@ -94,3 +94,9 @@ so child-suite runs remove it and assert a nonzero baseline test count. A UTF-16
 length mutation also survived the selected fixtures until an explicit one-code-
 point bound was paired with an astral character; that fixture is now permanent.
 Neither failure was counted as a successful mutation kill.
+
+Tuple generation adds positional children to the independent interpreter and
+all generic parent/child combinations. The pinned Ajv declared-`__proto__`
+defect can also occur beneath `prefixItems`; the existing semantics-preserving
+rename probe now traverses those positions before classifying a split. The
+retained seed 270544960, definition 47 records the initial harness failure.
