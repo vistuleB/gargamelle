@@ -1,7 +1,8 @@
-// Opt-in research gate: external pinned QuickJS sources, no package dependency.
+// Opt-in differential gate for vendored or external pinned QuickJS sources.
 import assert from 'node:assert/strict';
+import {collectTest262} from './test262-regex-cases.mjs';
 import {createHash} from 'node:crypto';
-import {readFileSync,writeFileSync,mkdtempSync,rmSync,mkdirSync,cpSync} from 'node:fs';
+import {readFileSync,writeFileSync,mkdtempSync,rmSync,mkdirSync,cpSync,existsSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join,resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -14,8 +15,8 @@ assert.equal(process.versions.unicode,'16.0','Reference Unicode version changed;
 const version=readFileSync(join(source,'VERSION'),'utf8').trim();
 assert.ok(['2025-09-13','2026-06-04'].includes(version),'Unreviewed QuickJS source version');
 const directory=mkdtempSync(join(tmpdir(),'gargamelle-quickjs-'));
-const unicodeSource=process.argv[3];
-const variant=unicodeSource?'unicode16-overlay':'original';
+const unicodeSource=process.argv[3]==='-'?null:process.argv[3];
+const variant=unicodeSource?'unicode16-overlay':existsSync(join(source,'PROVENANCE.json'))?'vendored-unicode16':'original';
 const sanitized=process.env.PROBE_SANITIZERS==='1';
 if(unicodeSource) {
   assert.equal(version,'2026-06-04');
@@ -31,7 +32,7 @@ const hashes=Object.fromEntries(['VERSION','libregexp.c','libregexp.h','libregex
 function run(command,args,options={}) {
   const result=spawnSync(command,args,{cwd:root,encoding:'utf8',timeout:60000,maxBuffer:30*1024*1024,...options});
   if(result.error) throw new Error(`${result.error}\n${result.stdout?.slice(-1000)}\n${result.stderr}`);
-  assert.equal(result.status,0,result.stdout+'\n'+result.stderr);
+  assert.equal(result.status,0,result.stdout.slice(-1000)+'\n'+result.stderr);
   return result.stdout;
 }
 try {
@@ -73,6 +74,25 @@ try {
     const cp=i<256?0x105c0+i:i<512?0x11db0+i-256:random()%0x110000;
     for(const property of properties)cases.push({pattern:`^\\p{${property}}$`,text:String.fromCodePoint(cp)});
   }
+  // Exercise every candidate property/category/script name and alias, including
+  // names Node rejects. This checks the table overlay beyond six sample properties.
+  let section='';
+  const aliases=[];
+  for(const line of readFileSync(join(source,'unicode_gen_def.h'),'utf8').split('\n')) {
+    const start=line.match(/^#ifdef (\w+)/); if(start){section=start[1];continue;}
+    const def=line.match(/^DEF\((\w+)(?:, "([^"]*)")?\)/);if(!def)continue;
+    for(const name of [def[1],...(def[2]??'').split(',')].filter(Boolean)) {
+      if(section==='UNICODE_SCRIPT') aliases.push(`Script=${name}`,`sc=${name}`,`Script_Extensions=${name}`,`scx=${name}`);
+      else if(section==='UNICODE_GENERAL_CATEGORY') aliases.push(name,`General_Category=${name}`,`gc=${name}`);
+      else if(section==='UNICODE_PROP_LIST'||section==='UNICODE_SEQUENCE_PROP_LIST') aliases.push(name);
+    }
+  }
+  const aliasTexts=['A','a','0','α','あ','💜','\u0301','\u200d','\n',String.fromCodePoint(0x105c0),String.fromCodePoint(0x11db0),String.fromCodePoint(0x10ffff)];
+  for(const property of new Set(aliases)) for(const text of aliasTexts) for(const escape of ['p','P'])
+    cases.push({pattern:`^\\${escape}{${property}}$`,text});
+  const test262=process.argv[4]?collectTest262(resolve(process.argv[4])):null;
+  if(test262) assert.equal(test262.exclusions.length,0,'Selected Test262 programs must pass on the reference runtime');
+  if(test262) cases.push(...test262.cases);
   const requests=cases.map(({pattern,text})=>({pattern,text_utf16:Buffer.from(text,'utf16le').toString('hex').toUpperCase()}));
   requests.push({pattern:'(a+)+$',text_utf16:Buffer.from('a'.repeat(30)+'!','utf16le').toString('hex').toUpperCase(),budget:0});
   requests.push({pattern:'a',text_utf16:'6100'}); // port remains usable after failure
@@ -90,7 +110,7 @@ try {
   assert.deepEqual(output.at(-2),{error:'operational'});
   assert.deepEqual(output.at(-1),{valid:true,matched:true});
   const report={version,variant,sanitized,sourceHashes:hashes,node:process.version,unicode:process.versions.unicode,
-    cases:cases.length,differences,operationalFailureRetained:true,scope:'Standalone libregexp via an OTP port; research only, no production binding'};
+    cases:cases.length,differences,test262:test262?{...test262,cases:test262.cases.length}:null,operationalFailureRetained:true,scope:'Standalone libregexp differential check; production binding is checked separately'};
   mkdirSync(join(root,'reports'),{recursive:true});
   writeFileSync(join(root,`reports/quickjs-regex-${version}-${variant}${sanitized?'-sanitized':''}.json`),JSON.stringify(report,null,2)+'\n');
   console.log(`QuickJS/Node regex probe: ${cases.length} cases; ${differences.length} differences; operational failure preserved.`);

@@ -70,8 +70,8 @@ assertion.
 
 ## Validation evidence
 
-- 44 main-source JavaScript tests, including the five promoted integration tests.
-- 52 Erlang tests: those tests plus eight native process/graph tests.
+- 45 main-source JavaScript tests, including the five promoted integration tests.
+- 53 Erlang tests: those tests plus eight native process/graph tests.
 - Twelve compile-negative checks across both targets, including rejection of
   construction plans by executable APIs and access to private constructors.
 - 36 emitted schemas and 3,636 cases checked independently with Ajv 2020-12.
@@ -84,18 +84,20 @@ The old implementation recorded three native failures for escaped runnable
 builder references. Main now implements a different, explicit construction-plan
 contract: the old positive tests are replaced with completed-definition lifetime
 tests and compile-negative checks. Their original programs remain in Git history
-at `511d5ae`. Main's native graph fixture passes all 52 tests; no old failure is
+at `511d5ae`. Main's native graph fixture passes all 53 tests; no old failure is
 reclassified as a successful execution of its original program.
 
-All eleven portability groups pass. Documentation generation and Hex tarball
+All twelve portability groups pass. Documentation generation and Hex tarball
 export pass. A fresh JavaScript consumer of the extracted archive, using copied
 pinned Gleam dependency sources and no repository verification tools, exercised
 recursive `lift`, a separately annotated generic helper, distinct mutual outputs,
 validation, decoding, emission, rendering and a decoded closure.
 
-Native regex uses a test adapter based on Erlang `re`. These cases do not establish
-ECMAScript regex compatibility. Full native support still requires the selected
-regex engine, packaging and broader independent conformance evidence.
+Native fixtures now build and use the production QuickJS regex helper. An
+unmodified fresh archive consumer passed on Erlang and JavaScript, including
+Unicode properties, duplicate named groups, recursive bounds and rendering.
+A retained renderer regression covers Erlang's distinct integer JSON values.
+See `docs/native-erlang.md` for the explicit native build and deployment step.
 
 ## Cost observations and remaining work
 
@@ -110,7 +112,7 @@ can still expand during transfer and emission, as the prototype report records.
 Public migration examples and helper/lifetime tests are now updated, and unused
 construction-cell machinery is removed from both runtimes. Standalone validation
 still allocates evidence, and shared copying/emission can expand repeated edges.
-Next, extend native oracle coverage and finish the regex binding and distribution
-gate before claiming Erlang support. An unmodified clean Erlang consumer remains
-blocked by the two regex externals. Neither a release nor an application dependency
-migration follows automatically from this integration.
+Next, extend native oracle coverage, measure regex startup costs on realistic
+workloads and verify platform/deployment builds before claiming Erlang support.
+Neither a release nor an application dependency migration follows automatically
+from this integration.

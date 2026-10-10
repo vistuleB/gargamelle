@@ -15,7 +15,7 @@ test('main library preserves baseline behavior with immutable recursive plans',(
     'historical baseline source changed');
   const directory=mkdtempSync(join(tmpdir(),'gargamelle-production-plans-'));
   try {
-    for(const name of ['src','test','build/packages']) cpSync(join(root,name),join(directory,name),{recursive:true});
+    for(const name of ['src','test','priv','build/packages']) cpSync(join(root,name),join(directory,name),{recursive:true});
     for(const name of ['gleam.toml','manifest.toml']) cpSync(join(root,name),join(directory,name));
     for(const name of ['plan_support.erl','plan_support.mjs']) cpSync(join(root,'verification/portability/plans',name),join(directory,'src',name));
     cpSync(join(root,'verification/portability/integration/integration_probe.gleam'),join(directory,'src/integration_probe.gleam'));
@@ -36,7 +36,7 @@ test('main library preserves baseline behavior with immutable recursive plans',(
     const run=(args)=>spawnSync('gleam',args,{cwd:directory,encoding:'utf8',timeout:60000,maxBuffer:5*1024*1024,env:{...process.env,GIT_DIR:'',GIT_WORK_TREE:''}});
     const javascript=run(['test','--target','javascript']);
     assert.equal(javascript.status,0,javascript.stderr+'\n'+javascript.stdout);
-    assert.match(javascript.stdout,/44 passed, no failures/);
+    assert.match(javascript.stdout,/45 passed, no failures/);
     const probe=target=>{
       const result=run(['run','--target',target,'-m','integration_probe']);
       assert.equal(result.status,0,result.stderr+'\n'+result.stdout);
@@ -71,20 +71,11 @@ test('main library preserves baseline behavior with immutable recursive plans',(
     }
     cpSync(join(root,'verification/portability/scalar_api.erl'),join(directory,'src/scalar_api.erl'));
     cpSync(join(root,'verification/portability/graph_api_test.gleam'),join(directory,'test/graph_api_test.gleam'));
-    const source=join(directory,'src/gargamelle.gleam');
-    let text=readFileSync(source,'utf8');
-    for(const name of ['pattern_valid','pattern_matches']) {
-      const marker=`@external(javascript, "./runtime.mjs", "${name}")`;
-      assert.equal(text.split(marker).length-1,1);
-      text=text.replace(marker,`@external(erlang, "scalar_api", "${name}")\n${marker}`);
-    }
-    writeFileSync(source,text);
-    const fixtures=join(directory,'src/schema_fixtures.gleam');
-    writeFileSync(fixtures,readFileSync(fixtures,'utf8').replace('@external(javascript, "./runtime.mjs", "int_text")',
-      '@external(erlang, "gargamelle_runtime", "int_text")\n@external(javascript, "./runtime.mjs", "int_text")'));
+    const build=spawnSync('make',['-C','priv/regex-src'],{cwd:directory,encoding:'utf8',timeout:60000});
+    assert.equal(build.status,0,build.stdout+'\n'+build.stderr);
     const erlang=run(['test','--target','erlang']);
     assert.equal(erlang.status,0,erlang.stderr+'\n'+erlang.stdout);
-    assert.match(erlang.stdout,/52 passed, no failures/);
+    assert.match(erlang.stdout,/53 passed, no failures/);
     assert.deepEqual(probe('erlang'),integrated,'cross-target schema/output/diagnostic mismatch');
     benchmark('erlang');
     for(const [name,body,privateValue] of [
@@ -113,6 +104,6 @@ pub fn forbidden() {
     }
     t.diagnostic('12 compile-negative checks passed on the integrated API');
     t.diagnostic(`${integrated.length} schemas, ${integrated.reduce((sum,row)=>sum+row.cases.length,0)} independent cases; exact historical JavaScript and native comparison`);
-    t.diagnostic('44 main-source tests and eight native process/graph tests passed');
+    t.diagnostic('45 main-source tests and eight native process/graph tests passed');
   } finally {rmSync(directory,{recursive:true,force:true});}
 });

@@ -2,7 +2,9 @@
 
 Version 0.2.0 is in development. These changes are in the main source;
 the published 0.1.0 package is unchanged. JavaScript remains the supported target
-while the native regex implementation and packaging are unfinished.
+while native platform, deployment and performance verification remain open.
+The native implementation requires an explicit build; see
+[Native Erlang setup](native-erlang.html).
 
 ## Strings and keys
 

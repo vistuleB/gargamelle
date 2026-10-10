@@ -15,6 +15,7 @@ import gleam/string
 type Value {
   Null
   Text(String)
+  Integer(Int)
   Number(Float)
   Boolean(Bool)
   Array(List(Value))
@@ -23,6 +24,7 @@ type Value {
 
 fn decoder() {
   decode.one_of(decode.map(decode.string, Text), [
+    decode.map(decode.int, Integer),
     decode.map(decode.float, Number),
     decode.map(decode.bool, Boolean),
     decode.map(decode.optional(decode.failure(Nil, "null")), fn(_) { Null }),
@@ -68,6 +70,7 @@ fn encode(v: Value) -> json.Json {
   case v {
     Null -> json.null()
     Text(s) -> json.string(s)
+    Integer(n) -> json.int(n)
     Number(n) -> json.float(n)
     Boolean(b) -> json.bool(b)
     Array(xs) -> json.array(xs, encode)

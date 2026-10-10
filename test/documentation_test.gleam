@@ -1,5 +1,6 @@
 import gargamelle as s
 import gargamelle/documentation as docs
+import gleam/option.{Some}
 import gleam/string
 import gleeunit/should
 
@@ -56,4 +57,20 @@ pub fn arbitrary_tag_test() {
     s.tagged("mode", [s.variant("custom", r, s.Closed)])
   let html = docs.render(definition, "tagged")
   string.contains(html, "mode = &quot;custom&quot;") |> should.be_true
+}
+
+pub fn integer_schema_values_test() {
+  let assert Ok(bounded) =
+    s.array(s.safe_integer()) |> s.bounds(Some(0), Some(3))
+  let html = docs.render(bounded, "bounded")
+  string.contains(html, "Invalid schema JSON") |> should.be_false
+  string.contains(html, "each item") |> should.be_true
+  let assert Ok(html) =
+    docs.render_emitted(
+      "{\"const\":3,\"default\":9007199254740991,\"minimum\":0.5}",
+      "numbers",
+      [],
+    )
+  string.contains(html, "default: 9007199254740991") |> should.be_true
+  string.contains(html, "class=\"type\">3</") |> should.be_true
 }

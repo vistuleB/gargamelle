@@ -1,7 +1,8 @@
 # Erlang string and regex investigation
 
-Recorded 2026-10-10 after graph integration commit `08fd1b2`. This is development
-research, not an Erlang support claim or a change to the published contract.
+Recorded 2026-10-10; updated after main-source recursion integration at `900040e`.
+The native regex binding is now implemented. Platform and performance gates remain
+open; this is not an Erlang support claim or a change to the published package.
 
 ## String boundary and authorized 0.2.0 decision
 
@@ -52,18 +53,30 @@ with Unicode 16.0 is the reference.
 - QuickJS 2026-06-04 with `libunicode-table.h` and `unicode_gen_def.h` from
   2025-09-13 had zero differences in this corpus. No engine code was patched.
 
-This is bounded empirical evidence, not complete ECMAScript conformance. The
-table overlay is experimental and needs broader property/Test262 coverage before
-production adoption. The 2026 `libunicode.h` version macro still says 17 in the
-temporary copy; production packaging must correct metadata to the actual tables.
-The 2026 executor requires `lre_get_alloc_count`, including internal registers,
-rather than allocating only visible capture slots as in the 2025 API.
+That original corpus was bounded empirical evidence. The implementation now vendors
+this combination under `priv/regex-src`, corrects the Unicode version macro to 16,
+and excludes two binary properties that QuickJS accepts outside ECMAScript's
+[property allowlist](https://github.com/tc39/ecma262/blob/main/table-binary-unicode-properties.html).
+The expanded sweep found 48 discrepancies: the canonical names
+`IDS_Unary_Operator`, `Modifier_Combining_Mark` and aliases `IDSU`, `MCM` were
+accepted by QuickJS and rejected by Node. Those cases remain in the corpus.
 
-No native dependency or production binding has been added. A separate rebar3
-dependency is a possible way to compile/distribute a native helper; Gleam supports
-[rebar3 dependency packages](https://gleam.run/documentation/gleam-toml-reference/).
-Clean-consumer builds, executable lookup, platform support, request lifecycle,
-resource failure handling and caching still need implementation and verification.
+The corrected sources passed 55,282 pattern/input pairs against Node 24 under
+AddressSanitizer and UndefinedBehaviorSanitizer. Coverage includes positive and
+negated property names/aliases from the tables, generated expressions and 598
+Boolean search projections from selected Test262 programs. All 139 selected
+programs passed their original assertions on Node. Native projections normalize
+flags to `u` and omit unsupported flags, non-scalar patterns and long inputs;
+this is not a full native Test262 run. The selection, exclusions and source hashes
+are retained in `verification/portability/test262-selection.json` and the report.
+
+The production Erlang binding uses a standalone executable, with no JavaScript
+subprocess. Installation requires an explicit C build; see
+[Native Erlang setup](native-erlang.md). A fresh consumer of the extracted Hex
+archive passed on both targets with unmodified library source, pinned dependency
+sources and the explicit native build. Integer bounds exposed a separate renderer
+bug: OTP JSON decoding distinguishes integers from floats. The renderer now keeps
+both types, with a shared regression for bounds and numeric constants/defaults.
 
 ## Decisions for independent review
 
@@ -141,7 +154,7 @@ dependencies, at the cost of ambient state and context wrappers.
 
 **Historical cell-backend findings, superseded by the main-source migration below.**
 The original regressions and implementation are retained in Git history at
-`511d5ae`; the current native graph gate passes 52 tests under the new contract.
+`511d5ae`; the current native graph gate passes 53 tests under the new contract.
 
 Transfer after creator exit, nested exception cleanup and independent-context
 composition have typed API tests. Review reentrancy, context installation on every
@@ -235,51 +248,64 @@ output and diagnostic ordering to match JavaScript; it does not change canonical
 schema sorting or the admitted JSON domain. Shared tests retain duplicates,
 nested ordering and index-boundary cases.
 
-### 6. QuickJS code with older Unicode tables — experimental candidate
+### 6. QuickJS code with Unicode 16 tables — implemented candidate
 
-The mixed-source candidate resolves the two observed release gaps and passed the
-13,572-pair corpus under sanitizers. I have not selected it as a production
-dependency. Review compatibility between the newer Unicode algorithms and older
-generated tables, property aliases/script data, duplicate-group semantics and
-broader Test262 coverage. Archive and source hashes identify the experiment;
-the stale version macro must be corrected if this combination is packaged.
+The mixed-source backend is now the production implementation on the working
+branch. `priv/regex-src/PROVENANCE.json` records archive hashes, upstream and
+vendored file hashes, and both local patches. Review compatibility between newer
+algorithms and older generated data; the expanded corpus does not prove exhaustive
+ECMAScript conformance. Retain the property-alias counterexamples when updating.
 
-Pinning Unicode 16 would make the native engine match the tested Node runtime.
-The public phrase “ECMAScript Unicode u” does not by itself specify a Unicode
-table version. We still need an explicit upgrade policy and tests for supported
-Node/OTP versions. I would not automatically update either engine or its tables
-while continuing to claim cross-target parity.
+Unicode 16 matches the tested Node 24 runtime. JavaScript still uses the host's
+RegExp implementation, so other Node or browser versions need their own parity
+checks. Update engine and tables deliberately together, rerun the differential
+corpus and review the contract before changing this pin. Automatic dependency
+updates must not silently change the native Unicode behavior.
 
-### 7. Port, NIF and build packaging — undecided
+### 7. Port ownership and explicit native build — implemented candidate
 
-The experiment uses a port to a standalone native executable. It demonstrates
-matching without a JavaScript subprocess; it does not settle production lifecycle
-or performance. A port isolates native failures but adds messaging and executable
-distribution. A NIF avoids that transport but needs careful scheduler, crash and
-resource handling. A rebar3 dependency could provide native build hooks, with a C
-toolchain and potentially a separate Hex package as additional requirements.
-Review deployment targets and expected validation volume before selecting the
-binding, port ownership, pattern caching or packaging approach.
+Each regex call starts a private worker that owns one native helper. It closes
+the port before returning a result; caller process flags and mailboxes remain
+unchanged. A crash, allocation failure, exhausted execution budget or timeout
+raises an operational error. Auxiliary condition, exclusion, contains, property
+name and default checks preserve that boundary. No permanent service, reference
+registry, pattern cache or manual release obligation was introduced.
 
-The probe's 16 MiB packet limit, 512 KiB stack check, execution tick budget and
-five-second response wait are research settings, not proposed public limits.
-Production resource failures must remain operational; they must not become syntax
-errors, no-match results, or conditional/exclusion branch selection.
+The helper accepts packets up to 16 MiB, checks 512 KiB of stack growth and limits
+execution to 100,000 timeout ticks. A four-second native alarm bounds stuck work,
+including after owner exit; transport and worker waits are five and six seconds.
+These are implementation resource guards, not extra schema constraints. They can
+raise for otherwise valid input. Compile-time allocation is not bounded by the
+execution tick counter; allocation failures and the native deadline remain guards.
+
+The archive includes MIT-licensed C source and a Makefile, with generated binaries
+outside `priv` so host binaries cannot accidentally enter Hex exports. Consumers
+must run an explicit build and install the helper for release deployment. Gleam
+1.18.1 does not run native build hooks for a local Gleam path dependency. A separate
+rebar3/Hex dependency could automate distribution, but introduces another package;
+it has not been created.
+
+The direct production-binding check measured approximately 7.5 ms per pair,
+including separate helper starts for syntax and matching. This cost may be too high
+for many patterned fields. Review realistic provider workloads before declaring
+support. A bounded operation-owned helper/cache is a possible next optimization;
+it must retain crash isolation, cleanup, reentrancy and process-independent
+completed definitions. A NIF remains an alternative with scheduler/crash costs.
 
 ### 8. Support and evidence boundaries — implemented gate
 
-The actual Erlang API fixture temporarily attaches native re adapters for the two
-unported regex externals. All other core operations use production implementations.
-Passing those tests proves the exercised structural/typed paths under the fixture;
-it does not prove ECMAScript regex parity through the production API. The QuickJS
-experiment is a separate native-engine check. Independent schema-oracle runs
-against an actual Erlang library runner, complete cross-target cases, clean Erlang
-consumers and platform builds remain required before a support claim.
+All main-source externals now have native implementations. The actual Erlang API
+and production-plan fixtures compile the vendored helper and use the real regex
+binding. They pass 53 native tests, twelve cross-target compile-negative checks and
+3,636 independent schema cases, including exact historical and cross-target
+schema/output/diagnostic comparisons. All twelve portability groups pass. A
+separate binding check covers 594 syntax/search cases and operational failures.
 
-I moved working metadata to 0.2.0 and evidence to contract revision 4 to identify
-the authorized domain change. The 0.1.0 tag is unchanged. Review compatibility
-notes and release criteria before publication; neither a 0.2.0 release nor a
-production native dependency has been published.
+The native setup is tested on macOS with OTP 29, Node 24 and a C compiler. Linux,
+Windows, minimum OTP versions and deployment packaging still need verification;
+the helper currently uses POSIX APIs. Broader native oracle coverage and workload
+performance remain release gates. Working metadata is 0.2.0, contract revision 5.
+The 0.1.0 tag is unchanged. No native dependency or new version has been published.
 
 ## Reproduction
 
@@ -308,3 +334,15 @@ Reports under `reports/` record source hashes and every counterexample; they are
 ignored build evidence. The overlay command copies into a temporary directory,
 changes only the two table files, and removes that copy after testing. It does
 not alter the downloaded archives or introduce a JavaScript subprocess on Erlang.
+
+To reproduce the expanded check against the exact vendored sources:
+
+```sh
+# Extract the pinned Test262 archive recorded in test262-selection.json first.
+PROBE_SANITIZERS=1 node verification/portability/quickjs-probe.mjs priv/regex-src - /path/to/test262
+npm run verify:erlang-primitives
+```
+
+The Test262 argument is optional; without it the selected Test262 projections are
+omitted and the count differs. The manifest verifies every selected source and
+harness file. Reports record omissions, runtime Unicode version and source hashes.

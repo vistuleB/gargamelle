@@ -35,6 +35,11 @@ path = "migration-0.2.html"
 source = "./docs/migration-0.2.md"
 
 [[documentation.pages]]
+title = "Native Erlang setup"
+path = "native-erlang.html"
+source = "./docs/native-erlang.md"
+
+[[documentation.pages]]
 title = "MIT License"
 path = "license.html"
 source = "./docs/license.md"

@@ -159,6 +159,7 @@ fn show_option(o) {
   }
 }
 
+@external(erlang, "gargamelle_runtime", "int_text")
 @external(javascript, "./runtime.mjs", "int_text")
 fn int_text(i: Int) -> String
 

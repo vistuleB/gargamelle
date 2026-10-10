@@ -284,9 +284,11 @@ fn canonical(text: String) -> String
 @external(javascript, "./runtime.mjs", "codepoints")
 fn codepoints(text: String) -> Int
 
+@external(erlang, "gargamelle_regex", "pattern_valid")
 @external(javascript, "./runtime.mjs", "pattern_valid")
 fn pattern_valid(text: String) -> Bool
 
+@external(erlang, "gargamelle_regex", "pattern_matches")
 @external(javascript, "./runtime.mjs", "pattern_matches")
 fn pattern_matches(pattern: String, text: String) -> Bool
 

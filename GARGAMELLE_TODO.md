@@ -1,6 +1,6 @@
 # Gargamelle handoff and next work
 
-Recorded 2026-10-10; updated through main-source recursion integration following `511d5ae`.
+Recorded 2026-10-10; updated through the native regex binding after `900040e`.
 This is a handoff and prioritized candidate list, not a commitment to implement
 all JSON Schema features. Verify external state before acting on it.
 
@@ -46,29 +46,34 @@ return construction errors; direct constructors assert the scalar precondition.
 The working version is 0.2.0, with contract/evidence revision 5. Nothing has been
 published or tagged for this milestone.
 
-The standalone native regex experiment found an empirical candidate: QuickJS
-2026-06-04 regex code with the two Unicode table files from 2025-09-13 agrees with
-Node 24/Unicode 16 in 13,572 pairs, including operational-failure handling through
-an Erlang port. Each unmodified release has retained counterexamples. No native
-dependency or production regex binding has been added. See
-`docs/erlang-portability.md` for the decision, reproduction, archive/source hashes
-and the remaining packaging/conformance work.
+The native regex binding now vendors standalone QuickJS 2026-06-04 code with
+Unicode 16 tables from 2025-09-13. Source hashes and patches are retained under
+`priv/regex-src`. An expanded property-alias sweep exposed four extra accepted
+names; the corrected backend agrees with Node 24 in 55,282 pairs under sanitizers,
+including 598 selected Test262 Boolean `u` projections. This is bounded evidence,
+not a complete Test262 run. The actual binding passes 594 direct cases and keeps
+native/resource failures operational through auxiliary constraints and defaults.
 
-Immutable plans and private conversion evidence are now integrated into the
-main source, with migrated tests, public examples and a clean JavaScript consumer.
-Next: broaden native regex conformance and package its binding, then extend
-independent native oracle coverage and test an unmodified clean Erlang consumer.
-Complete Erlang support remains gated on the two regex externals.
+Immutable plans and private conversion evidence are integrated into main.
+All core externals now have native implementations. Native fixtures use the real
+regex helper, without regex test adapters. Current validation: 45 JavaScript
+Gleam tests, 144 Node tests, 17,788 generated pairs and 109 official schema cases;
+53 native tests, twelve cross-target compile-negative checks and 3,636 independent
+cases across 36 schemas. All twelve portability groups pass.
 
-Current JavaScript validation passed: 44 Gleam tests, 144 Node tests,
-17,788 generated pairs and 109 official cases. The production-plan experiment
-now exercises main directly: 44 JavaScript tests, 52 native tests and twelve
-compile-negative checks. All eleven portability groups pass. The earlier scalar checkpoint passed
-nine portability groups, including 43 actual Erlang Gleam API tests with only
-regex test adapters.
-The native regex candidate passed 13,572 pairs under address/undefined-behavior
-sanitizers. Docs generation, Hex export and a fresh JavaScript consumer of the
-extracted 0.2.0 archive passed using the pinned dependency sources offline.
+Fresh consumers of the extracted 0.2.0 archive pass on both targets using pinned
+dependency sources offline. Native setup requires an explicit C build. Generated
+binaries stay outside `priv`; release deployments must install the helper. The
+consumer exposed an integer/float decoding bug in optional rendering, now fixed
+with a shared regression. See `docs/native-erlang.md` and the reviewed decisions
+in `docs/erlang-portability.md`.
+
+Next: measure regex-heavy provider workloads and assess a bounded operation-owned
+helper/cache if startup cost is material (direct binding observation: about 7.5 ms
+per syntax/match pair). Extend independent native oracle coverage and verify Linux,
+OTP version bounds and release deployment. Windows is unverified and the helper
+currently uses POSIX APIs. Complete Erlang support remains gated on these checks.
+Do not publish or move `v0.1.0` for this work.
 
 ## Read these first
 
@@ -194,7 +199,7 @@ JSON admission/canonical serialization. The admission/canonical/string helpers
 are deliberately not attached to the public API while surrogate compatibility
 is unresolved.
 
-`npm run verify:erlang-primitives` runs eleven independent portability test groups,
+`npm run verify:erlang-primitives` runs twelve independent portability test groups,
 including the isolated immutable-plan and production integration experiments. The current library graph
 group passes with the new construction-plan contract. The earlier captured-
 placeholder failures are recorded historically below.
@@ -276,11 +281,11 @@ comparison. This design has now been promoted to the main library.
 
 Main now preserves full DataError paths and branch diagnostics, naming/conflict
 policies and canonical schema bytes under immutable recursion. It passes
-44 JavaScript tests, 52 native tests, twelve cross-target compile-negative checks
+45 JavaScript tests, 53 native tests, twelve cross-target compile-negative checks
 and 3,636 independent cases across 36 schemas. Exact schema text, decoded outputs
 and diagnostics match the historical baseline and native runner. The runner
-checks the retained baseline source hash. Native regex still uses a limited test
-adapter; this is not an Erlang support claim. See
+checks the retained baseline source hash. Native regex now uses the vendored QuickJS binding; platform and performance
+checks remain before an Erlang support claim. See
 `docs/production-recursion-integration.md` and `docs/migration-0.2.md`.
 
 Main removes construction cells/registries, keeps temporary scope-aware walk
@@ -290,8 +295,8 @@ exceptions, distinct mutual outputs and callback suppression. The old positive
 runnable-placeholder tests are retained in Git history at `511d5ae`; current
 compile-negative tests establish the explicit API change. Documentation and Hex
 export pass, and a fresh JavaScript archive consumer exercised recursive helpers,
-`lift`, closures, emission and rendering offline. The source still rejects an
-unmodified Erlang build through the two regex externals. Previous integration
+`lift`, closures, emission and rendering offline. A fresh archive consumer now passes on both targets with an explicit native
+helper build and unmodified library source. Previous integration
 findings also retain zero-sign equality and repeated exclusive-bound tests.
 
 Regex counterexamples are retained in `verification/portability/regex-baseline.test.mjs`:
@@ -299,11 +304,11 @@ native dot/whitespace handling and accepted pattern syntax differ from ECMAScrip
 `u`. QuickJS's standalone `libregexp` is a candidate exact engine, per its
 [primary documentation](https://bellard.org/quickjs/quickjs.html). It is C code,
 so a native binding would introduce build/distribution work. Node v24.10.0 uses
-Unicode 16.0; engine/table-version compatibility must also be checked. No native
-engine dependency has been added and no shared subset has been selected.
+Unicode 16.0; engine/table-version compatibility must also be checked. The standalone engine is now vendored with an explicit native build; no restricted
+shared regex subset has been selected.
 
-Next implementation work: finish exact ECMAScript regex compatibility and packaging, then extend independent cross-target oracle
-verification. Keep parser/regex support gated until their admitted
+Next implementation work: measure regex workload cost, verify native platform and
+release packaging, and extend independent cross-target oracle verification. Keep parser/regex support gated until their admitted
 string representation and engine choices preserve the contract or receive an
 explicit versioned amendment. Do not publish or move `v0.1.0` for this work.
 
