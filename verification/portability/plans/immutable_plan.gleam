@@ -39,6 +39,10 @@ type Schema {
   TupleSchema(List(Schema))
   UnionSchema(List(Schema))
   AllSchema(Schema, List(Schema))
+  ConditionalSchema(Schema, Schema, Option(Schema))
+  NotSchema(Schema)
+  ContainsSchema(Schema, Int, Option(Int))
+  KeysSchema(Schema)
   Reference(Identity, String)
   Graph(Schema, Bindings)
 }
@@ -185,6 +189,10 @@ pub fn text() -> Plan(String, environment) {
     let assert Text(text) = value
     text
   })
+}
+
+pub fn string_constant(value: String) -> Plan(String, recursion) {
+  make_plan(ConstantString(value), fn(_, _) { value })
 }
 
 pub fn boolean() -> Plan(Bool, environment) {
@@ -400,6 +408,76 @@ pub fn requiring(
     ),
     run,
   )
+}
+
+// Auxiliary plans contribute only schema checks. Their typed converters are
+// discarded, even when their output types differ from the base and each other.
+pub fn if_then_else(
+  base: Plan(a, recursion),
+  condition: Plan(b, recursion),
+  consequence: Plan(c, recursion),
+  alternative: Plan(d, recursion),
+) -> Plan(a, recursion) {
+  let Plan(schema, run) = base
+  let Plan(probe, _) = condition
+  let Plan(yes, _) = consequence
+  let Plan(no, _) = alternative
+  make_plan(AllSchema(schema, [ConditionalSchema(probe, yes, Some(no))]), run)
+}
+
+pub fn exclude(
+  base: Plan(a, recursion),
+  forbidden: Plan(b, recursion),
+) -> Plan(a, recursion) {
+  let Plan(schema, run) = base
+  let Plan(probe, _) = forbidden
+  make_plan(AllSchema(schema, [NotSchema(probe)]), run)
+}
+
+// Shape checks are limited to the experiment's vocabulary. The production
+// constructor restrictions still require preservation during integration.
+fn has_shape(schema, array: Bool) {
+  case schema {
+    Identified(_, child) | AnnotatedSchema(child, _) | AllSchema(child, _) ->
+      has_shape(child, array)
+    ArraySchema(_) | TupleSchema(_) -> array
+    DictionarySchema(_) | RecordSchema(_, _) -> !array
+    _ -> False
+  }
+}
+
+pub fn contains(
+  base: Plan(a, recursion),
+  matching: Plan(b, recursion),
+  minimum: Int,
+  maximum: Option(Int),
+) -> Result(Plan(a, recursion), String) {
+  let Plan(schema, run) = base
+  let Plan(probe, _) = matching
+  let invalid_max = case maximum {
+    Some(limit) -> limit < minimum
+    None -> False
+  }
+  case !has_shape(schema, True) || minimum < 0 || invalid_max {
+    True -> Error("invalid contains construction")
+    False ->
+      Ok(make_plan(
+        AllSchema(schema, [ContainsSchema(probe, minimum, maximum)]),
+        run,
+      ))
+  }
+}
+
+pub fn property_names(
+  base: Plan(a, recursion),
+  keys: Plan(String, recursion),
+) -> Result(Plan(a, recursion), String) {
+  let Plan(schema, run) = base
+  let Plan(probe, _) = keys
+  case has_shape(schema, False) {
+    False -> Error("property names requires an object")
+    True -> Ok(make_plan(AllSchema(schema, [KeysSchema(probe)]), run))
+  }
 }
 
 pub fn lift(definition: Definition(a)) -> Plan(a, environment) {
@@ -620,6 +698,38 @@ fn check(
       }
     AllSchema(base, rules), _ ->
       all(list.map([base, ..rules], check(_, value, bindings)))
+    ConditionalSchema(probe, yes, no), _ ->
+      case check(probe, value, bindings), no {
+        Ok(_), _ -> check(yes, value, bindings)
+        Error(_), Some(alternative) -> check(alternative, value, bindings)
+        Error(_), None -> Ok(Nil)
+      }
+    NotSchema(probe), _ ->
+      case check(probe, value, bindings) {
+        Ok(_) -> Error("excluded")
+        Error(_) -> Ok(Nil)
+      }
+    ContainsSchema(_, 0, None), Array(_) -> Ok(Nil)
+    ContainsSchema(probe, minimum, maximum), Array(values) -> {
+      let count =
+        list.count(values, fn(value) {
+          result.is_ok(check(probe, value, bindings))
+        })
+      let within_max = case maximum {
+        Some(limit) -> count <= limit
+        None -> True
+      }
+      case count >= minimum && within_max {
+        True -> Ok(Nil)
+        False -> Error("contains count")
+      }
+    }
+    KeysSchema(probe), Object(properties) ->
+      all(
+        list.map(properties, fn(property) {
+          check(probe, Text(property.0), bindings)
+        }),
+      )
     Reference(id, _), _ -> {
       use child <- result.try(
         list.key_find(bindings, id)
@@ -676,6 +786,13 @@ fn resolve_children(children, bindings, memo) {
   })
 }
 
+fn conditional_children(probe, yes, no) {
+  case no {
+    Some(alternative) -> [probe, yes, alternative]
+    None -> [probe, yes]
+  }
+}
+
 fn resolved_walk(
   schema: Schema,
   bindings: Bindings,
@@ -713,6 +830,10 @@ fn resolved_walk(
     TupleSchema(items) | UnionSchema(items) ->
       resolve_children(items, bindings, memo)
     AllSchema(base, rules) -> resolve_children([base, ..rules], bindings, memo)
+    ConditionalSchema(probe, yes, no) ->
+      resolve_children(conditional_children(probe, yes, no), bindings, memo)
+    NotSchema(probe) | ContainsSchema(probe, _, _) | KeysSchema(probe) ->
+      resolved_walk(probe, bindings, memo)
     StringSchema
     | BooleanSchema
     | NullSchema
@@ -766,6 +887,12 @@ fn guard_walk(
     UnionSchema(children) -> guard_children(children, bindings, path, memo)
     AllSchema(base, rules) ->
       guard_children([base, ..rules], bindings, path, memo)
+    ConditionalSchema(probe, yes, no) ->
+      guard_children(conditional_children(probe, yes, no), bindings, path, memo)
+    NotSchema(probe) -> guard_walk(probe, bindings, path, memo)
+    // Membership and key probes inspect strict child inputs. Their references
+    // still participate in resolution above, but cannot cause same-input loops.
+    ContainsSchema(_, _, _) | KeysSchema(_) -> Ok(memo)
     Graph(_, definitions) -> {
       use _ <- result.try(guard_bindings(definitions))
       Ok(memo)
@@ -906,6 +1033,41 @@ fn emit_schema(
         #(
           "allOf",
           emit_children([base, ..rules], "allOf", location, references),
+        ),
+      ])
+    ConditionalSchema(probe, yes, no) -> {
+      let fields = [
+        #("if", emit_schema(probe, location <> "/if", references)),
+        #("then", emit_schema(yes, location <> "/then", references)),
+      ]
+      json.object(case no {
+        None -> fields
+        Some(alternative) ->
+          list.append(fields, [
+            #("else", emit_schema(alternative, location <> "/else", references)),
+          ])
+      })
+    }
+    NotSchema(probe) ->
+      json.object([#("not", emit_schema(probe, location <> "/not", references))])
+    ContainsSchema(_, 0, None) -> json.object([#("type", json.string("array"))])
+    ContainsSchema(probe, minimum, maximum) -> {
+      let fields = [
+        #("type", json.string("array")),
+        #("contains", emit_schema(probe, location <> "/contains", references)),
+        #("minContains", json.int(minimum)),
+      ]
+      json.object(case maximum {
+        None -> fields
+        Some(limit) -> list.append(fields, [#("maxContains", json.int(limit))])
+      })
+    }
+    KeysSchema(probe) ->
+      json.object([
+        #("type", json.string("object")),
+        #(
+          "propertyNames",
+          emit_schema(probe, location <> "/propertyNames", references),
         ),
       ])
     Reference(id, _) -> {

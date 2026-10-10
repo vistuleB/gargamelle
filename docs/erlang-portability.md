@@ -191,7 +191,7 @@ It uses typed construction plans, explicit recursion environments and immutable
 completed bodies. Self recursion, an independently typed pair, native handoff,
 callback suppression, defaults and compile-negative cases are exercised. See
 [the prototype report](immutable-recursion-prototype.md) for its API comparison,
-724-case independent schema checks per target, and limits. Curried record/tuple
+984-case independent schema checks per target, and limits. Curried record/tuple
 builders and generic helpers now compile without public schema lookup types.
 This demonstrates a
 possible **different recursion contract**; it does not fix the existing library
@@ -201,8 +201,14 @@ Provider helpers now cover tagged unions, nullable/dictionary children and
 modifiers. The prototype uses native node/reference identities and scope-aware
 immutable memo dictionaries for construction. The measured 16-layer shared case
 dropped from roughly 5.3 million to 1,200 native reductions, without reference
-storage in process dictionaries or permanent registries. Repeated validation
-during deep branch selection and allocation/transfer costs remain under review.
+storage in process dictionaries or permanent registries. Auxiliary conditional,
+exclusion, membership and property-name checks now compose without executing
+their converters. The bounded transfer probe found that six duplicated union
+layers expand from 261 sender heap words to 36,576 receiver words; a realistic
+provider used 889 receiver words. Shared emission also expands repeated branches.
+These limitations and the proposed next experiment—structural validation evidence
+consumed by typed converters—are recorded in the prototype report. Repeated
+validation and retained schema captures need assessment before a library rewrite.
 
 ### 6. QuickJS code with older Unicode tables — experimental candidate
 

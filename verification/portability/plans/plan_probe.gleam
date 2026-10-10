@@ -188,6 +188,30 @@ pub fn main() {
       )
     })
   let leaf = p.Object([#("kind", p.Text("leaf")), #("value", p.Text("x"))])
+  let assert Ok(constrained) =
+    p.recursive("constraints", fn(self) {
+      use children <- result.try(plan_helpers.constrained_children(self))
+      use keys <- result.try(plan_helpers.keyed_children(self))
+      p.any_of([
+        p.map(p.text(), Leaf),
+        p.map(children, Branch),
+        p.map(keys, fn(entries) {
+          Branch(list.map(entries, fn(entry) { entry.1 }))
+        }),
+      ])
+    })
+  let constraint_values =
+    list.append(
+      samples(),
+      list.flat_map(samples(), fn(value) {
+        [
+          p.Array([p.Text("x"), value]),
+          p.Array([p.Text("x"), p.Text("y"), value]),
+          p.Object([#("bad/~", value)]),
+          p.Object([#("__proto__", value)]),
+        ]
+      }),
+    )
   let provider_values =
     list.append(
       samples(),
@@ -231,6 +255,7 @@ pub fn main() {
         fixture("pair-first", first, samples()),
         fixture("pair-second", second, samples()),
         fixture("provider-features", provider, provider_values),
+        fixture("auxiliary-constraints", constrained, constraint_values),
         fixture("named-record", named, record_samples()),
         fixture("heterogeneous-tuple", packet, tuple_samples()),
         fixture(

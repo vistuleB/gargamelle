@@ -1,3 +1,4 @@
+import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/result
 import gleam/string
@@ -446,4 +447,68 @@ pub fn independent_nested_recursion_and_unfinished_outer_rejection_test() {
     Ok(p.text())
   })
   |> should.be_error
+}
+
+pub fn auxiliary_constraints_keep_outputs_and_suppress_callbacks_test() {
+  let assert Ok(definition) =
+    handoff(fn() {
+      p.recursive("constraints", fn(self) {
+        use children <- result.try(plan_helpers.constrained_children(self))
+        use keys <- result.try(plan_helpers.keyed_children(self))
+        p.any_of([
+          p.map(p.text(), Leaf),
+          p.map(children, Branch),
+          p.map(keys, fn(entries) {
+            Branch(list.map(entries, fn(entry) { entry.1 }))
+          }),
+        ])
+      })
+    })
+  let input = p.Array([p.Text("x"), p.Array([p.Text("y")])])
+  p.validate(definition, input) |> should.be_ok
+  p.emit(definition) |> should.not_equal("")
+  p.decode(definition, input)
+  |> should.equal(Ok(Branch([Leaf("x"), Branch([Leaf("y")])])))
+  p.decode(definition, p.Array([])) |> should.be_error
+  p.decode(definition, p.Array([p.Boolean(True)])) |> should.be_error
+  p.decode(definition, p.Array([p.Text("x"), p.Text("y"), p.Text("z")]))
+  |> should.be_error
+  p.decode(definition, p.Object([#("__proto__", input)])) |> should.be_ok
+  p.decode(definition, p.Object([#("bad/~", p.Text("x"))])) |> should.be_error
+  let #(tick, count) = counter(fn(tick, count) { #(tick, count) })
+  let assert Ok(children) = plan_helpers.constrained_children(p.text())
+  let closed =
+    p.finish(
+      p.map(children, fn(value) {
+        tick()
+        value
+      }),
+    )
+  p.decode(closed, p.Array([p.Text("x"), p.Boolean(False)])) |> should.be_error
+  count() |> should.equal(0)
+  p.decode(closed, p.Array([p.Text("x")])) |> should.equal(Ok(["x"]))
+  count() |> should.equal(1)
+}
+
+pub fn auxiliary_references_require_resolution_and_guarding_test() {
+  p.recursive("condition", fn(self) {
+    Ok(p.if_then_else(p.text(), self, p.text(), p.text()))
+  })
+  |> should.be_error
+  p.recursive("exclusion", fn(self) { Ok(p.exclude(p.text(), self)) })
+  |> should.be_error
+  p.recursive("outer", fn(outer) {
+    use _ <- result.try(
+      p.recursive("inner", fn(_) {
+        p.contains(p.array(p.text()), outer, 0, None)
+        |> result.map(p.map(_, fn(_) { "inner" }))
+      }),
+    )
+    Ok(p.text())
+  })
+  |> should.be_error
+  p.contains(p.text(), p.text(), 1, None) |> should.be_error
+  p.contains(p.array(p.text()), p.text(), -1, None) |> should.be_error
+  p.contains(p.array(p.text()), p.text(), 2, Some(1)) |> should.be_error
+  p.property_names(p.text(), p.text()) |> should.be_error
 }

@@ -10,3 +10,5 @@ export function measure(run) {
   return [Math.round((performance.now() - before) * 1000), 0];
 }
 export function fresh_identity() { return Symbol(); }
+// No equivalent heap-word or native process-transfer measurement on this target.
+export function transfer_size(value, use) { use(value); return [0, 0, 0]; }

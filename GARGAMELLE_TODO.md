@@ -244,8 +244,8 @@ callback outputs or introduce a permanent cell registry. See decision 5 in
 the successful root-transfer evidence below for independently captured references.
 
 The isolated plan/environment prototype in `verification/portability/plans`
-now passes fifteen behavioral tests per target, eight compile-negative checks,
-native creator-exit handoff and 724 independent schema cases per target. Run
+now passes seventeen behavioral tests per target, eight compile-negative checks,
+native creator-exit handoff and 984 independent schema cases per target. Run
 `node --test verification/portability/immutable-plans.test.mjs`. See
 `docs/immutable-recursion-prototype.md` for the realistic API comparison and
 acceptance results. Curried records, optional/default fields, heterogeneous
@@ -255,10 +255,17 @@ compose in a provider helper. Schema lookup is private; helper signatures need
 only a generic recursion parameter. Scope-aware node identities and immutable
 memo dictionaries eliminate measured exponential shared construction work, with
 a retained 26-layer case. Reference bindings use identities, not display names.
-Deep branch selection still rescans validated subtrees; allocation, shared schema
-emission and transfer sizes require profiling. The library has not been rewritten.
-Next, map the remaining specialized combinators and diagnostics onto this design,
-and assess remaining costs before migrating the public recursion API.
+Conditional, exclusion, contains and property-name probes now preserve base
+outputs without executing auxiliary converters. The remaining production APIs
+and diagnostics have a source-based migration map in the prototype report.
+Deep branch selection still rescans validated subtrees. Bounded native copying
+shows substantial amplification for repeatedly shared branches (261 sender words
+to 36,576 receiver words at six layers); the realistic provider transfers and uses
+889 receiver words. Shared emission also expands repeated unnamed branches.
+The library has not been rewritten. Next, prototype private validation evidence
+for typed conversion, measuring callback suppression, defaults, exclusive unions,
+handoff and retained term sizes. Then integrate with the production checker and
+emitter incrementally, preserving naming/conflict and canonical-byte policies.
 
 The actual Erlang fixture runs 35 shared Gleam tests and seven additional typed
 API tests against a temporary library copy. It covers recursive and mutually
