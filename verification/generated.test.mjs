@@ -13,8 +13,8 @@ const seeds=[0x10203040,0x91abcdef,0x12345678,0xdeadbeef,0x71423,0x55555555,0xab
 const common=[null,true,false,0,1,-1,1.5,'','x','a','ab','😀','e\u0301','\0','\ud800',[],{},[null],{value:null},Number.MAX_SAFE_INTEGER+1];
 function random(seed){let x=seed>>>0;return n=>{x^=x<<13;x^=x>>>17;x^=x<<5;return (x>>>0)%n;};}
 function generated(r,depth){
- if(depth===0){const a=specimen(allKinds[r(6)]);if(a.kind==='constant')a.value=[null,true,false,'c',-1,0,1][r(7)];if(a.kind==='string'&&r(2)){a.min=r(2);a.max=3;if(r(2))a.patterns=['a','b','a'];}if(a.kind==='integer'&&r(2)){a.min=-3;a.max=3;}return a;}
- const kind=allKinds[6+r(allKinds.length-6)];
+ if(depth===0){const a=specimen(allKinds[r(7)]);if(a.kind==='constant')a.value=[null,true,false,'c',-1,0,1][r(7)];if(a.kind==='string'&&r(2)){a.min=r(2);a.max=3;if(r(2))a.patterns=['a','b','a'];}if(a.kind==='integer'&&r(2)){a.min=-3;a.max=3;}if(a.kind==='number'&&r(2)){a.min=-1.5;a.max=2.5;a.exclusiveMin=!!r(2);a.exclusiveMax=!!r(2);}return a;}
+ const kind=allKinds[7+r(allKinds.length-7)];
  const a=specimen(kind,generated(r,depth-1));
  const names=['__proto__','constructor','toString','','a/b','~1','10','2','01','😀'];
  if(kind==='record'){a.open=!!r(2);const offset=r(names.length);a.fields.forEach((f,i)=>f.name=names[(offset+i)%names.length]);}

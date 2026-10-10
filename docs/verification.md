@@ -6,6 +6,12 @@ library exists and no verification row is marked passed. The initial experiment
 is a possible fork of glon 1.0.0. This document does not authorize publication,
 production integration, or a claim of formal verification.
 
+Implementation extension, 2026-10-10: P05 finite-number contracts and
+inclusive/exclusive bounds are now implemented. The original revision-3 status
+above describes the specification checkpoint; current automated results are in
+`reports/evidence.json`. This extension retains the same parsed-value domain J.
+`multipleOf` and fractional constants remain outside scope.
+
 ## 1. Product and scope
 
 Build a Gleam library in which one typed definition produces both a JSON Schema
@@ -85,6 +91,7 @@ These are conceptual constructors, not committed API spellings.
 | P01 | Boolean, null | Exactly the corresponding JSON type | Preserve value |
 | P02 | String | String only; optional inclusive min/max length and pattern | Preserve string exactly; no trimming, case changes, or Unicode normalization |
 | P03 | Safe integer | `integer` plus explicit bounds within -9007199254740991…9007199254740991; optional tighter inclusive bounds | Preserve mathematical integer; accept parsed `1.0` as 1; -0 and 0 are equivalent |
+| P05 | Finite number | `number`; optional finite inclusive/exclusive endpoints, intersected on repetition | Preserve the admitted binary64 value as Float, including signed zero; comparison treats both zero signs equally |
 | P04 | String enum; string, safe-integer, Boolean and null constants | Exact membership/equality, without coercion | Preserve value; optional mapping follows A02 |
 | C01 | Homogeneous array | Array; every item satisfies its child; optional inclusive min/max item count | Preserve order and duplicates; decode every element |
 | C02 | Record | Object; declared required/optional fields; explicit extra-field policy | Decode declared fields by wire name and combine into a typed value |
@@ -97,8 +104,14 @@ These are conceptual constructors, not committed API spellings.
 | A02 | Total map | No change to schema or acceptance | Apply mapping to successfully decoded value; mapping cannot add rejection rules |
 
 Safe-integer bounds are visible in the emitted schema, not a hidden runtime
-restriction. Unbounded/general numbers, fractional constraints, and `multipleOf`
-are deferred; adding them requires specifying numeric precision first.
+restriction. P05 numbers use finite IEEE-754 binary64 values after JSON parsing,
+including values outside safe-integer bounds. Inclusive/exclusive finite bounds
+emit the matching numeric keywords; repeated bounds intersect. Nonfinite
+endpoints, inverted bounds, and exclusive equal endpoints fail construction.
+Parsed rounding and underflow are preserved; overflow to infinity is an admission
+error. Negative zero survives decoding but numeric comparisons equate both zero
+signs. `multipleOf`, arbitrary-precision decimals, and fractional constants remain
+deferred.
 
 String lengths count Unicode code points, not UTF-16 code units or grapheme
 clusters. Include astral characters, combining sequences, NUL and escaped lone

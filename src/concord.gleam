@@ -37,11 +37,18 @@ pub type Policy {
   Open
 }
 
+/// A finite numeric endpoint. Inclusive endpoints accept equality.
+pub type NumberBound {
+  Inclusive(Float)
+  Exclusive(Float)
+}
+
 type Node {
   BooleanNode
   NullNode
   StringNode(Option(Int), Option(Int), List(String))
   IntegerNode(Int, Int)
+  NumberNode(Option(NumberBound), Option(NumberBound))
   ConstNode(Value, String)
   EnumNode(List(String))
   ArrayNode(Node, Option(Int), Option(Int))
@@ -125,6 +132,9 @@ fn sorted(values: List(String)) -> List(String)
 @external(javascript, "./runtime.mjs", "integer")
 fn integer(value: Float) -> Bool
 
+@external(javascript, "./runtime.mjs", "finite")
+fn finite(value: Float) -> Bool
+
 @external(javascript, "./runtime.mjs", "as_int")
 fn as_int(value: Float) -> Int
 
@@ -160,6 +170,125 @@ pub fn safe_integer() -> Definition(Int) {
       _ -> panic as "validated integer"
     }
   })
+}
+
+/// Decode any admitted finite IEEE-754 number to Float, including integers.
+/// JSON parsing may round or underflow; decoding preserves the parsed value.
+pub fn number() -> Definition(Float) {
+  Definition(NumberNode(None, None), fn(v) {
+    case v {
+      JNumber(n) -> n
+      _ -> panic as "validated number"
+    }
+  })
+}
+
+fn endpoint(bound: NumberBound) -> Float {
+  case bound {
+    Inclusive(x) | Exclusive(x) -> x
+  }
+}
+
+fn stricter_bound(
+  a: Option(NumberBound),
+  b: Option(NumberBound),
+  lower: Bool,
+) -> Option(NumberBound) {
+  case a, b {
+    None, x | x, None -> x
+    Some(x), Some(y) -> {
+      let xv = endpoint(x)
+      let yv = endpoint(y)
+      case xv == yv {
+        True ->
+          Some(case x, y {
+            Exclusive(_), _ | _, Exclusive(_) -> Exclusive(xv)
+            _, _ -> Inclusive(xv)
+          })
+        False ->
+          Some(case lower && xv >. yv || !lower && xv <. yv {
+            True -> x
+            False -> y
+          })
+      }
+    }
+  }
+}
+
+fn valid_number_bounds(
+  lower: Option(NumberBound),
+  upper: Option(NumberBound),
+) -> Bool {
+  let endpoints = list.filter_map([lower, upper], option.to_result(_, Nil))
+  list.all(endpoints, fn(b) { finite(endpoint(b)) })
+  && case lower, upper {
+    Some(a), Some(b) -> {
+      let lo = endpoint(a)
+      let hi = endpoint(b)
+      lo <. hi
+      || lo == hi
+      && case a, b {
+        Inclusive(_), Inclusive(_) -> True
+        _, _ -> False
+      }
+    }
+    _, _ -> True
+  }
+}
+
+/// Intersect a number definition's interval with finite inclusive/exclusive
+/// bounds. Reject inverted intervals and exclusive equal endpoints.
+pub fn number_bounds(
+  def: Definition(Float),
+  lower: Option(NumberBound),
+  upper: Option(NumberBound),
+) -> Result(Definition(Float), ConstructionError) {
+  case valid_number_bounds(lower, upper) {
+    False -> Error(ConstructionError("invalid number bounds"))
+    True -> {
+      let Definition(n, d) = def
+      use next <- result.try(number_bound_node(n, lower, upper))
+      Ok(Definition(next, d))
+    }
+  }
+}
+
+fn number_bound_node(
+  n: Node,
+  lower: Option(NumberBound),
+  upper: Option(NumberBound),
+) -> Result(Node, ConstructionError) {
+  case n {
+    AnnotatedNode(child, k, v) ->
+      result.map(number_bound_node(child, lower, upper), AnnotatedNode(_, k, v))
+    NumberNode(lo, hi) -> {
+      let lo = stricter_bound(lo, lower, True)
+      let hi = stricter_bound(hi, upper, False)
+      case valid_number_bounds(lo, hi) {
+        True -> Ok(NumberNode(lo, hi))
+        False -> Error(ConstructionError("empty number interval"))
+      }
+    }
+    _ -> Error(ConstructionError("number bounds require a number definition"))
+  }
+}
+
+fn number_ok(
+  x: Float,
+  lo: Option(NumberBound),
+  hi: Option(NumberBound),
+) -> Bool {
+  let low = case lo {
+    None -> True
+    Some(Inclusive(b)) -> x >=. b
+    Some(Exclusive(b)) -> x >. b
+  }
+  let high = case hi {
+    None -> True
+    Some(Inclusive(b)) -> x <=. b
+    Some(Exclusive(b)) -> x <. b
+  }
+  low && high
 }
 
 pub fn string_enum(
@@ -670,6 +799,11 @@ fn check(n: Node, v: Value, p: String) -> List(DataError) {
         True -> []
         False -> err("integer_constraint", p)
       }
+    NumberNode(lo, hi), JNumber(x) ->
+      case number_ok(x, lo, hi) {
+        True -> []
+        False -> err("number_constraint", p)
+      }
     ConstNode(expected, _), _ ->
       case expected == v {
         True -> []
@@ -758,6 +892,7 @@ fn check(n: Node, v: Value, p: String) -> List(DataError) {
     NullNode, _ -> err("null_type", p)
     StringNode(_, _, _), _ | EnumNode(_), _ -> err("string_type", p)
     IntegerNode(_, _), _ -> err("integer_type", p)
+    NumberNode(_, _), _ -> err("number_type", p)
     ArrayNode(_, _, _), _ -> err("array_type", p)
   }
 }
@@ -861,6 +996,19 @@ fn emit_with_definitions(n: Node) -> Value {
   }
 }
 
+fn emit_number_bound(
+  schema: Value,
+  bound: Option(NumberBound),
+  inclusive_key: String,
+  exclusive_key: String,
+) -> Value {
+  case bound {
+    None -> schema
+    Some(Inclusive(x)) -> put(schema, inclusive_key, JNumber(x))
+    Some(Exclusive(x)) -> put(schema, exclusive_key, JNumber(x))
+  }
+}
+
 fn emit(n: Node) -> Value {
   case n {
     NamedNode(name, _) -> obj([#("$ref", JString("#/$defs/" <> name))])
@@ -891,6 +1039,10 @@ fn emit(n: Node) -> Value {
       typ("integer")
       |> emit_bound("minimum", Some(lo))
       |> emit_bound("maximum", Some(hi))
+    NumberNode(lo, hi) ->
+      typ("number")
+      |> emit_number_bound(lo, "minimum", "exclusiveMinimum")
+      |> emit_number_bound(hi, "maximum", "exclusiveMaximum")
     ConstNode(v, t) -> put(typ(t), "const", v)
     EnumNode(vs) -> put(typ("string"), "enum", JArray(list.map(vs, JString)))
     ArrayNode(c, lo, hi) ->

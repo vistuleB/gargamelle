@@ -39,6 +39,18 @@ export function translate(raw, inheritedType) {
     if (!Number.isSafeInteger(schema.minimum) || !Number.isSafeInteger(schema.maximum)) fail('Unbounded integer schema is not equivalent to bounded safe-integer constructor');
     return { kind: 'integer', min: schema.minimum, max: schema.maximum };
   }
+  if (type === 'number') {
+    only(['type', 'minimum', 'maximum', 'exclusiveMinimum', 'exclusiveMaximum']);
+    const bound = (inclusive, exclusive, lower) => {
+      if (inclusive == null && exclusive == null) return {};
+      for (const x of [inclusive, exclusive]) if (x != null && !Number.isFinite(x)) fail('Non-finite number endpoint');
+      const useExclusive = exclusive != null && (inclusive == null || (lower ? exclusive >= inclusive : exclusive <= inclusive));
+      return { value: useExclusive ? exclusive : inclusive, exclusive: useExclusive };
+    };
+    const lo = bound(schema.minimum, schema.exclusiveMinimum, true), hi = bound(schema.maximum, schema.exclusiveMaximum, false);
+    if (lo.value != null && hi.value != null && (lo.value > hi.value || lo.value === hi.value && (lo.exclusive || hi.exclusive))) fail('Empty numeric interval is rejected at construction');
+    return { kind: 'number', min: lo.value, max: hi.value, exclusiveMin: lo.exclusive, exclusiveMax: hi.exclusive };
+  }
   if (type === 'array') {
     only(['type', 'items', 'minItems', 'maxItems']);
     if (!schema.items) fail('Unconstrained array items require unrestricted JSON-value constructor');
@@ -55,5 +67,5 @@ export function translate(raw, inheritedType) {
     if ((schema.required ?? []).some(k => !Object.hasOwn(props, k))) fail('Required unrestricted fields need an unrestricted JSON-value constructor');
     return { kind: 'record', open: schema.additionalProperties !== false, fields: Object.entries(props).map(([name, child]) => ({ name, child: translate(child), presence: schema.required?.includes(name) ? 'required' : 'optional' })) };
   }
-  fail(type === 'number' ? 'General number constructor deferred' : 'Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor');
+  fail('Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor');
 }

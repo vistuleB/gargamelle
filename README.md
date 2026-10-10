@@ -49,15 +49,16 @@ The implementation agent completed the core and generated, mutation, runtime,
 typed-output and compile-negative evidence. The coordinating agent reviewed it
 and added independent validator checks, official-suite selection, cloze payload
 comparisons and the final evidence gate. The generated suite includes 10,000
-seeded pairs, all 160 generic parent/child combinations and nine depth-50 chains.
-Eight actual compiled-library mutations must fail behavioral assertions. The three
+seeded pairs, all 170 generic parent/child combinations and nine depth-50 chains.
+Thirteen actual compiled-library mutations must fail behavioral assertions,
+including five numeric validation, emission, and construction mutants. The three
 new revision-3 mutations run the full foundation, typed-value and hardening suites.
-Seven forbidden Gleam programs must fail compilation after a positive baseline.
+Nine forbidden Gleam programs must fail compilation after a positive baseline.
 
 The official suite is pinned to commit
 `7de0e6a06031ede80028583dd45d0cd41105ae5b`. All 46 core files are retained with
-hashes and licence. `verification/official/selection.json` identifies 24 selected
-groups and 360 exclusions with reasons. No unsupported schema is strengthened to
+hashes and licence. `verification/official/selection.json` identifies 27 selected
+groups and 357 exclusions with reasons. No unsupported schema is strengthened to
 make it fit our constructors. Optional suite collections and full-dialect
 conformance are not claimed. Existing cloze schemas are frozen from checkpoint `ceb244a` for independent compatibility comparisons; safe-integer limits and the provider's UTF-16 length difference
 are explicitly exercised.
@@ -107,6 +108,44 @@ remains `review-required`. File existence is not proof of that argument. A repor
 always identifies a hashed working-tree snapshot; Git commit fields are null when the checkout has no Git history. `sourceCommit` is null when the
 relevant source is uncommitted, with `baseCommit` retained for context. After a
 checkpoint commit, regenerate evidence to identify the containing commit.
+
+## Fractional numbers
+
+`number()` returns `Definition(Float)` and accepts every finite number admitted by
+`parse`, including integers and magnitudes outside the safe-integer range.
+`number_bounds` intersects finite numeric endpoints; `None` leaves that side
+unbounded. Apply bounds before naming a definition or composing it into a union.
+Annotations and maps preserve the underlying number node and support bounds.
+
+```gleam
+import concord
+import gleam/option.{None, Some}
+
+let assert Ok(probability) =
+  concord.number_bounds(
+    concord.number(),
+    Some(concord.Inclusive(0.0)),
+    Some(concord.Inclusive(1.0)),
+  )
+let assert Ok(positive) =
+  concord.number_bounds(concord.number(), Some(concord.Exclusive(0.0)), None)
+```
+
+This is the parsed IEEE-754 binary64 model, not arbitrary-precision decimal
+arithmetic. `parse` rejects numeric overflow to infinity as an admission error,
+including overflow nested in arrays/objects. Parsing may round decimal text or
+underflow it to zero. Decoding preserves the resulting number, including negative
+zero; schema comparisons treat both zero signs equally. Serializing through
+`value_text` follows JSON serialization and normalizes negative zero to `0`.
+The independent validators and decoder must receive the same parsed value.
+
+Bounds emit `minimum`/`maximum` or `exclusiveMinimum`/`exclusiveMaximum`.
+Repeated bounds intersect, with exclusivity winning at equal endpoints.
+Nonfinite endpoints, inverted intervals, and exclusive equal endpoints are
+construction errors. An interval between adjacent representable numbers can be
+constructed even when it accepts no binary64 value; schema and decoder agree.
+`bounds` remains the integer/size API; use `number_bounds` for numbers.
+`multipleOf` and fractional-number constants are not included in this extension.
 
 ## Optional HTML documentation
 

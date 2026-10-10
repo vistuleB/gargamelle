@@ -12,6 +12,7 @@ export function reference(a,v,visit=()=>{},path='$') {
  case 'null': if(v===null)r=yes(null);break;
  case 'string': if(typeof v==='string'&&bounded(a,[...v].length)&&(a.patterns??[]).every(p=>new RegExp(p,'u').test(v)))r=yes(v);break;
  case 'integer': if(Number.isSafeInteger(v)&&bounded(a,v))r=yes(v);break;
+ case 'number': if(typeof v==='number'&&Number.isFinite(v)&&(a.min==null||(a.exclusiveMin?v>a.min:v>=a.min))&&(a.max==null||(a.exclusiveMax?v<a.max:v<=a.max)))r=yes(v);break;
  case 'enum': if(a.values.includes(v))r=yes(v);break;
  case 'constant': if(v===a.value)r=yes(v);break;
  case 'array': case 'dictionary': {

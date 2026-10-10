@@ -57,6 +57,7 @@ export function pattern_valid(pattern) {
 export const pattern_matches = (pattern, text) => new RegExp(pattern, 'u').test(text);
 export const sorted = values => toList([...values].sort());
 export const integer = Number.isInteger;
+export const finite = Number.isFinite;
 // Gleam Int and Float share JavaScript's number representation. These are
 // primitive numeric conversions, not generic opaque-value casts.
 export const as_int = value => value;

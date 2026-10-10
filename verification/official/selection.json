@@ -237,7 +237,7 @@
       "description": "anyOf with one empty schema",
       "tests": 2,
       "status": "excluded",
-      "reason": "General number constructor deferred"
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
     },
     {
       "id": "draft2020-12/anyOf.json#7",
@@ -517,7 +517,7 @@
       "description": "the default keyword does not do anything if the property is missing",
       "tests": 3,
       "status": "excluded",
-      "reason": "General number constructor deferred"
+      "reason": "Unsupported source-keyword combination: default"
     },
     {
       "id": "draft2020-12/defs.json#0",
@@ -1152,8 +1152,22 @@
       "id": "draft2020-12/items.json#4",
       "description": "nested items",
       "tests": 3,
-      "status": "excluded",
-      "reason": "General number constructor deferred"
+      "recipe": {
+        "kind": "array",
+        "child": {
+          "kind": "array",
+          "child": {
+            "kind": "array",
+            "child": {
+              "kind": "array",
+              "child": {
+                "kind": "number"
+              }
+            }
+          }
+        }
+      },
+      "status": "selected"
     },
     {
       "id": "draft2020-12/items.json#5",
@@ -1566,7 +1580,7 @@
       "description": "oneOf with empty schema",
       "tests": 2,
       "status": "excluded",
-      "reason": "General number constructor deferred"
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
     },
     {
       "id": "draft2020-12/oneOf.json#8",
@@ -2184,8 +2198,10 @@
       "id": "draft2020-12/type.json#1",
       "description": "number type matches numbers",
       "tests": 9,
-      "status": "excluded",
-      "reason": "General number constructor deferred"
+      "recipe": {
+        "kind": "number"
+      },
+      "status": "selected"
     },
     {
       "id": "draft2020-12/type.json#2",
@@ -2828,8 +2844,10 @@
       "id": "draft2020-12/vocabulary.json#1",
       "description": "ignore unrecognized optional vocabulary",
       "tests": 2,
-      "status": "excluded",
-      "reason": "General number constructor deferred"
+      "recipe": {
+        "kind": "number"
+      },
+      "status": "selected"
     }
   ]
 }

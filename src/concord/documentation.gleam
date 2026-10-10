@@ -136,6 +136,14 @@ fn constraints(s: Value) {
       }
     })
   let extras = [
+    case has(s, "exclusiveMinimum") {
+      True -> "value > " <> show(get(s, "exclusiveMinimum"))
+      False -> ""
+    },
+    case has(s, "exclusiveMaximum") {
+      True -> "value < " <> show(get(s, "exclusiveMaximum"))
+      False -> ""
+    },
     case has(s, "pattern") {
       True -> "pattern: " <> text(get(s, "pattern"))
       False -> ""

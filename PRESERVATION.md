@@ -27,6 +27,18 @@ caught as validation errors.
   and value. The restricted primitive constants avoid JSON-object equality
   questions. Unsafe integer constants and empty/duplicate enums are rejected.
 
+- **P05 finite number:** admission provides a finite binary64 `JNumber`.
+  The number node accepts that constructor, and conversion returns its Float
+  unchanged. The schema emits `number`, with no safe-integer restriction.
+  Numeric bounds compare the same parsed binary64 endpoints and values as the
+  independent validators. Inclusive/exclusive lower and upper comparisons emit
+  their corresponding JSON Schema keywords. Repeated constraints choose the
+  stricter endpoint; exclusivity wins at equal values. Construction rejects
+  nonfinite endpoints, inverted intervals, and exclusive equal endpoints.
+  Rounding and underflow belong to admission; overflow to infinity is rejected
+  there. Negative zero survives decoding while numeric comparisons equate it
+  to positive zero. None of these checks invokes author callbacks.
+
 ## Composition
 
 - **C01 arrays:** object constructor distinguishes arrays from other JSON values.
@@ -90,15 +102,15 @@ conversion. There is no generic FFI cast or forged typed provider value.
 
 ## Current evidence and remaining work
 
-`gleam test` currently runs 17 tests, including concrete typed records/custom
+`gleam test` currently runs 25 tests, including concrete typed records/custom
 variants, dictionaries/arrays, glon regressions, optional/null states, callback
 suppression, hostile keys, Unicode, tags, constraints, constants and defaults.
 `schema_fixtures` supplies 25 authored independent-oracle fixtures.
 
 `verification/generated*.test.mjs` adds 10,000 seeded definition/input pairs,
-all 160 generic parent/child combinations, nonempty depth-50 chains, independently
+all 170 generic parent/child combinations, nonempty depth-50 chains, independently
 specified output/error fixtures, admission/operational tests, callback counters,
-and actual isolated mutations for all five required defect classes. Seven
+and actual isolated mutations for all five required defect classes. Nine
 compile-negative programs establish the public opaque/static API boundary.
 Generated coverage and retained findings are documented in
 `verification/generated-notes.md`; operational failures are not rejections.
