@@ -49,11 +49,11 @@ The implementation agent completed the core and generated, mutation, runtime,
 typed-output and compile-negative evidence. The coordinating agent reviewed it
 and added independent validator checks, official-suite selection, cloze payload
 comparisons and the final evidence gate. The generated suite includes 10,000
-seeded pairs, all 170 generic parent/child combinations and nine depth-50 chains.
-Thirteen actual compiled-library mutations must fail behavioral assertions,
-including five numeric validation, emission, and construction mutants. The three
+seeded pairs, all 180 generic parent/child combinations and nine depth-50 chains.
+Sixteen actual compiled-library mutations must fail behavioral assertions,
+including five numeric and three recursion mutants. The three
 new revision-3 mutations run the full foundation, typed-value and hardening suites.
-Nine forbidden Gleam programs must fail compilation after a positive baseline.
+Thirteen forbidden Gleam programs must fail compilation after a positive baseline.
 
 The official suite is pinned to commit
 `7de0e6a06031ede80028583dd45d0cd41105ae5b`. All 46 core files are retained with
@@ -146,6 +146,62 @@ construction errors. An interval between adjacent representable numbers can be
 constructed even when it accepts no binary64 value; schema and decoder agree.
 `bounds` remains the integer/size API; use `number_bounds` for numbers.
 `multipleOf` and fractional-number constants are not included in this extension.
+
+## Recursive definitions
+
+`recursive(name, build)` creates a guarded self-recursive definition. Its builder
+runs once with a typed definition reference, never a fabricated decoded value.
+The builder returns `Result(Definition(a), ConstructionError)`. For example:
+
+```gleam
+import concord as s
+import gleam/result
+
+pub type Tree {
+  Leaf(Float)
+  Branch(List(Tree))
+}
+
+pub fn tree_definition() {
+  s.recursive("tree", fn(self) {
+    use leaf <- result.try(s.required(s.record(Leaf), "value", s.number()))
+    use branch <- result.try(
+      s.required(s.record(Branch), "children", s.array(self)),
+    )
+    s.tagged("kind", [
+      s.variant("leaf", leaf, s.Closed),
+      s.variant("branch", branch, s.Closed),
+    ])
+  })
+}
+```
+
+`recursive_pair(first_name, second_name, build)` supplies two references, with
+independent output types. Return `Ok(#(first_body, second_body))`; the result
+contains both finalized definitions, each usable as a root. This first API
+supports self-recursion and pairs, not arbitrary heterogeneous recursion groups.
+
+Every cycle must descend into an array item, dictionary value, or record field.
+Direct reference loops, loops through nullable/union/annotation wrappers, and
+mutual aliases without child descent are construction errors. This is a
+conservative syntactic guard, not a proof that every definition has an accepted
+value. Names use the same restricted syntax as `named`; pair names must differ.
+Conflicting definitions sharing a name are rejected during graph finalization or
+when composed definitions are emitted/validated.
+
+Builder references are scoped to construction. They cannot be decoded/emitted
+before finalization, nor used to validate a default while unresolved. A rejected
+construction invalidates its bound placeholders; escaped placeholders cause
+operational failures even in empty arrays. Add defaults containing recursive
+values after their definitions are finalized. Nested construction cannot close
+over an unfinished outer reference; use `recursive_pair` for that relationship.
+
+Schemas emit finite local `$defs`/`$ref` graphs. Decoding follows the same
+references, preserving typed values and nested error paths. Documentation renders
+references as links rather than expanding recursive trees. There is no hidden
+depth limit. Stack exhaustion and callback exceptions remain operational failures,
+not validation rejections. The equation provider's existing depth-20 contracts
+are unchanged; migrating them would be a separate app behavior decision.
 
 ## Optional HTML documentation
 

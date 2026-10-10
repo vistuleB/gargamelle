@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.3 — 2026-10-10
+
+- Add guarded self-recursive definitions and mutually recursive pairs with distinct typed outputs.
+- Emit finite local reference graphs and reject non-progressing cycles or unfinished references.
+- Extend deep-input, typed-output, mutation, resource-failure, and generated composition verification.
+
 ## 0.0.2 — 2026-10-10
 
 - Add finite-number definitions decoding to Gleam `Float`.

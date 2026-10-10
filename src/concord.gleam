@@ -58,8 +58,50 @@ type Node {
   UnionNode(List(Node), Bool)
   TaggedNode(String, List(#(String, Node, Option(String))))
   NamedNode(String, Node)
+  ReferenceNode(String, Cell(Node))
   UniqueNode(Node)
   AnnotatedNode(Node, String, String)
+}
+
+// Cells contain only library nodes or typed conversion functions, never values
+// fabricated for definition-author callbacks. They are private to construction.
+// Per-traversal identity tracking avoids rescanning shared/recursive nodes.
+type Seen(a) {
+  Seen(fn(a) -> Bool)
+}
+
+@external(javascript, "./runtime.mjs", "identity_tracker")
+fn new_seen(make: fn(fn(a) -> Bool) -> Seen(a)) -> Seen(a)
+
+fn seen_before(seen: Seen(a), value: a) -> Bool {
+  let Seen(visit) = seen
+  visit(value)
+}
+
+type Cell(a) {
+  Cell(fn() -> Result(a, ConstructionError), fn(a) -> Nil, fn() -> Nil)
+}
+
+@external(javascript, "./runtime.mjs", "recursive_cell")
+fn new_cell(
+  make: fn(fn() -> Result(a, ConstructionError), fn(a) -> Nil, fn() -> Nil) ->
+    Cell(a),
+  missing: ConstructionError,
+) -> Cell(a)
+
+fn read_cell(cell: Cell(a)) -> Result(a, ConstructionError) {
+  let Cell(read, _, _) = cell
+  read()
+}
+
+fn bind_cell(cell: Cell(a), value: a) -> Nil {
+  let Cell(_, bind, _) = cell
+  bind(value)
+}
+
+fn reject_cell(cell: Cell(a)) -> Nil {
+  let Cell(_, _, reject) = cell
+  reject()
 }
 
 type Field {
@@ -367,16 +409,111 @@ pub fn dictionary(def: Definition(a)) -> Definition(List(#(String, a))) {
   })
 }
 
-// Named definitions are finite reusable DAG nodes, not recursive callbacks.
+fn valid_name(name: String) -> Bool {
+  pattern_matches("^[A-Za-z][A-Za-z0-9_-]*$", name)
+  && !pattern_matches("[^A-Za-z0-9_-]", name)
+}
+
+fn make_reference(
+  name: String,
+) -> #(Definition(a), Cell(Node), Cell(fn(Value) -> a)) {
+  let nodes =
+    new_cell(
+      Cell,
+      ConstructionError("unfinalized recursive reference: " <> name),
+    )
+  let converters =
+    new_cell(Cell, ConstructionError("unfinalized recursive decoder: " <> name))
+  let def =
+    Definition(ReferenceNode(name, nodes), fn(value) {
+      let assert Ok(convert) = read_cell(converters)
+        as "Recursive definition is not finalized"
+      convert(value)
+    })
+  #(def, nodes, converters)
+}
+
+fn bind_reference(
+  nodes: Cell(Node),
+  converters: Cell(fn(Value) -> a),
+  def: Definition(a),
+) -> Nil {
+  let Definition(node, convert) = def
+  bind_cell(nodes, node)
+  bind_cell(converters, convert)
+}
+
+/// Build a guarded self-recursive definition. The builder runs once with a
+/// typed definition placeholder, never an invented decoded value.
+pub fn recursive(
+  name: String,
+  build: fn(Definition(a)) -> Result(Definition(a), ConstructionError),
+) -> Result(Definition(a), ConstructionError) {
+  case valid_name(name) {
+    False -> Error(ConstructionError("invalid definition name"))
+    True -> {
+      let #(reference, nodes, converters) = make_reference(name)
+      use body <- result.try(build(reference))
+      bind_reference(nodes, converters, body)
+      let Definition(root, _) = reference
+      case guard_graph(root) {
+        Ok(_) -> Ok(reference)
+        Error(error) -> {
+          reject_cell(nodes)
+          reject_cell(converters)
+          Error(error)
+        }
+      }
+    }
+  }
+}
+
+/// Build two mutually recursive definitions with distinct names and independent
+/// output types. References may cross only through guarded data structure edges.
+pub fn recursive_pair(
+  first_name: String,
+  second_name: String,
+  build: fn(Definition(a), Definition(b)) ->
+    Result(#(Definition(a), Definition(b)), ConstructionError),
+) -> Result(#(Definition(a), Definition(b)), ConstructionError) {
+  case
+    valid_name(first_name)
+    && valid_name(second_name)
+    && first_name != second_name
+  {
+    False -> Error(ConstructionError("invalid or duplicate recursive names"))
+    True -> {
+      let #(first, first_nodes, first_convert) = make_reference(first_name)
+      let #(second, second_nodes, second_convert) = make_reference(second_name)
+      use bodies <- result.try(build(first, second))
+      bind_reference(first_nodes, first_convert, bodies.0)
+      bind_reference(second_nodes, second_convert, bodies.1)
+      let Definition(first_root, _) = first
+      let Definition(second_root, _) = second
+      case
+        result.try(guard_graph(first_root), fn(_) { guard_graph(second_root) })
+      {
+        Ok(_) -> Ok(#(first, second))
+        Error(error) -> {
+          reject_cell(first_nodes)
+          reject_cell(first_convert)
+          reject_cell(second_nodes)
+          reject_cell(second_convert)
+          Error(error)
+        }
+      }
+    }
+  }
+}
+
+// Named definitions reuse finite structures; recursive definitions use explicit
+// references whose complete graph is checked before returning to the caller.
 pub fn named(
   name: String,
   def: Definition(a),
 ) -> Result(Definition(a), ConstructionError) {
   let Definition(node, convert) = def
-  case
-    pattern_matches("^[A-Za-z][A-Za-z0-9_-]*$", name)
-    && !pattern_matches("[^A-Za-z0-9_-]", name)
-  {
+  case valid_name(name) {
     True -> Ok(Definition(NamedNode(name, node), convert))
     False -> Error(ConstructionError("invalid definition name"))
   }
@@ -450,6 +587,9 @@ pub fn defaulted(
   value: Value,
 ) -> Result(Record(b), ConstructionError) {
   let Definition(n, _) = child
+  // Defaults are checked during construction. A recursive placeholder cannot
+  // yet supply its acceptance contract; reject it rather than invent a value.
+  use _ <- result.try(collect_definitions_result([n], [], new_seen(Seen)))
   case check(n, value, "") {
     [] -> add_field(r, name, child, Default(value))
     _ -> Error(ConstructionError("invalid default"))
@@ -727,6 +867,9 @@ pub fn validate(
   value: Value,
 ) -> Result(Nil, List(DataError)) {
   let Definition(n, _) = def
+  // Even an empty array must not make an escaped, rejected placeholder usable.
+  let assert Ok(_) = collect_definitions_result([n], [], new_seen(Seen))
+    as "Definition contains an unfinalized recursive reference or conflicting names"
   case check(n, value, "") {
     [] -> Ok(Nil)
     errors -> Error(errors)
@@ -772,6 +915,11 @@ fn size_ok(n: Int, lo: Option(Int), hi: Option(Int)) -> Bool {
 
 fn check(n: Node, v: Value, p: String) -> List(DataError) {
   case n, v {
+    ReferenceNode(_, cell), _ -> {
+      let assert Ok(child) = read_cell(cell)
+        as "Recursive definition is not finalized"
+      check(child, v, p)
+    }
     NamedNode(_, child), _ -> check(child, v, p)
     UniqueNode(child), JArray(xs) -> {
       let values = list.map(xs, value_text)
@@ -934,54 +1082,130 @@ fn emit_bound(v: Value, k: String, b: Option(Int)) -> Value {
 }
 
 @external(javascript, "./runtime.mjs", "same_reference")
-fn same_reference(a: Node, b: Node) -> Bool
+fn same_reference(a: a, b: a) -> Bool
+
+fn node_children(n: Node) -> Result(List(Node), ConstructionError) {
+  case n {
+    ReferenceNode(_, cell) -> result.map(read_cell(cell), fn(child) { [child] })
+    NamedNode(_, child)
+    | ArrayNode(child, _, _)
+    | DictNode(child, _, _)
+    | NullableNode(child)
+    | AnnotatedNode(child, _, _)
+    | UniqueNode(child) -> Ok([child])
+    RecordNode(fields, _) ->
+      Ok(
+        list.map(fields, fn(f) {
+          let Field(_, child, _) = f
+          child
+        }),
+      )
+    UnionNode(children, _) -> Ok(children)
+    TaggedNode(_, branches) -> Ok(list.map(branches, fn(b) { b.1 }))
+    _ -> Ok([])
+  }
+}
+
+fn merge_definition(
+  name: String,
+  child: Node,
+  definitions: List(#(String, Node)),
+) -> Result(List(#(String, Node)), ConstructionError) {
+  case list.key_find(definitions, name) {
+    Error(_) -> Ok([#(name, child), ..definitions])
+    Ok(existing) ->
+      case
+        same_reference(existing, child)
+        || value_text(emit(existing)) == value_text(emit(child))
+      {
+        True -> Ok(definitions)
+        False ->
+          Error(ConstructionError(
+            "Conflicting named schema definitions: " <> name,
+          ))
+      }
+  }
+}
+
+fn collect_definitions_result(
+  pending: List(Node),
+  definitions: List(#(String, Node)),
+  seen: Seen(Node),
+) -> Result(List(#(String, Node)), ConstructionError) {
+  case pending {
+    [] -> Ok(definitions)
+    [node, ..rest] ->
+      case seen_before(seen, node) {
+        True -> collect_definitions_result(rest, definitions, seen)
+        False ->
+          case node_children(node) {
+            Error(error) -> Error(error)
+            Ok(children) -> {
+              let merged = case node, children {
+                NamedNode(name, _), [child] | ReferenceNode(name, _), [child] ->
+                  merge_definition(name, child, definitions)
+                _, _ -> Ok(definitions)
+              }
+              case merged {
+                Error(error) -> Error(error)
+                Ok(next) ->
+                  collect_definitions_result(
+                    list.append(children, rest),
+                    next,
+                    seen,
+                  )
+              }
+            }
+          }
+      }
+  }
+}
+
+// These wrappers check the same input. Arrays, dictionary values and record
+// fields instead descend into a strict child value and therefore break cycles.
+fn same_input_children(n: Node) -> Result(List(Node), ConstructionError) {
+  case n {
+    ArrayNode(_, _, _) | DictNode(_, _, _) | RecordNode(_, _) -> Ok([])
+    _ -> node_children(n)
+  }
+}
+
+fn guard_same_input(
+  n: Node,
+  ancestors: List(Node),
+) -> Result(Nil, ConstructionError) {
+  case list.any(ancestors, same_reference(n, _)) {
+    True -> Error(ConstructionError("non-progressing recursive definition"))
+    False -> {
+      use children <- result.try(same_input_children(n))
+      list.try_fold(children, Nil, fn(_, child) {
+        guard_same_input(child, [n, ..ancestors])
+      })
+    }
+  }
+}
+
+fn guard_graph(root: Node) -> Result(Nil, ConstructionError) {
+  use definitions <- result.try(collect_definitions_result(
+    [root],
+    [],
+    new_seen(Seen),
+  ))
+  list.try_fold(
+    [root, ..list.map(definitions, fn(pair) { pair.1 })],
+    Nil,
+    fn(_, n) { guard_same_input(n, []) },
+  )
+}
 
 fn collect_definitions(
   n: Node,
-  definitions: List(#(String, Node)),
+  _: List(#(String, Node)),
 ) -> List(#(String, Node)) {
-  case n {
-    NamedNode(name, child) ->
-      case list.key_find(definitions, name) {
-        Ok(existing) ->
-          case same_reference(existing, child) {
-            True -> definitions
-            False -> {
-              let assert True =
-                value_text(emit(existing)) == value_text(emit(child))
-                as "Conflicting named schema definitions"
-              let updated =
-                list.map(definitions, fn(pair) {
-                  case pair.0 == name {
-                    True -> #(name, child)
-                    False -> pair
-                  }
-                })
-              collect_definitions(child, updated)
-            }
-          }
-        Error(_) -> collect_definitions(child, [#(name, child), ..definitions])
-      }
-    ArrayNode(c, _, _)
-    | DictNode(c, _, _)
-    | NullableNode(c)
-    | AnnotatedNode(c, _, _)
-    | UniqueNode(c) -> collect_definitions(c, definitions)
-    RecordNode(fs, _) ->
-      list.fold(fs, definitions, fn(acc, field) {
-        let Field(_, c, _) = field
-        collect_definitions(c, acc)
-      })
-    UnionNode(children, _) ->
-      list.fold(children, definitions, fn(acc, c) {
-        collect_definitions(c, acc)
-      })
-    TaggedNode(_, branches) ->
-      list.fold(branches, definitions, fn(acc, branch) {
-        collect_definitions(branch.1, acc)
-      })
-    _ -> definitions
-  }
+  let assert Ok(definitions) =
+    collect_definitions_result([n], [], new_seen(Seen))
+    as "Conflicting named schema definitions or unfinalized recursive reference"
+  definitions
 }
 
 fn emit_with_definitions(n: Node) -> Value {
@@ -1011,7 +1235,8 @@ fn emit_number_bound(
 
 fn emit(n: Node) -> Value {
   case n {
-    NamedNode(name, _) -> obj([#("$ref", JString("#/$defs/" <> name))])
+    NamedNode(name, _) | ReferenceNode(name, _) ->
+      obj([#("$ref", JString("#/$defs/" <> name))])
     UniqueNode(c) -> put(emit(c), "uniqueItems", JBool(True))
     BooleanNode -> typ("boolean")
     NullNode -> typ("null")

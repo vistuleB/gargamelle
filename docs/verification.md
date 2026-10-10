@@ -10,7 +10,9 @@ Implementation extension, 2026-10-10: P05 finite-number contracts and
 inclusive/exclusive bounds are now implemented. The original revision-3 status
 above describes the specification checkpoint; current automated results are in
 `reports/evidence.json`. This extension retains the same parsed-value domain J.
-`multipleOf` and fractional constants remain outside scope.
+`multipleOf` and fractional constants remain outside scope. Guarded self-recursion
+and mutually recursive pairs are also implemented with finite local reference
+graphs. Same-input cycles fail construction; no decoder depth cap is introduced.
 
 ## 1. Product and scope
 
@@ -100,6 +102,7 @@ These are conceptual constructors, not committed API spellings.
 | C05 | Any-of | At least one child accepts | Select the first successful branch in declaration order |
 | C06 | One-of | Exactly one child accepts | Decode that unique branch; reject overlapping matches |
 | C07 | Tagged union | Object branches with required, distinct string-constant discriminators; equivalent to their emitted one-of | Select the matching variant; discriminator is consumed, not duplicated in branch output |
+| C08 | Guarded recursion | Local `$defs`/`$ref` graphs; every cycle must descend through an item, dictionary value, or record field | Preserve the declared recursive output type; mutually recursive pairs may have distinct output types |
 | A01 | Description/title | Annotation only; no change in accepted inputs or decoded values | Preserve child result |
 | A02 | Total map | No change to schema or acceptance | Apply mapping to successfully decoded value; mapping cannot add rejection rules |
 
@@ -273,7 +276,7 @@ remains deferred. Default annotations must not alter acceptance.
   belong in the core library. A narrow, documented regex/JSON-runtime FFI is
   acceptable; an FFI value cast used to bypass the type model is not.
 
-Deferred: arbitrary schema import, refs/recursion, public all-of/not/conditionals,
+Deferred: arbitrary schema import, remote/dynamic refs, larger recursion groups, public all-of/not/conditionals,
 unevaluated keywords, tuples, pattern properties, format assertions, uniqueItems,
 general JSON-valued enums/constants, encoders/round-trip promises, Erlang support,
 and a machine-checked proof. There is no API that silently ignores these features.

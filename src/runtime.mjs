@@ -65,3 +65,27 @@ export const as_float = value => value;
 export const int_text = String;
 
 export const same_reference = (a, b) => a === b;
+
+// A single-assignment typed construction cell. No schema-author callback is
+// called here. Failed graph finalization invalidates escaped placeholders.
+export function recursive_cell(make, missing) {
+  let state = 'unbound', value;
+  return make(
+    () => state === 'bound' ? new Ok(value) : new Error(missing),
+    next => {
+      if (state !== 'unbound') throw new globalThis.Error('Recursive cell already finalized');
+      value = next; state = 'bound';
+    },
+    () => { state = 'rejected'; value = undefined; },
+  );
+}
+
+// Tracking is local to one schema walk; it retains no process-wide cache.
+export function identity_tracker(make) {
+  const seen = new Set();
+  return make(value => {
+    if (seen.has(value)) return true;
+    seen.add(value);
+    return false;
+  });
+}

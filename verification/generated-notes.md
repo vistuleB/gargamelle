@@ -20,7 +20,7 @@ not the generator, determines validity. Extra-key, missing-field, wrong-type,
 length and numeric mutations are proposals, never assumed invalid. Arbitrary
 JSON values supplement them. Proposals vary union branch, nullable presence,
 optional/defaulted presence, names and tags, including hostile keys. Coverage
-requires both outcomes for every root and nested constructor and all 170 generic parent/child constructor combinations.
+requires both outcomes for every root and nested constructor and all 180 generic parent/child constructor combinations.
 
 Nine additional depth-50 chains use linear structure. Arrays/dictionaries have
 nonempty witnesses; nullable chains use non-null witnesses; each also has an

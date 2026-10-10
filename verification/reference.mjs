@@ -15,6 +15,11 @@ export function reference(a,v,visit=()=>{},path='$') {
  case 'number': if(typeof v==='number'&&Number.isFinite(v)&&(a.min==null||(a.exclusiveMin?v>a.min:v>=a.min))&&(a.max==null||(a.exclusiveMax?v<a.max:v<=a.max)))r=yes(v);break;
  case 'enum': if(a.values.includes(v))r=yes(v);break;
  case 'constant': if(v===a.value)r=yes(v);break;
+ case 'recursive': {
+  if(typeof v==='number'&&Number.isFinite(v))r=yes({leaf:v});
+  else if(Array.isArray(v)){const results=v.map((x,i)=>child(a,x,path+'/child/'+i));if(results.every(x=>x.accepted))r=yes({children:results.map(x=>x.value)});}
+  break;
+ }
  case 'array': case 'dictionary': {
   if(a.kind==='array'?!Array.isArray(v):!object(v))break;
   const entries=Object.entries(v), values=entries.map(([k,x])=>[k,child(a.child,x,path+'/child')]);

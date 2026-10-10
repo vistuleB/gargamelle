@@ -26,6 +26,7 @@ export function build(a) {
     case 'number': d=s.number(); if(a.min!=null||a.max!=null)d=unwrap(s.number_bounds(d,a.min==null?None:new Some(a.exclusiveMin?new s.Exclusive(a.min):new s.Inclusive(a.min)),a.max==null?None:new Some(a.exclusiveMax?new s.Exclusive(a.max):new s.Inclusive(a.max)))); break;
     case 'enum': d=unwrap(s.string_enum(toList(a.values))); break;
     case 'constant': d=a.value===null?s.map(s.null_constant(),()=>null):typeof a.value==='string'?s.string_constant(a.value):typeof a.value==='boolean'?s.boolean_constant(a.value):unwrap(s.integer_constant(a.value)); break;
+    case 'recursive': d=unwrap(s.recursive('generated-tree',self=>s.any_of(toList([s.map(s.number(),x=>({leaf:x})),s.map(s.array(self),xs=>({children:[...xs]}))])))); break;
     case 'array': d=s.array(build(a.child)); if(a.min!=null||a.max!=null)d=unwrap(s.bounds(d,option(a.min),option(a.max))); d=s.map(d,x=>[...x]); break;
     case 'dictionary': d=s.dictionary(build(a.child)); if(a.min!=null||a.max!=null)d=unwrap(s.bounds(d,option(a.min),option(a.max))); d=s.map(d,x=>Object.fromEntries(x)); break;
     case 'record': d=s.finish(objectRecord(a.fields),a.open?s.Policy$Open$const:s.Policy$Closed$const); break;
@@ -55,7 +56,7 @@ export function evaluateText(definition, text) {
   return {accepted:result instanceof Ok, value:result[0]};
 }
 export const emitted=d=>JSON.parse(s.emit_text(d));
-export const allKinds=['boolean','null','string','integer','enum','constant','number','array','dictionary','record','nullable','any','one','tagged','description','title','map'];
+export const allKinds=['boolean','null','string','integer','enum','constant','number','recursive','array','dictionary','record','nullable','any','one','tagged','description','title','map'];
 export function childNodes(a) {
   return a.child?[a.child]:a.children??(a.fields?a.fields.map(f=>f.child):a.branches?a.branches.flatMap(b=>b.fields.map(f=>f.child)):[]);
 }
@@ -65,6 +66,7 @@ export function proposal(a,r=()=>0) {
  const p=c=>proposal(c,r);
  switch(a.kind){
  case 'boolean':return !!r(2);case 'null':return null;case 'string':return (a.patterns??[]).length?'ab':'x'.repeat(a.min??1);case 'integer':return a.min??0;
+ case 'recursive':return r(2)?[0.5,[]]:0.5;
  case 'number':return a.min==null?(a.max==null?0.5:a.max-(a.exclusiveMax?0.5:0)) : a.min+(a.exclusiveMin?0.5:0);
  case 'enum':return a.values[r(a.values.length)];case 'constant':return a.value;
  case 'array':return Array.from({length:a.min??1},()=>p(a.child));

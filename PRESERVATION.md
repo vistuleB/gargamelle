@@ -80,6 +80,37 @@ caught as validation errors.
 - **A02 maps:** retain the original node exactly and compose only the converter.
   Under the pure/total callback assumption they cannot change acceptance.
 
+## Guarded recursive graphs
+
+`recursive`/`recursive_pair` allocate private single-assignment cells holding
+only typed nodes and converters. Builders run once with definitions, not decoded
+values. After binding all cells, graph finalization checks names, definitions,
+and every cycle reachable without consuming a child. Arrays, dictionary values
+and record fields break such paths because they select strict subvalues of
+finite admitted JSON. Union, nullable, name, reference, uniqueness and annotation
+wrappers do not break them. This conservative guard excludes recursive calls on
+the same input; it does not assert satisfiability or bounded resource use.
+
+Validation follows reference cells into their finalized nodes. Induction on
+strict child values, with finite same-input paths between descents, gives the
+same structural acceptance as local schema references. Conversion follows cells
+of the same output type only after validation. Mutual pairs may have different
+output types without any generic cast. Inputs remain finite trees; no cyclic
+host objects are admitted. Operational stack/resource failures still escape.
+
+Emission visits graph nodes by runtime identity, registers each named/ref target,
+and emits references without expanding them. Colliding names must emit equal
+local structures, and traversal continues through every distinct node to check
+transitive conflicts. Repeated nodes terminate traversal, so recursive graphs
+produce finite `$defs`. The optional HTML renderer consumes those finite schemas
+and renders references as links.
+
+All public validation/emission checks reference readiness. Defaults cannot be
+checked against unbound references. Failed finalization invalidates all newly
+bound cells; escaped placeholders cannot decode even an empty container. The
+JavaScript FFI creates cell functions around library values and never invents
+values for user callbacks. Cell mutation ends at successful finalization.
+
 ## Admission, emission and trusted runtime
 
 Public `Value` is opaque. The public admission operation accepts JSON text,
@@ -102,15 +133,15 @@ conversion. There is no generic FFI cast or forged typed provider value.
 
 ## Current evidence and remaining work
 
-`gleam test` currently runs 25 tests, including concrete typed records/custom
+`gleam test` currently runs 29 tests, including concrete typed records/custom
 variants, dictionaries/arrays, glon regressions, optional/null states, callback
 suppression, hostile keys, Unicode, tags, constraints, constants and defaults.
 `schema_fixtures` supplies 25 authored independent-oracle fixtures.
 
 `verification/generated*.test.mjs` adds 10,000 seeded definition/input pairs,
-all 170 generic parent/child combinations, nonempty depth-50 chains, independently
+all 180 generic parent/child combinations, nonempty depth-50 chains, independently
 specified output/error fixtures, admission/operational tests, callback counters,
-and actual isolated mutations for all five required defect classes. Nine
+and actual isolated mutations for all five required defect classes. Thirteen
 compile-negative programs establish the public opaque/static API boundary.
 Generated coverage and retained findings are documented in
 `verification/generated-notes.md`; operational failures are not rejections.
