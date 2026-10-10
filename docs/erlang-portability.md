@@ -191,7 +191,9 @@ It uses typed construction plans, explicit recursion environments and immutable
 completed bodies. Self recursion, an independently typed pair, native handoff,
 callback suppression, defaults and compile-negative cases are exercised. See
 [the prototype report](immutable-recursion-prototype.md) for its API comparison,
-261-case independent schema checks per target, and limits. This demonstrates a
+511-case independent schema checks per target, and limits. Curried record/tuple
+builders and generic helpers now compile without public schema lookup types.
+This demonstrates a
 possible **different recursion contract**; it does not fix the existing library
 or authorize a public API migration.
 

@@ -15,10 +15,12 @@ Gleam package. It uses no regex shim or production reference implementation.
 
 ## Representation
 
-`Plan(a, Environment(recursion))` contains a finite structural schema and a typed
+`Plan(a, recursion)` contains a finite structural schema and a typed
 converter taking an explicit environment and a JSON-shaped prototype value.
 The environment contains a schema lookup and typed recursive functions. It never
-contains a heterogeneous collection of converters.
+contains a heterogeneous collection of converters. Schema lookup and the actual
+environment tuple are private; public combinators and generic helpers quantify
+over only the recursion parameter.
 
 For self recursion, the environment supplies `fn(Value) -> a`. For a pair, it
 supplies `#(fn(Value) -> a, fn(Value) -> b)`. The builder executes once and produces
@@ -33,7 +35,7 @@ resolve its references against an enclosing definition with the same name.
 
 `lift` imports a completed definition into a plan and ignores the plan's converter
 environment. Ordinary `map` still permits closures as outputs. `finish` accepts
-only a plan whose recursion environment is `Nil`; a recursive builder reference
+only a plan whose recursion parameter is `Nil`; a recursive builder reference
 cannot be finalized independently. The public `recursive` and `recursive_pair`
 operations close their environments and return completed definitions.
 
@@ -48,16 +50,19 @@ No allocation profiler or reclamation stress test has been run.
 
 | Criterion | Result |
 |---|---|
-| Self recursion and a pair with different output types | Six behavioral tests pass on each target; converters use typed functions, without casts. |
+| Self recursion and a pair with different output types | Eleven behavioral tests pass on each target; converters use typed functions, without casts. |
 | Builder executes once | Counter assertions remain at one after repeated decode, validation and emission. Tested for both self recursion and a pair. |
 | Completed values survive creator exit | Native tests transfer completed self/pair definitions and a decoded closure capturing a completed definition, then use them after creator exit. JavaScript runs the same cases directly; it does not demonstrate process transfer. |
-| Construction references cannot be decoded | Compile-negative tests fail with type mismatches on both targets for `decode(self, ...)` and `finish(self)`. |
+| Construction references cannot be decoded | Eight compile-negative checks fail with type mismatches: each target rejects direct decode/finalization and finalization after mapping or wrapping a reference in a heterogeneous tuple. |
 | Ordinary mappings return closures | A mapped text definition returns a closure capturing a completed recursive definition. The closure remains usable after native handoff. |
 | Composition and schema scope | Imported recursive definitions compose inside another recursive definition, including identical graph names and names containing JSON Pointer escape characters. |
-| Defaults | Defaults using completed recursive definitions succeed. Defaults using unresolved references fail during construction. Default checks and emission do not execute converters. |
+| Defaults | Defaults using completed recursive definitions succeed. Defaults using unresolved references fail during construction, including an empty array of unresolved references. Default checks and emission do not execute converters. |
 | Guard checks | Direct self aliases, unguarded union recursion and mutual aliases are rejected. Structural array/field recursion succeeds. |
 | Callback suppression | Auxiliary constraint converters never execute. Invalid arrays execute no primary converter, including for an earlier valid element. |
-| Independent schema agreement | Ajv 2020-12 agrees with validation and decoding success on 261 cases per target, across self recursion, both pair roots, composition and defaults. Emitted schemas and case outcomes match between targets. |
+| Curried records and tuples | Multi-field records, optional presence, defaults, open/closed projection and exact heterogeneous tuples compile and decode. Tuples carry independently typed pair outputs. |
+| Helper inference | A separately compiled helper module tests annotated generic record/union helpers and an inferred tuple helper, used in closed, self-recursive and paired contexts. Call sites do not supply recursion functions or internal environment types. |
+| Nested construction | Independent nested definitions compose through `lift`. Capturing an unfinished outer reference is rejected during construction, including below an array. |
+| Independent schema agreement | Ajv 2020-12 agrees with validation and decoding success on 511 cases per target, across self recursion, both pair roots, composition, records, defaults and tuples. Emitted schemas and case outcomes match between targets. |
 
 These results establish a feasible typed implementation for the tested subset.
 They do not prove that all existing Gargamelle combinators can be migrated without
@@ -89,18 +94,19 @@ import immutable_plan as p
 
 pub fn tree_definition() -> Result(p.Definition(Tree), String) {
   p.recursive("tree", fn(self) {
-    p.any_of([
-      p.map(p.text(), Leaf),
-      p.map(p.field("children", p.array(self)), Branch),
-    ])
+    use branch <- result.try(
+      p.required(p.record(Branch), "children", p.array(self)),
+    )
+    p.any_of([p.map(p.text(), Leaf), p.finish_record(branch, p.Closed)])
   })
 }
 ```
 
 No environment annotation is needed at this call site. `self` is inferred as a
-plan; the result is a completed definition. The prototype's `field` supports only
-exact one-field objects. It is a testing shortcut, not a proposed replacement
-for Gargamelle's full record API. Naming and module organization remain undecided.
+plan; the result is a completed definition. Curried multi-field record and tuple
+builders use the same recursion parameter as their children. The convenience
+`field` function delegates to the general record builder. Naming and module
+organization remain undecided. The proposed example also imports `gleam/result`.
 
 The contract change is explicit: returning a closure that captures a completed
 definition is supported; using a captured construction plan as an independently
@@ -110,11 +116,17 @@ to the library or published.
 
 ## Remaining decisions and work
 
-Before any library rewrite, extend the typing experiment to curried multi-field
-records, optional fields, heterogeneous tuples and nested recursive construction.
-Check whether helper functions need users to write environment types, and whether
-the schema lookup can be hidden without losing inference. Validate sharing and
-error-path behavior, and measure allocation/traversal cost on deeper inputs.
+Curried records, optional fields, heterogeneous tuples and independent nested
+construction now work in the experiment. Explicitly annotated generic helpers
+write `Plan(a, recursion)`; inferred helpers need no such annotation. This is one
+additional public type parameter compared with `Definition(a)`. Users do not
+write the schema lookup or environment tuple, but migration of existing helper
+signatures still has a cost.
+
+Before any library rewrite, test the remaining combinators and their modifiers,
+larger realistic helper modules, sharing and error-path behavior. Measure
+allocation/traversal cost on deeper inputs. The typed prototype is not yet a
+demonstration that the complete API can migrate cleanly.
 
 The prototype scopes imported graphs independently and permits names outside
 Gargamelle's current restricted syntax. Its same-name composition tests prove

@@ -1,7 +1,9 @@
+import gleam/option.{type Option, None, Some}
 import gleam/result
 import gleam/string
 import gleeunit/should
 import immutable_plan as p
+import plan_helpers
 
 @external(erlang, "plan_support", "counter")
 @external(javascript, "./plan_support.mjs", "counter")
@@ -147,4 +149,163 @@ pub fn callback_suppression_and_atomic_validation_test() {
   p.decode(children, p.Array([p.Text("valid"), p.Boolean(True)]))
   |> should.be_error
   count() |> should.equal(1)
+}
+
+pub type LabeledTree {
+  LabeledTree(String, Option(Bool), List(LabeledTree))
+}
+
+fn labeled_tree() -> Result(p.Definition(LabeledTree), String) {
+  p.recursive("labeled", fn(self) {
+    use body <- result.try(plan_helpers.named_children(self))
+    Ok(p.map(body, fn(value) { LabeledTree(value.0, value.1, value.2) }))
+  })
+}
+
+pub fn curried_records_optional_fields_and_helper_inference_test() {
+  let assert Ok(definition) = handoff(labeled_tree)
+  let leaf = p.Object([#("name", p.Text("leaf")), #("children", p.Array([]))])
+  let input =
+    p.Object([
+      #("name", p.Text("root")),
+      #("enabled", p.Boolean(False)),
+      #("children", p.Array([leaf])),
+    ])
+  p.decode(definition, input)
+  |> should.equal(
+    Ok(LabeledTree("root", Some(False), [LabeledTree("leaf", None, [])])),
+  )
+  p.decode(definition, p.Object([#("name", p.Text("missing children"))]))
+  |> should.be_error
+  p.decode(
+    definition,
+    p.Object([
+      #("name", p.Text("x")),
+      #("children", p.Array([])),
+      #("enabled", p.Text("bad")),
+    ]),
+  )
+  |> should.be_error
+  let assert Ok(closed) = plan_helpers.named_children(p.text())
+  p.decode(p.finish(closed), leaf) |> should.equal(Ok(#("leaf", None, [])))
+  let fields = p.record(fn(value) { fn(other) { #(value, other) } })
+  let assert Ok(fields) = p.required(fields, "same", p.text())
+  p.optional(fields, "same", p.boolean()) |> should.be_error
+}
+
+pub type PacketTree {
+  PacketTree(String, Bool, List(PacketTree))
+}
+
+pub fn heterogeneous_tuple_recursive_helper_test() {
+  let assert Ok(definition) =
+    p.recursive("packet", fn(self) {
+      Ok(
+        p.map(plan_helpers.packet(p.array(self)), fn(value) {
+          PacketTree(value.0, value.1, value.2)
+        }),
+      )
+    })
+  let leaf = p.Array([p.Text("leaf"), p.Boolean(False), p.Array([])])
+  p.decode(
+    definition,
+    p.Array([p.Text("root"), p.Boolean(True), p.Array([leaf])]),
+  )
+  |> should.equal(Ok(PacketTree("root", True, [PacketTree("leaf", False, [])])))
+  p.decode(definition, p.Array([p.Text("short"), p.Boolean(True)]))
+  |> should.be_error
+  p.decode(
+    definition,
+    p.Array([p.Text("extra"), p.Boolean(True), p.Array([]), p.Text("x")]),
+  )
+  |> should.be_error
+  p.decode(
+    definition,
+    p.Array([p.Boolean(False), p.Text("swapped"), p.Array([])]),
+  )
+  |> should.be_error
+}
+
+pub type PacketFirst {
+  PacketFirst(String, Bool, List(PacketSecond))
+}
+
+pub type PacketSecond {
+  PacketSecond(String, Bool, List(PacketFirst))
+}
+
+pub fn pair_helpers_infer_independent_output_types_test() {
+  let assert Ok(#(first, second)) =
+    p.recursive_pair("packet_a", "packet_b", fn(a, b) {
+      Ok(#(
+        p.map(plan_helpers.packet(p.array(b)), fn(value) {
+          PacketFirst(value.0, value.1, value.2)
+        }),
+        p.map(plan_helpers.packet(p.array(a)), fn(value) {
+          PacketSecond(value.0, value.1, value.2)
+        }),
+      ))
+    })
+  let leaf = p.Array([p.Text("leaf"), p.Boolean(False), p.Array([])])
+  p.decode(first, p.Array([p.Text("root"), p.Boolean(True), p.Array([leaf])]))
+  |> should.equal(
+    Ok(PacketFirst("root", True, [PacketSecond("leaf", False, [])])),
+  )
+  p.decode(second, leaf) |> should.equal(Ok(PacketSecond("leaf", False, [])))
+}
+
+pub fn full_record_defaults_and_constructor_suppression_test() {
+  let #(tick, count) = counter(fn(tick, count) { #(tick, count) })
+  let assert Ok(tree) = tree()
+  let fields =
+    p.record(fn(label) {
+      tick()
+      fn(value) { #(label, value) }
+    })
+  let assert Ok(fields) = p.required(fields, "label", p.text())
+  let assert Ok(fields) =
+    p.default_field(fields, "tree", p.lift(tree), p.Text("default"))
+  let definition = p.finish(p.finish_record(fields, p.Open))
+  let input = p.Object([#("label", p.Text("x")), #("extra", p.Boolean(True))])
+  p.validate(definition, input) |> should.be_ok
+  p.emit(definition) |> should.not_equal("")
+  count() |> should.equal(0)
+  p.decode(definition, input) |> should.equal(Ok(#("x", Leaf("default"))))
+  count() |> should.equal(1)
+  p.decode(
+    definition,
+    p.Object([#("label", p.Text("x")), #("tree", p.Boolean(False))]),
+  )
+  |> should.be_error
+  count() |> should.equal(1)
+  p.recursive("empty_default", fn(self) {
+    p.defaulted("children", p.array(self), p.Array([]))
+    |> result.map(fn(_) { p.text() })
+  })
+  |> should.be_error
+  let empty = p.finish(p.finish_tuple(p.tuple(Nil)))
+  p.decode(empty, p.Array([])) |> should.equal(Ok(Nil))
+  p.decode(empty, p.Array([p.Text("extra")])) |> should.be_error
+}
+
+pub fn independent_nested_recursion_and_unfinished_outer_rejection_test() {
+  let assert Ok(outer) =
+    p.recursive("outer", fn(self) {
+      use inner <- result.try(
+        p.recursive("inner", fn(inner) {
+          plan_helpers.text_or(p.map(p.array(inner), fn(_) { "inner" }))
+        }),
+      )
+      p.any_of([p.lift(inner), p.map(p.array(self), fn(_) { "outer" })])
+    })
+  p.decode(outer, p.Array([p.Array([p.Text("x")])])) |> should.be_ok
+  p.recursive("outer", fn(outer) {
+    use _ <- result.try(
+      p.recursive("inner", fn(_) {
+        Ok(p.map(p.array(outer), fn(_) { "inner" }))
+      }),
+    )
+    Ok(p.text())
+  })
+  |> should.be_error
 }

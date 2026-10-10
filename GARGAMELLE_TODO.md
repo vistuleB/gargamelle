@@ -244,13 +244,16 @@ callback outputs or introduce a permanent cell registry. See decision 5 in
 the successful root-transfer evidence below for independently captured references.
 
 The isolated plan/environment prototype in `verification/portability/plans`
-now passes six behavioral tests per target, compile-negative checks, native
-creator-exit handoff and 261 independent schema cases per target. Run
+now passes eleven behavioral tests per target, eight compile-negative checks,
+native creator-exit handoff and 511 independent schema cases per target. Run
 `node --test verification/portability/immutable-plans.test.mjs`. See
 `docs/immutable-recursion-prototype.md` for the realistic API comparison and
-acceptance results. The library has not been rewritten. Next, test the proposed
-types with full record/tuple composition and helper-function inference before
-deciding whether to migrate the public recursion API.
+acceptance results. Curried records, optional/default fields, heterogeneous
+tuples, separately compiled helper inference and independent nested construction
+are covered. Schema lookup is private; helper signatures need only a generic
+recursion parameter. The library has not been rewritten. Next, test the remaining
+combinators/modifiers, sharing and deeper traversal costs before deciding whether
+to migrate the public recursion API.
 
 The actual Erlang fixture runs 35 shared Gleam tests and seven additional typed
 API tests against a temporary library copy. It covers recursive and mutually

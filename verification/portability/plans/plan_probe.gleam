@@ -1,8 +1,10 @@
 import gleam/io
 import gleam/json
 import gleam/list
+import gleam/option.{type Option}
 import gleam/result
 import immutable_plan as p
+import plan_helpers
 
 pub type Tree {
   Leaf(String)
@@ -67,6 +69,77 @@ fn fixture(name, definition, values) {
   ])
 }
 
+pub type NamedTree {
+  NamedTree(String, Option(Bool), List(NamedTree))
+}
+
+pub type PacketTree {
+  PacketTree(String, Bool, List(PacketTree))
+}
+
+fn record_samples() {
+  let leaf = p.Object([#("name", p.Text("leaf")), #("children", p.Array([]))])
+  let combinations =
+    list.flat_map([p.Text("x"), p.Boolean(True)], fn(name) {
+      list.flat_map(
+        [
+          p.Array([]),
+          p.Array([leaf]),
+          p.Boolean(False),
+          p.Array([p.Text("bad")]),
+        ],
+        fn(children) {
+          list.map([p.Boolean(False), p.Text("bad")], fn(enabled) {
+            p.Object([
+              #("name", name),
+              #("children", children),
+              #("enabled", enabled),
+            ])
+          })
+        },
+      )
+    })
+  list.append(
+    samples(),
+    list.append(combinations, [
+      leaf,
+      p.Object([#("name", p.Text("root")), #("children", p.Array([leaf]))]),
+      p.Object([
+        #("name", p.Text("root")),
+        #("children", p.Array([])),
+        #("extra", p.Boolean(True)),
+      ]),
+    ]),
+  )
+}
+
+fn tuple_samples() {
+  let leaf = p.Array([p.Text("leaf"), p.Boolean(False), p.Array([])])
+  let combinations =
+    list.flat_map([p.Text("x"), p.Boolean(True)], fn(label) {
+      list.flat_map([p.Boolean(False), p.Text("bad")], fn(enabled) {
+        list.map(
+          [
+            p.Array([]),
+            p.Array([leaf]),
+            p.Boolean(False),
+            p.Array([p.Text("bad")]),
+          ],
+          fn(children) { p.Array([label, enabled, children]) },
+        )
+      })
+    })
+  list.append(
+    samples(),
+    list.append(combinations, [
+      leaf,
+      p.Array([p.Text("root"), p.Boolean(True), p.Array([leaf])]),
+      p.Array([p.Text("short"), p.Boolean(False)]),
+      p.Array([p.Text("long"), p.Boolean(False), p.Array([]), p.Text("extra")]),
+    ]),
+  )
+}
+
 pub fn main() {
   let assert Ok(definition) = tree("tree/~")
   let assert Ok(outer) =
@@ -82,6 +155,28 @@ pub fn main() {
       )
       Ok(#(p.map(p.array(b), fn(_) { "first" }), second))
     })
+  let assert Ok(named) =
+    p.recursive("named", fn(self) {
+      use body <- result.try(plan_helpers.named_children(self))
+      Ok(p.map(body, fn(value) { NamedTree(value.0, value.1, value.2) }))
+    })
+  let assert Ok(packet) =
+    p.recursive("packet", fn(self) {
+      Ok(
+        p.map(plan_helpers.packet(p.array(self)), fn(value) {
+          PacketTree(value.0, value.1, value.2)
+        }),
+      )
+    })
+  let assert Ok(fields) =
+    p.required(
+      p.record(fn(label) { fn(tree) { #(label, tree) } }),
+      "label",
+      p.text(),
+    )
+  let assert Ok(fields) =
+    p.default_field(fields, "tree", p.lift(definition), p.Text("default"))
+  let full_default = p.finish(p.finish_record(fields, p.Open))
   json.to_string(
     json.array(
       [
@@ -95,6 +190,25 @@ pub fn main() {
         ),
         fixture("pair-first", first, samples()),
         fixture("pair-second", second, samples()),
+        fixture("named-record", named, record_samples()),
+        fixture("heterogeneous-tuple", packet, tuple_samples()),
+        fixture(
+          "full-default-record",
+          full_default,
+          list.map(samples(), fn(value) {
+            p.Object([#("label", p.Text("x")), #("tree", value)])
+          })
+            |> list.append([
+              p.Object([#("label", p.Text("x"))]),
+              p.Object([#("label", p.Boolean(False))]),
+              p.Object([#("label", p.Text("x")), #("extra", p.Boolean(True))]),
+            ]),
+        ),
+        fixture(
+          "empty-tuple",
+          p.finish(p.finish_tuple(p.tuple(Nil))),
+          samples(),
+        ),
       ],
       fn(json) { json },
     ),

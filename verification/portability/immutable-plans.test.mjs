@@ -8,7 +8,7 @@ import {fileURLToPath} from 'node:url';
 import Ajv2020 from 'ajv/dist/2020.js';
 const root=fileURLToPath(new URL('../../',import.meta.url));
 
-test('isolated immutable plans compile and run on JavaScript and Erlang',()=>{
+test('isolated immutable plans compile and run on JavaScript and Erlang',(t)=>{
   const directory=mkdtempSync(join(tmpdir(),'gargamelle-immutable-plans-'));
   try {
     cpSync(join(root,'build/packages'),join(directory,'build/packages'),{recursive:true});
@@ -26,7 +26,7 @@ test('isolated immutable plans compile and run on JavaScript and Erlang',()=>{
     for(const target of ['javascript','erlang']) {
       const result=run(['test','--target',target]);
       assert.equal(result.status,0,target+'\n'+result.stderr+'\n'+result.stdout);
-      assert.match(result.stdout,/6 passed, no failures/);
+      assert.match(result.stdout,/11 passed, no failures/);
       const probe=run(['run','--target',target,'-m','plan_probe']);
       assert.equal(probe.status,0,probe.stderr+'\n'+probe.stdout);
       const fixtures=JSON.parse(probe.stdout.trim());
@@ -40,12 +40,16 @@ test('isolated immutable plans compile and run on JavaScript and Erlang',()=>{
           assert.equal(entry.decoded,entry.accepted);
         }
       }
+      t.diagnostic(`${target}: 11 behavioral tests; ${fixtures.reduce((sum,fixture)=>sum+fixture.cases.length,0)} independent schema cases`);
     }
     for(const [name,body] of [
       ['decode','p.decode(self, p.Text("x"))'],
       ['finish','p.finish(self)'],
+      ['finish-mapped','p.finish(p.map(self, fn(_) { Nil }))'],
+      ['finish-tuple','p.finish(plan_helpers.packet(self))'],
     ]) {
       writeFileSync(join(directory,'src/negative.gleam'), `import immutable_plan as p
+import plan_helpers
 pub fn forbidden() {
   p.recursive("bad", fn(self) {
     ${body}
