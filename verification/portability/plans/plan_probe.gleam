@@ -149,6 +149,13 @@ pub fn main() {
     })
   let assert Ok(default) =
     p.defaulted("tree/~", p.lift(definition), p.Text("default"))
+  let assert Ok(exclusive) =
+    p.recursive("exclusive", fn(self) {
+      p.one_of([p.map(p.text(), Leaf), p.map(p.array(self), Branch)])
+    })
+  let assert Ok(overlapping) =
+    p.one_of([p.text(), p.string_constant("special")])
+  let assert Ok(duplicate) = p.one_of([p.text(), p.text()])
   let assert Ok(#(first, second)) =
     p.recursive_pair("a", "b", fn(a, b) {
       use second <- result.try(
@@ -245,6 +252,13 @@ pub fn main() {
     json.array(
       [
         fixture("self", definition, samples()),
+        fixture("exclusive-recursive", exclusive, samples()),
+        fixture("exclusive-duplicate", p.finish(duplicate), samples()),
+        fixture(
+          "exclusive-overlap",
+          p.finish(overlapping),
+          list.append(samples(), [p.Text("special"), p.Text("other")]),
+        ),
         fixture("composed", outer, samples()),
         fixture(
           "default",

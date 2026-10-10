@@ -12,3 +12,8 @@ export function measure(run) {
 export function fresh_identity() { return Symbol(); }
 // No equivalent heap-word or native process-transfer measurement on this target.
 export function transfer_size(value, use) { use(value); return [0, 0, 0]; }
+export function term_size(_) { return [0, 0]; }
+export function propagates(run) {
+  try { run(); return false; }
+  catch (error) { if (error?.gleam_error === 'panic') return true; throw error; }
+}

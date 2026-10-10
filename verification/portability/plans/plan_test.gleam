@@ -155,6 +155,10 @@ fn counter(make: fn(fn() -> Nil, fn() -> Int) -> a) -> a
 @external(javascript, "./plan_support.mjs", "handoff")
 fn handoff(build: fn() -> a) -> a
 
+@external(erlang, "plan_support", "propagates")
+@external(javascript, "./plan_support.mjs", "propagates")
+fn propagates(run: fn() -> a) -> Bool
+
 pub type Tree {
   Leaf(String)
   Branch(List(Tree))
@@ -511,4 +515,69 @@ pub fn auxiliary_references_require_resolution_and_guarding_test() {
   p.contains(p.array(p.text()), p.text(), -1, None) |> should.be_error
   p.contains(p.array(p.text()), p.text(), 2, Some(1)) |> should.be_error
   p.property_names(p.text(), p.text()) |> should.be_error
+}
+
+pub fn union_receipts_select_outputs_and_reject_ambiguity_test() {
+  let #(tick, count) = counter(fn(tick, count) { #(tick, count) })
+  let primary =
+    p.map(p.text(), fn(_) {
+      tick()
+      "first"
+    })
+  let secondary =
+    p.map(p.string_constant("special"), fn(_) {
+      tick()
+      "second"
+    })
+  let assert Ok(ordinary) = p.any_of([primary, secondary])
+  let ordinary = p.finish(ordinary)
+  p.validate(ordinary, p.Text("special")) |> should.be_ok
+  p.emit(ordinary) |> should.not_equal("")
+  count() |> should.equal(0)
+  p.decode(ordinary, p.Text("special")) |> should.equal(Ok("first"))
+  count() |> should.equal(1)
+  let assert Ok(exclusive) = p.one_of([primary, secondary])
+  let exclusive = p.finish(p.array(exclusive))
+  p.decode(exclusive, p.Array([p.Text("other"), p.Text("special")]))
+  |> should.be_error
+  count() |> should.equal(1)
+  p.decode(exclusive, p.Array([p.Text("other")])) |> should.equal(Ok(["first"]))
+  count() |> should.equal(2)
+  let assert Ok(duplicate) = p.one_of([p.text(), p.text()])
+  p.decode(p.finish(duplicate), p.Text("x")) |> should.be_error
+  p.one_of([]) |> should.be_error
+  let assert Ok(second_branch) =
+    p.one_of([
+      p.map(p.boolean(), fn(_) { "boolean" }),
+      p.map(p.text(), fn(_) { "text" }),
+    ])
+  p.decode(p.finish(second_branch), p.Text("x")) |> should.equal(Ok("text"))
+}
+
+pub fn recursive_default_receipts_and_closure_handoff_test() {
+  let assert Ok(get_tree) =
+    handoff(fn() {
+      use tree <- result.try(tree())
+      let nested = p.Object([#("children", p.Array([p.Text("default")]))])
+      use base <- result.try(p.defaulted("tree", p.lift(tree), nested))
+      let definition = p.finish(p.map(base, fn(decoded) { fn() { decoded } }))
+      p.decode(definition, p.Object([]))
+    })
+  get_tree() |> should.equal(Branch([Leaf("default")]))
+  let assert Ok(definition) =
+    handoff(fn() {
+      p.recursive("exclusive", fn(self) {
+        p.one_of([p.map(p.text(), Leaf), p.map(p.array(self), Branch)])
+      })
+    })
+  p.decode(definition, p.Array([p.Text("x"), p.Array([p.Text("y")])]))
+  |> should.equal(Ok(Branch([Leaf("x"), Branch([Leaf("y")])])))
+}
+
+pub fn converter_exceptions_propagate_after_successful_validation_test() {
+  let definition =
+    p.finish(p.map(p.text(), fn(_) { panic as "converter failure" }))
+  p.validate(definition, p.Text("x")) |> should.be_ok
+  p.decode(definition, p.Boolean(True)) |> should.be_error
+  propagates(fn() { p.decode(definition, p.Text("x")) }) |> should.be_true
 }

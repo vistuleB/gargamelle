@@ -37,7 +37,7 @@ type Schema {
   ArraySchema(Schema)
   RecordSchema(List(Field), Policy)
   TupleSchema(List(Schema))
-  UnionSchema(List(Schema))
+  UnionSchema(List(Schema), Bool)
   AllSchema(Schema, List(Schema))
   ConditionalSchema(Schema, Schema, Option(Schema))
   NotSchema(Schema)
@@ -55,27 +55,42 @@ pub type Policy {
 type Presence {
   Required
   Optional
-  Default(Value)
+  Default(Value, Evidence)
 }
 
 type Field {
   Field(String, Schema, Presence)
 }
 
+// Structural receipts are private and contain no user output values/functions.
+// Transparent schema wrappers and references forward the child's receipt.
+type Evidence {
+  Atomic
+  Children(List(Evidence))
+  Fields(List(#(String, Evidence)))
+  Selected(Int, Evidence)
+}
+
+// The public recursion parameter hides the private receipt argument. Callers
+// quantify over recursion; they cannot construct or invoke these runners.
+pub opaque type Recursive(a) {
+  Recursive(fn(Value, Evidence) -> a)
+}
+
 pub opaque type Record(a, environment) {
-  Record(List(Field), fn(Environment(environment), Value) -> a)
+  Record(List(Field), fn(environment, Value, Evidence) -> a)
 }
 
 pub opaque type Tuple(a, environment) {
-  Tuple(List(Schema), fn(Environment(environment), Value) -> a)
+  Tuple(List(Schema), fn(environment, Value, Evidence) -> a)
 }
 
 pub opaque type Plan(a, environment) {
-  Plan(Schema, fn(Environment(environment), Value) -> a)
+  Plan(Schema, fn(environment, Value, Evidence) -> a)
 }
 
 pub opaque type Definition(a) {
-  Definition(Schema, fn(Value) -> a)
+  Definition(Schema, fn(Value, Evidence) -> a)
 }
 
 fn identified(schema: Schema) -> Schema {
@@ -90,15 +105,15 @@ fn make_plan(schema, convert) {
 }
 
 pub opaque type Variant(a, recursion) {
-  Variant(String, List(Field), Policy, fn(Environment(recursion), Value) -> a)
+  Variant(String, List(Field), Policy, fn(recursion, Value, Evidence) -> a)
 }
 
 pub fn nullable(plan: Plan(a, recursion)) -> Plan(Option(a), recursion) {
   let Plan(schema, convert) = plan
-  make_plan(NullableSchema(schema), fn(environment, value) {
+  make_plan(NullableSchema(schema), fn(environment, value, evidence) {
     case value {
       Null -> None
-      _ -> Some(convert(environment, value))
+      _ -> Some(convert(environment, value, evidence))
     }
   })
 }
@@ -107,10 +122,11 @@ pub fn dictionary(
   plan: Plan(a, recursion),
 ) -> Plan(List(#(String, a)), recursion) {
   let Plan(schema, convert) = plan
-  make_plan(DictionarySchema(schema), fn(environment, value) {
+  make_plan(DictionarySchema(schema), fn(environment, value, evidence) {
     let assert Object(properties) = value
-    list.map(properties, fn(property) {
-      #(property.0, convert(environment, property.1))
+    let assert Children(receipts) = evidence
+    list.map(list.zip(properties, receipts), fn(pair) {
+      #(pair.0.0, convert(environment, pair.0.1, pair.1))
     })
   })
 }
@@ -185,18 +201,18 @@ pub fn tagged(
 }
 
 pub fn text() -> Plan(String, environment) {
-  make_plan(StringSchema, fn(_, value) {
+  make_plan(StringSchema, fn(_, value, _) {
     let assert Text(text) = value
     text
   })
 }
 
 pub fn string_constant(value: String) -> Plan(String, recursion) {
-  make_plan(ConstantString(value), fn(_, _) { value })
+  make_plan(ConstantString(value), fn(_, _, _) { value })
 }
 
 pub fn boolean() -> Plan(Bool, environment) {
-  make_plan(BooleanSchema, fn(_, value) {
+  make_plan(BooleanSchema, fn(_, value, _) {
     let assert Boolean(boolean) = value
     boolean
   })
@@ -207,14 +223,19 @@ pub fn map(
   convert: fn(a) -> b,
 ) -> Plan(b, environment) {
   let Plan(schema, run) = plan
-  make_plan(schema, fn(environment, value) { convert(run(environment, value)) })
+  make_plan(schema, fn(environment, value, evidence) {
+    convert(run(environment, value, evidence))
+  })
 }
 
 pub fn array(plan: Plan(a, environment)) -> Plan(List(a), environment) {
   let Plan(schema, run) = plan
-  make_plan(ArraySchema(schema), fn(environment, value) {
+  make_plan(ArraySchema(schema), fn(environment, value, evidence) {
     let assert Array(values) = value
-    list.map(values, run(environment, _))
+    let assert Children(receipts) = evidence
+    list.map(list.zip(values, receipts), fn(pair) {
+      run(environment, pair.0, pair.1)
+    })
   })
 }
 
@@ -238,7 +259,7 @@ pub fn defaulted(
 }
 
 pub fn record(constructor: a) -> Record(a, environment) {
-  Record([], fn(_, _) { constructor })
+  Record([], fn(_, _, _) { constructor })
 }
 
 fn unique_field(fields, name) -> Result(Nil, String) {
@@ -264,10 +285,14 @@ pub fn required(
   Ok(
     Record(
       list.append(fields, [Field(name, schema, Required)]),
-      fn(environment, value) {
+      fn(environment, value, evidence) {
         let assert Object(properties) = value
         let assert Ok(child) = list.key_find(properties, name)
-        construct(environment, value)(convert(environment, child))
+        construct(environment, value, evidence)(convert(
+          environment,
+          child,
+          field_evidence(evidence, name),
+        ))
       },
     ),
   )
@@ -284,13 +309,14 @@ pub fn optional(
   Ok(
     Record(
       list.append(fields, [Field(name, schema, Optional)]),
-      fn(environment, value) {
+      fn(environment, value, evidence) {
         let assert Object(properties) = value
         let decoded = case list.key_find(properties, name) {
           Error(_) -> None
-          Ok(child) -> Some(convert(environment, child))
+          Ok(child) ->
+            Some(convert(environment, child, field_evidence(evidence, name)))
         }
-        construct(environment, value)(decoded)
+        construct(environment, value, evidence)(decoded)
       },
     ),
   )
@@ -306,14 +332,18 @@ pub fn default_field(
   use _ <- result.try(unique_field(fields, name))
   let Plan(schema, convert) = child
   use _ <- result.try(resolved(schema, [], []))
-  use _ <- result.try(check(schema, default, []))
+  use receipt <- result.try(inspect(schema, default, []))
   Ok(
     Record(
-      list.append(fields, [Field(name, schema, Default(default))]),
-      fn(environment, value) {
+      list.append(fields, [Field(name, schema, Default(default, receipt))]),
+      fn(environment, value, evidence) {
         let assert Object(properties) = value
         let child = result.unwrap(list.key_find(properties, name), default)
-        construct(environment, value)(convert(environment, child))
+        construct(environment, value, evidence)(convert(
+          environment,
+          child,
+          field_evidence(evidence, name),
+        ))
       },
     ),
   )
@@ -328,7 +358,7 @@ pub fn finish_record(
 }
 
 pub fn tuple(constructor: a) -> Tuple(a, environment) {
-  Tuple([], fn(_, _) { constructor })
+  Tuple([], fn(_, _, _) { constructor })
 }
 
 pub fn item(
@@ -338,10 +368,12 @@ pub fn item(
   let Tuple(items, construct) = tuple
   let Plan(schema, convert) = child
   let index = list.length(items)
-  Tuple(list.append(items, [schema]), fn(environment, value) {
+  Tuple(list.append(items, [schema]), fn(environment, value, evidence) {
     let assert Array(values) = value
     let assert Ok(child) = values |> list.drop(index) |> list.first
-    construct(environment, value)(convert(environment, child))
+    let assert Children(receipts) = evidence
+    let assert Ok(receipt) = receipts |> list.drop(index) |> list.first
+    construct(environment, value, evidence)(convert(environment, child, receipt))
   })
 }
 
@@ -353,44 +385,51 @@ pub fn finish_tuple(tuple: Tuple(a, environment)) -> Plan(a, environment) {
 pub fn any_of(
   plans: List(Plan(a, recursion)),
 ) -> Result(Plan(a, recursion), String) {
+  union(plans, False)
+}
+
+pub fn one_of(
+  plans: List(Plan(a, recursion)),
+) -> Result(Plan(a, recursion), String) {
+  union(plans, True)
+}
+
+fn union(
+  plans: List(Plan(a, recursion)),
+  exclusive: Bool,
+) -> Result(Plan(a, recursion), String) {
   case plans {
     [] -> Error("empty union")
-    _ ->
+    _ -> {
+      let schemas =
+        list.map(plans, fn(plan) {
+          let Plan(schema, _) = plan
+          schema
+        })
+      // Capture only homogeneous typed runners, never whole plans or schemas.
+      let runners =
+        list.map(plans, fn(plan) {
+          let Plan(_, run) = plan
+          run
+        })
       Ok(
         make_plan(
-          UnionSchema(
-            list.map(plans, fn(plan) {
-              let Plan(schema, _) = plan
-              schema
-            }),
-          ),
-          fn(environment, value) { choose(plans, environment, value) },
+          UnionSchema(schemas, exclusive),
+          fn(environment, value, evidence) {
+            let assert Selected(index, receipt) = evidence
+            let assert Ok(run) = runners |> list.drop(index) |> list.first
+            run(environment, value, receipt)
+          },
         ),
       )
+    }
   }
 }
 
-fn choose(
-  plans: List(Plan(a, recursion)),
-  environment: Environment(recursion),
-  value: Value,
-) -> a {
-  let assert [Plan(schema, run), ..rest] = plans
-  // The schema environment is supplied by the closed runner below. This
-  // requires it explicitly, rather than consulting process-local state.
-  case check(schema, value, environment_schema(environment)) {
-    Ok(_) -> run(environment, value)
-    Error(_) -> choose(rest, environment, value)
-  }
-}
-
-// Every converter environment carries a schema lookup plus typed recursion.
-// This alias keeps references explicit and avoids heterogeneous converter maps.
-type Environment(recursion) =
-  #(Bindings, recursion)
-
-fn environment_schema(environment: Environment(recursion)) {
-  environment.0
+fn field_evidence(evidence, name) {
+  let assert Fields(fields) = evidence
+  let assert Ok(receipt) = list.key_find(fields, name)
+  receipt
 }
 
 pub fn requiring(
@@ -482,51 +521,55 @@ pub fn property_names(
 
 pub fn lift(definition: Definition(a)) -> Plan(a, environment) {
   let Definition(schema, run) = definition
-  make_plan(schema, fn(_, value) { run(value) })
+  make_plan(schema, fn(_, value, evidence) { run(value, evidence) })
 }
 
 pub fn finish(plan: Plan(a, Nil)) -> Definition(a) {
   let Plan(schema, run) = plan
-  Definition(schema, run(#([], Nil), _))
+  Definition(schema, fn(value, evidence) { run(Nil, value, evidence) })
 }
 
 pub fn recursive(
   name: String,
-  build: fn(Plan(a, fn(Value) -> a)) -> Result(Plan(a, fn(Value) -> a), String),
+  build: fn(Plan(a, Recursive(a))) -> Result(Plan(a, Recursive(a)), String),
 ) -> Result(Definition(a), String) {
   let reference_id = fresh_identity()
   let self =
     make_plan(
       Reference(reference_id, name),
-      fn(environment: Environment(fn(Value) -> a), value) {
-        environment.1(value)
+      fn(environment: Recursive(a), value, evidence) {
+        let Recursive(run) = environment
+        run(value, evidence)
       },
     )
   use body <- result.try(build(self))
-  let Plan(schema, _) = body
+  let Plan(schema, run) = body
   let bindings = [#(reference_id, #(name, schema))]
   let graph = identified(Graph(Reference(reference_id, name), bindings))
   use _ <- result.try(resolved(graph, [], []))
   use _ <- result.try(guard_bindings(bindings))
-  Ok(Definition(graph, run_self(body, bindings, _)))
+  Ok(Definition(graph, fn(value, evidence) { run_self(run, value, evidence) }))
 }
 
-fn run_self(body: Plan(a, fn(Value) -> a), bindings, value) -> a {
-  let Plan(_, run) = body
-  run(#(bindings, fn(child) { run_self(body, bindings, child) }), value)
+fn run_self(run: fn(Recursive(a), Value, Evidence) -> a, value, evidence) -> a {
+  run(
+    Recursive(fn(child, receipt) { run_self(run, child, receipt) }),
+    value,
+    evidence,
+  )
 }
 
 pub fn recursive_pair(
   first_name: String,
   second_name: String,
   build: fn(
-    Plan(a, #(fn(Value) -> a, fn(Value) -> b)),
-    Plan(b, #(fn(Value) -> a, fn(Value) -> b)),
+    Plan(a, #(Recursive(a), Recursive(b))),
+    Plan(b, #(Recursive(a), Recursive(b))),
   ) ->
     Result(
       #(
-        Plan(a, #(fn(Value) -> a, fn(Value) -> b)),
-        Plan(b, #(fn(Value) -> a, fn(Value) -> b)),
+        Plan(a, #(Recursive(a), Recursive(b))),
+        Plan(b, #(Recursive(a), Recursive(b))),
       ),
       String,
     ),
@@ -540,20 +583,22 @@ pub fn recursive_pair(
   let first =
     make_plan(
       Reference(first_id, first_name),
-      fn(environment: Environment(#(fn(Value) -> a, fn(Value) -> b)), value) {
-        environment.1.0(value)
+      fn(environment: #(Recursive(a), Recursive(b)), value, evidence) {
+        let Recursive(run) = environment.0
+        run(value, evidence)
       },
     )
   let second =
     make_plan(
       Reference(second_id, second_name),
-      fn(environment: Environment(#(fn(Value) -> a, fn(Value) -> b)), value) {
-        environment.1.1(value)
+      fn(environment: #(Recursive(a), Recursive(b)), value, evidence) {
+        let Recursive(run) = environment.1
+        run(value, evidence)
       },
     )
   use bodies <- result.try(build(first, second))
-  let Plan(first_schema, _) = bodies.0
-  let Plan(second_schema, _) = bodies.1
+  let Plan(first_schema, first_run) = bodies.0
+  let Plan(second_schema, second_run) = bodies.1
   let bindings = [
     #(first_id, #(first_name, first_schema)),
     #(second_id, #(second_name, second_schema)),
@@ -563,49 +608,50 @@ pub fn recursive_pair(
     identified(Graph(Reference(second_id, second_name), bindings))
   use _ <- result.try(resolved(first_graph, [], []))
   use _ <- result.try(guard_bindings(bindings))
+  let runners = #(first_run, second_run)
   Ok(#(
-    Definition(first_graph, run_first(bodies, bindings, _)),
-    Definition(second_graph, run_second(bodies, bindings, _)),
+    Definition(first_graph, fn(value, evidence) {
+      run_first(runners, value, evidence)
+    }),
+    Definition(second_graph, fn(value, evidence) {
+      run_second(runners, value, evidence)
+    }),
   ))
 }
 
 fn run_first(
-  bodies: #(
-    Plan(a, #(fn(Value) -> a, fn(Value) -> b)),
-    Plan(b, #(fn(Value) -> a, fn(Value) -> b)),
+  runners: #(
+    fn(#(Recursive(a), Recursive(b)), Value, Evidence) -> a,
+    fn(#(Recursive(a), Recursive(b)), Value, Evidence) -> b,
   ),
-  bindings,
   value,
+  evidence,
 ) -> a {
-  let Plan(_, run) = bodies.0
-  run(
+  runners.0(
     #(
-      bindings,
-      #(fn(child) { run_first(bodies, bindings, child) }, fn(child) {
-        run_second(bodies, bindings, child)
-      }),
+      Recursive(fn(child, receipt) { run_first(runners, child, receipt) }),
+      Recursive(fn(child, receipt) { run_second(runners, child, receipt) }),
     ),
     value,
+    evidence,
   )
 }
 
 fn run_second(
-  bodies: #(
-    Plan(a, #(fn(Value) -> a, fn(Value) -> b)),
-    Plan(b, #(fn(Value) -> a, fn(Value) -> b)),
+  runners: #(
+    fn(#(Recursive(a), Recursive(b)), Value, Evidence) -> a,
+    fn(#(Recursive(a), Recursive(b)), Value, Evidence) -> b,
   ),
-  bindings,
   value,
+  evidence,
 ) -> b {
-  let Plan(_, run) = bodies.1
-  run(
+  runners.1(
     #(
-      bindings,
-      #(fn(child) { run_first(bodies, bindings, child) }, fn(child) {
-        run_second(bodies, bindings, child)
-      }),
+      Recursive(fn(child, receipt) { run_first(runners, child, receipt) }),
+      Recursive(fn(child, receipt) { run_second(runners, child, receipt) }),
     ),
     value,
+    evidence,
   )
 }
 
@@ -618,9 +664,24 @@ pub fn validate(
 }
 
 pub fn decode(definition: Definition(a), value: Value) -> Result(a, String) {
-  use _ <- result.try(validate(definition, value))
-  let Definition(_, run) = definition
-  Ok(run(value))
+  let Definition(schema, run) = definition
+  use evidence <- result.try(inspect(schema, value, []))
+  Ok(run(value, evidence))
+}
+
+@external(erlang, "plan_support", "term_size")
+@external(javascript, "./plan_support.mjs", "term_size")
+fn term_size(value: a) -> #(Int, Int)
+
+// Diagnostic surface of the isolated experiment only. Evidence stays private;
+// expose heap-word counts without exposing receipts or running converters.
+pub fn validation_size(
+  definition: Definition(a),
+  value: Value,
+) -> Result(#(Int, Int), String) {
+  let Definition(schema, _) = definition
+  use evidence <- result.try(inspect(schema, value, []))
+  Ok(term_size(evidence))
 }
 
 fn check(
@@ -628,29 +689,40 @@ fn check(
   value: Value,
   bindings: Bindings,
 ) -> Result(Nil, String) {
+  inspect(schema, value, bindings) |> result.map(fn(_) { Nil })
+}
+
+// All user callbacks run after inspect succeeds for the entire input. Receipt
+// construction is structural and does not inspect or fabricate typed outputs.
+fn inspect(
+  schema: Schema,
+  value: Value,
+  bindings: Bindings,
+) -> Result(Evidence, String) {
   case schema, value {
-    Identified(_, child), _ -> check(child, value, bindings)
-    NullSchema, Null -> Ok(Nil)
+    Identified(_, child), _ -> inspect(child, value, bindings)
+    NullSchema, Null -> Ok(Atomic)
     ConstantString(expected), Text(actual) ->
       case expected == actual {
-        True -> Ok(Nil)
+        True -> Ok(Atomic)
         False -> Error("constant")
       }
-    NullableSchema(_), Null -> Ok(Nil)
-    NullableSchema(child), _ -> check(child, value, bindings)
+    NullableSchema(_), Null -> Ok(Atomic)
+    NullableSchema(child), _ -> inspect(child, value, bindings)
     DictionarySchema(child), Object(properties) ->
-      all(
-        list.map(properties, fn(property) { check(child, property.1, bindings) }),
-      )
-    AnnotatedSchema(child, _), _ -> check(child, value, bindings)
+      list.try_map(properties, fn(property) {
+        inspect(child, property.1, bindings)
+      })
+      |> result.map(Children)
+    AnnotatedSchema(child, _), _ -> inspect(child, value, bindings)
     ArrayLimits(minimum, maximum), Array(values) ->
       case list.length(values) >= minimum && list.length(values) <= maximum {
-        True -> Ok(Nil)
+        True -> Ok(Atomic)
         False -> Error("array limits")
       }
-    StringSchema, Text(_) | BooleanSchema, Boolean(_) -> Ok(Nil)
+    StringSchema, Text(_) | BooleanSchema, Boolean(_) -> Ok(Atomic)
     ArraySchema(child), Array(values) ->
-      all(list.map(values, check(child, _, bindings)))
+      list.try_map(values, inspect(child, _, bindings)) |> result.map(Children)
     RecordSchema(fields, policy), Object(properties) -> {
       use _ <- result.try(
         case
@@ -666,50 +738,47 @@ fn check(
           False -> Error("unknown field")
         },
       )
-      all(
-        list.map(fields, fn(field) {
-          let Field(name, schema, presence) = field
-          case list.key_find(properties, name), presence {
-            Ok(value), _ -> check(schema, value, bindings)
-            Error(_), Required -> Error("missing field")
-            Error(_), _ -> Ok(Nil)
-          }
-        }),
-      )
+      list.try_map(fields, fn(field) {
+        let Field(name, child, presence) = field
+        case list.key_find(properties, name), presence {
+          Ok(value), _ ->
+            inspect(child, value, bindings)
+            |> result.map(fn(receipt) { #(name, receipt) })
+          Error(_), Required -> Error("missing field")
+          Error(_), Default(_, receipt) -> Ok(#(name, receipt))
+          Error(_), Optional -> Ok(#(name, Atomic))
+        }
+      })
+      |> result.map(Fields)
     }
     TupleSchema(items), Array(values) ->
       case list.length(items) == list.length(values) {
         False -> Error("tuple length")
         True ->
-          all(
-            list.map(list.zip(items, values), fn(pair) {
-              check(pair.0, pair.1, bindings)
-            }),
-          )
+          list.try_map(list.zip(items, values), fn(pair) {
+            inspect(pair.0, pair.1, bindings)
+          })
+          |> result.map(Children)
       }
-    UnionSchema(children), _ ->
-      case
-        list.any(children, fn(child) {
-          result.is_ok(check(child, value, bindings))
-        })
-      {
-        True -> Ok(Nil)
-        False -> Error("no branch")
-      }
-    AllSchema(base, rules), _ ->
-      all(list.map([base, ..rules], check(_, value, bindings)))
+    UnionSchema(children, exclusive), _ ->
+      inspect_union(children, value, bindings, exclusive, 0, None)
+    AllSchema(base, rules), _ -> {
+      use evidence <- result.try(inspect(base, value, bindings))
+      use _ <- result.try(all(list.map(rules, check(_, value, bindings))))
+      Ok(evidence)
+    }
     ConditionalSchema(probe, yes, no), _ ->
       case check(probe, value, bindings), no {
-        Ok(_), _ -> check(yes, value, bindings)
-        Error(_), Some(alternative) -> check(alternative, value, bindings)
-        Error(_), None -> Ok(Nil)
+        Ok(_), _ -> inspect(yes, value, bindings)
+        Error(_), Some(alternative) -> inspect(alternative, value, bindings)
+        Error(_), None -> Ok(Atomic)
       }
     NotSchema(probe), _ ->
       case check(probe, value, bindings) {
         Ok(_) -> Error("excluded")
-        Error(_) -> Ok(Nil)
+        Error(_) -> Ok(Atomic)
       }
-    ContainsSchema(_, 0, None), Array(_) -> Ok(Nil)
+    ContainsSchema(_, 0, None), Array(_) -> Ok(Atomic)
     ContainsSchema(probe, minimum, maximum), Array(values) -> {
       let count =
         list.count(values, fn(value) {
@@ -720,7 +789,7 @@ fn check(
         None -> True
       }
       case count >= minimum && within_max {
-        True -> Ok(Nil)
+        True -> Ok(Atomic)
         False -> Error("contains count")
       }
     }
@@ -730,15 +799,39 @@ fn check(
           check(probe, Text(property.0), bindings)
         }),
       )
+      |> result.map(fn(_) { Atomic })
     Reference(id, _), _ -> {
       use child <- result.try(
         list.key_find(bindings, id)
         |> result.map_error(fn(_) { "unresolved reference" }),
       )
-      check(child.1, value, bindings)
+      inspect(child.1, value, bindings)
     }
-    Graph(root, definitions), _ -> check(root, value, definitions)
+    Graph(root, definitions), _ -> inspect(root, value, definitions)
     _, _ -> Error("wrong type")
+  }
+}
+
+fn inspect_union(children, value, bindings, exclusive, index, selected) {
+  case children, selected {
+    [], None -> Error("no branch")
+    [], Some(receipt) -> Ok(receipt)
+    [child, ..rest], _ ->
+      case inspect(child, value, bindings), selected {
+        Ok(receipt), _ if !exclusive -> Ok(Selected(index, receipt))
+        Ok(_), Some(_) -> Error("multiple branches")
+        Ok(receipt), None ->
+          inspect_union(
+            rest,
+            value,
+            bindings,
+            exclusive,
+            index + 1,
+            Some(Selected(index, receipt)),
+          )
+        Error(_), _ ->
+          inspect_union(rest, value, bindings, exclusive, index + 1, selected)
+      }
   }
 }
 
@@ -827,7 +920,7 @@ fn resolved_walk(
         bindings,
         memo,
       )
-    TupleSchema(items) | UnionSchema(items) ->
+    TupleSchema(items) | UnionSchema(items, _) ->
       resolve_children(items, bindings, memo)
     AllSchema(base, rules) -> resolve_children([base, ..rules], bindings, memo)
     ConditionalSchema(probe, yes, no) ->
@@ -884,7 +977,7 @@ fn guard_walk(
           guard_walk(child.1, bindings, [id, ..path], memo)
         }
       }
-    UnionSchema(children) -> guard_children(children, bindings, path, memo)
+    UnionSchema(children, _) -> guard_children(children, bindings, path, memo)
     AllSchema(base, rules) ->
       guard_children([base, ..rules], bindings, path, memo)
     ConditionalSchema(probe, yes, no) ->
@@ -1024,10 +1117,15 @@ fn emit_schema(
           ])
       })
     }
-    UnionSchema(children) ->
+    UnionSchema(children, exclusive) -> {
+      let keyword = case exclusive {
+        True -> "oneOf"
+        False -> "anyOf"
+      }
       json.object([
-        #("anyOf", emit_children(children, "anyOf", location, references)),
+        #(keyword, emit_children(children, keyword, location, references)),
       ])
+    }
     AllSchema(base, rules) ->
       json.object([
         #(

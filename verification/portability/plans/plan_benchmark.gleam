@@ -93,6 +93,16 @@ pub fn main() {
         #("receiver_heap_words", json.int(sizes.2)),
       ])
     })
+  let receipt_sizes =
+    list.map([8, 32, 64], fn(depth) {
+      let assert Ok(sizes) = p.validation_size(tree, nested(depth))
+      json.object([
+        #("kind", json.string("validation-evidence")),
+        #("depth", json.int(depth)),
+        #("shared_heap_words", json.int(sizes.0)),
+        #("flat_heap_words", json.int(sizes.1)),
+      ])
+    })
   let assert Ok(provider) =
     p.recursive("provider", fn(self) {
       plan_helpers.provider(self, fn(text) { text }, fn(_) { "branch" }, fn(_) {
@@ -138,7 +148,14 @@ pub fn main() {
     })
   json.to_string(
     json.array(
-      list.flatten([sharing, decoding, transfers, [provider_row], emissions]),
+      list.flatten([
+        sharing,
+        decoding,
+        receipt_sizes,
+        transfers,
+        [provider_row],
+        emissions,
+      ]),
       fn(json) { json },
     ),
   )

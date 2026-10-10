@@ -1,6 +1,11 @@
 -module(plan_support).
--export([counter/1, handoff/1, measure/1, fresh_identity/0, transfer_size/2]).
+-export([counter/1, handoff/1, measure/1, fresh_identity/0, transfer_size/2, term_size/1, propagates/1]).
 fresh_identity() -> make_ref().
+term_size(Value) -> {erts_debug:size(Value), erts_debug:flat_size(Value)}.
+%% The test asserts an operational exception escapes decode, not a data Error.
+propagates(Run) ->
+    try Run(), false
+    catch error:#{gleam_error := panic} -> true end.
 %% Diagnostic only: size counts heap sharing; flat_size counts repeated edges.
 %% Measure the received term as well, rather than assuming message-copy behavior.
 transfer_size(Value, Use) ->

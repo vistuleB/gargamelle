@@ -244,8 +244,8 @@ callback outputs or introduce a permanent cell registry. See decision 5 in
 the successful root-transfer evidence below for independently captured references.
 
 The isolated plan/environment prototype in `verification/portability/plans`
-now passes seventeen behavioral tests per target, eight compile-negative checks,
-native creator-exit handoff and 984 independent schema cases per target. Run
+now passes twenty behavioral tests per target, twelve compile-negative checks,
+native creator-exit handoff and 1,142 independent schema cases per target. Run
 `node --test verification/portability/immutable-plans.test.mjs`. See
 `docs/immutable-recursion-prototype.md` for the realistic API comparison and
 acceptance results. Curried records, optional/default fields, heterogeneous
@@ -258,14 +258,18 @@ a retained 26-layer case. Reference bindings use identities, not display names.
 Conditional, exclusion, contains and property-name probes now preserve base
 outputs without executing auxiliary converters. The remaining production APIs
 and diagnostics have a source-based migration map in the prototype report.
-Deep branch selection still rescans validated subtrees. Bounded native copying
-shows substantial amplification for repeatedly shared branches (261 sender words
-to 36,576 receiver words at six layers); the realistic provider transfers and uses
-889 receiver words. Shared emission also expands repeated unnamed branches.
-The library has not been rewritten. Next, prototype private validation evidence
-for typed conversion, measuring callback suppression, defaults, exclusive unions,
-handoff and retained term sizes. Then integrate with the production checker and
-emitter incrementally, preserving naming/conflict and canonical-byte policies.
+Private structural evidence now selects typed conversion after whole-input
+validation. Converters no longer retain schema lookup or call validation.
+At depths 8/32/64, native decode work is roughly 500/1,900/3,800 reductions,
+down from 1,900/22,500/85,000. Evidence occupies 76/292/580 native heap words.
+The six-layer shared transfer now occupies 5,271 receiver words (previously
+36,576); the provider occupies 310 (previously 889). Shared copying and emission
+still expand repeated branches. The report documents the evidence/memory tradeoff,
+exclusive unions, default receipts, operational failures and exact old-fixture
+comparison. The library has not been rewritten. Next, integrate plans/evidence
+with the production checker and emitter in an isolated fixture, preserving full
+DataError paths, naming/conflict and canonical-byte policies. Then run the actual
+typed API fixtures on both targets before changing the shipped API.
 
 The actual Erlang fixture runs 35 shared Gleam tests and seven additional typed
 API tests against a temporary library copy. It covers recursive and mutually

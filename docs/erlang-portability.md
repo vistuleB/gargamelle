@@ -191,7 +191,7 @@ It uses typed construction plans, explicit recursion environments and immutable
 completed bodies. Self recursion, an independently typed pair, native handoff,
 callback suppression, defaults and compile-negative cases are exercised. See
 [the prototype report](immutable-recursion-prototype.md) for its API comparison,
-984-case independent schema checks per target, and limits. Curried record/tuple
+1,142-case independent schema checks per target, and limits. Curried record/tuple
 builders and generic helpers now compile without public schema lookup types.
 This demonstrates a
 possible **different recursion contract**; it does not fix the existing library
@@ -203,12 +203,16 @@ immutable memo dictionaries for construction. The measured 16-layer shared case
 dropped from roughly 5.3 million to 1,200 native reductions, without reference
 storage in process dictionaries or permanent registries. Auxiliary conditional,
 exclusion, membership and property-name checks now compose without executing
-their converters. The bounded transfer probe found that six duplicated union
-layers expand from 261 sender heap words to 36,576 receiver words; a realistic
-provider used 889 receiver words. Shared emission also expands repeated branches.
-These limitations and the proposed next experiment—structural validation evidence
-consumed by typed converters—are recorded in the prototype report. Repeated
-validation and retained schema captures need assessment before a library rewrite.
+their converters. Private validation evidence now records union selection and
+accepted children, then drives typed conversion after the entire input passes.
+Converters retain neither schema lookup nor branch schemas. The depth-64 native
+case dropped from about 85,000 to 3,800 reductions, with 580 words of evidence.
+The six-layer shared received term dropped from 36,576 to 5,271 words; the
+provider dropped from 889 to 310. Shared copying and emission still expand
+repeated branches. The prototype report records the tradeoff: private transient
+receipts and cached default receipts, plus standalone validation's currently
+unoptimized receipt allocation. Next, assess an isolated integration with the
+production checker/emitter and structured errors; the shipped API is unchanged.
 
 ### 6. QuickJS code with older Unicode tables — experimental candidate
 
