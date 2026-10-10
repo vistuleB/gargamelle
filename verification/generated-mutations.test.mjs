@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 const root=fileURLToPath(new URL('../',import.meta.url));
-const original=readFileSync(join(root,'build/dev/javascript/concord/concord.mjs'),'utf8');
+const original=readFileSync(join(root,'build/dev/javascript/gargamelle/gargamelle.mjs'),'utf8');
 const variants=[
  ['first-match-one-of','return union(defs, true);','return union(defs, false);',"assert.equal(accepted('overlap','\"x\"'),false)"],
  ['null-as-missing','return new Some(x);','return x instanceof JNull ? Option$None$const : new Some(x);',"assert.equal(accepted('optional','{\"a\":null}'),false)"],
@@ -14,12 +14,12 @@ const variants=[
  ['off-by-one-bound','_block = n >= x;','_block = n > x;',"assert.equal(accepted('bounded_string','\"x\"'),true)"],
  ['dropped-field','let properties = $list.map(\n      fs,','let properties = $list.map(\n      $List$Empty$const,',"assert.equal(Object.hasOwn(JSON.parse(f.fixture_schema('closed_record')).properties,'a'),true)"],
 ];
-const header=`import assert from 'node:assert/strict';\nimport * as f from './concord/schema_fixtures.mjs';\nimport {Ok} from './concord/gleam.mjs';\nfunction accepted(name,text){const r=f.fixture_decode(name,text);assert.ok(r instanceof Ok);return r[0] instanceof Ok;}\n`;
+const header=`import assert from 'node:assert/strict';\nimport * as f from './gargamelle/schema_fixtures.mjs';\nimport {Ok} from './gargamelle/gleam.mjs';\nfunction accepted(name,text){const r=f.fixture_decode(name,text);assert.ok(r instanceof Ok);return r[0] instanceof Ok;}\n`;
 test('actual isolated compiled mutations are killed by permanent counterexamples',()=>{
  const dir=mkdtempSync(join(tmpdir(),'schema-contract-mutations-'));
  try {
  cpSync(join(root,'build/dev/javascript'),dir,{recursive:true});
- const target=join(dir,'concord/concord.mjs');
+ const target=join(dir,'gargamelle/gargamelle.mjs');
  for(const [name,from,to,assertion] of variants){
   assert.equal(original.split(from).length-1,1,`${name}: mutation target must be unique`);
   writeFileSync(join(dir,'check.mjs'),header+assertion+';\n');
@@ -47,9 +47,9 @@ test('revision-3 mutants fail the complete foundation, typed-value and hardening
   for(const [file,from,to] of [
    ['runtime.mjs','Object.create(null)','{}'],
    ['runtime.mjs','[...text].length','text.length'],
-   ['concord.mjs','err("unknown_discriminator", path(p, k))','err("union_no_match", path(p, k))'],
+   ['gargamelle.mjs','err("unknown_discriminator", path(p, k))','err("union_no_match", path(p, k))'],
   ]){
-   const target=join(dir,'build/dev/javascript/concord',file),source=readFileSync(target,'utf8');
+   const target=join(dir,'build/dev/javascript/gargamelle',file),source=readFileSync(target,'utf8');
    assert.equal(source.split(from).length-1,1,'mutation target must be unique');
    writeFileSync(target,source.replace(from,to));const mutant=run();writeFileSync(target,source);
    assert.notEqual(mutant.status,0,from+' survived\n'+mutant.stdout+mutant.stderr);assert.match(mutant.stdout+mutant.stderr,/AssertionError|ERR_ASSERTION/,from+' must fail behavioral assertions');

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {s,unwrap,toList,Some,None,Ok,emitted} from './generated-api.mjs';
-import * as docs from '../build/dev/javascript/concord/concord/documentation.mjs';
+import * as docs from '../build/dev/javascript/gargamelle/gargamelle/documentation.mjs';
 import {compileOracle} from './oracle.mjs';
 import {compileSupplementary} from './supplementary-oracle.mjs';
 const inputs=values=>toList(values.map(v=>unwrap(s.parse(JSON.stringify(v)))));

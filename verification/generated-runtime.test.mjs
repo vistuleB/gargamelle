@@ -21,7 +21,7 @@ test('callback and resource exceptions remain operational failures, not schema r
  assert.ok(s.validate(d,input) instanceof Ok);
  assert.doesNotThrow(()=>s.emit_text(d));
  assert.throws(()=>s.decode(d,input),e=>e===marker);
- const source=`import {parse} from ${JSON.stringify(new URL('../build/dev/javascript/concord/concord.mjs',import.meta.url).href)};
+ const source=`import {parse} from ${JSON.stringify(new URL('../build/dev/javascript/gargamelle/gargamelle.mjs',import.meta.url).href)};
  try { const r=parse('['.repeat(10000)+'null'+']'.repeat(10000)); console.error('incorrectly returned',r.constructor.name); process.exit(3); }
  catch(e) { if(e instanceof RangeError){ console.log('operational RangeError'); process.exit(42); } throw e; }`;
  const resource=spawnSync(process.execPath,['--stack_size=256','--input-type=module','-e',source],{encoding:'utf8',timeout:10000});

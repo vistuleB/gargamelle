@@ -1,7 +1,7 @@
 // Test-only adapter from generated definition recipes to PUBLIC Gleam constructors.
 // Recipes are not a library schema-import API and never inject a Node/Definition.
-import * as s from '../build/dev/javascript/concord/concord.mjs';
-import { Ok, toList } from '../build/dev/javascript/concord/gleam.mjs';
+import * as s from '../build/dev/javascript/gargamelle/gargamelle.mjs';
+import { Ok, toList } from '../build/dev/javascript/gargamelle/gleam.mjs';
 import { Some, Option$None$const as None } from '../build/dev/javascript/gleam_stdlib/gleam/option.mjs';
 export { s, Ok, toList, Some, None };
 export const unwrap = r => { if (!(r instanceof Ok)) throw new Error(`Construction/admission failed: ${JSON.stringify(r)}`); return r[0]; };

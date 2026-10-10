@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.0 — 2026-10-10
+
+- Rename the package and public modules from Concord to Gargamelle.
+- Prepare package metadata and consumer documentation for the first public release.
+- Document public API contracts, runtime scope, errors and glon compatibility.
+- Hide verification fixtures from the public documentation surface.
+- Add a publication checklist and verify the exported package in a clean consumer.
+- No decoder or schema acceptance changes.
+
 ## 0.0.10 — 2026-10-10
 
 - Add checked documentation examples with indexed validation errors, HTML escaping, and no decoder callback execution.
@@ -57,5 +66,5 @@
 
 ## 0.0.1 — 2026-10-10
 
-Initial standalone extraction of Concord with schema emission, typed decoding,
+Initial standalone extraction of Gargamelle with schema emission, typed decoding,
 optional HTML documentation, and verification fixtures.

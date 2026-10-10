@@ -12,11 +12,11 @@ const mutations=[
  ['not-emission-dropped','["not", emit(probe)]','["x-not", emit(probe)]',`assert.equal(JSON.parse(s.emit_text(d)).allOf[1].not?.const,0);`],
 ];
 test('exclusion polarity, rejection, and not emission mutants fail assertions',()=>{
- const dir=mkdtempSync(join(tmpdir(),'concord-exclude-mutants-'));
+ const dir=mkdtempSync(join(tmpdir(),'gargamelle-exclude-mutants-'));
  try{
  cpSync(join(root,'build/dev/javascript'),dir,{recursive:true});
- const target=join(dir,'concord/concord.mjs'),original=readFileSync(target,'utf8');
- const header=`import assert from 'node:assert/strict';import * as s from './concord/concord.mjs';import {Ok,toList} from './concord/gleam.mjs';import {Some,Option$None$const as None} from './gleam_stdlib/gleam/option.mjs';const unwrap=r=>{assert.ok(r instanceof Ok);return r[0];};const d=s.exclude(s.number(),unwrap(s.integer_constant(0)));\n`;
+ const target=join(dir,'gargamelle/gargamelle.mjs'),original=readFileSync(target,'utf8');
+ const header=`import assert from 'node:assert/strict';import * as s from './gargamelle/gargamelle.mjs';import {Ok,toList} from './gargamelle/gleam.mjs';import {Some,Option$None$const as None} from './gleam_stdlib/gleam/option.mjs';const unwrap=r=>{assert.ok(r instanceof Ok);return r[0];};const d=s.exclude(s.number(),unwrap(s.integer_constant(0)));\n`;
  for(const [name,from,to,assertion] of mutations){
  assert.equal(original.split(from).length-1,1,name+' unique mutation');
  writeFileSync(join(dir,'check.mjs'),header+assertion);

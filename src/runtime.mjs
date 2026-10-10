@@ -1,5 +1,5 @@
 import { Ok, Error, toList } from './gleam.mjs';
-import { AdmissionError } from './concord.mjs';
+import { AdmissionError } from './gargamelle.mjs';
 
 // The factories are library-owned opaque Value constructors. Every argument is
 // an actual JSON.parse result, never a fabricated provider value.

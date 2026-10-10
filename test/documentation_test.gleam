@@ -1,5 +1,5 @@
-import concord as s
-import concord/documentation as docs
+import gargamelle as s
+import gargamelle/documentation as docs
 import gleam/string
 import gleeunit/should
 

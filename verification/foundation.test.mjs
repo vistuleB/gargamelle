@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { names, fixture_schema, fixture_decode } from '../build/dev/javascript/concord/schema_fixtures.mjs';
-import { Ok } from '../build/dev/javascript/concord/gleam.mjs';
+import { names, fixture_schema, fixture_decode } from '../build/dev/javascript/gargamelle/schema_fixtures.mjs';
+import { Ok } from '../build/dev/javascript/gargamelle/gleam.mjs';
 import { compileOracle } from './oracle.mjs';
 
 function decode(name, value) {

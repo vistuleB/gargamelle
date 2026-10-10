@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {s,unwrap,toList,Some,None,Ok,emitted,evaluate} from './generated-api.mjs';
 import {compileOracle} from './oracle.mjs';
 import {compileSupplementary} from './supplementary-oracle.mjs';
-import * as docs from '../build/dev/javascript/concord/concord/documentation.mjs';
+import * as docs from '../build/dev/javascript/gargamelle/gargamelle/documentation.mjs';
 async function compare(d,cases){const schema=emitted(d),checks=[compileOracle(schema),await compileSupplementary(schema)];for(const [v,accepted,output] of cases){const actual=evaluate(d,v);assert.equal(actual.accepted,accepted,JSON.stringify(v));for(const check of checks)assert.equal(check(v).accepted,accepted);if(accepted&&output!==undefined)assert.deepEqual(actual.value,output);}}
 
 test('formula code exclusion forbids whitespace, backslash and Unicode punctuation',async()=>{

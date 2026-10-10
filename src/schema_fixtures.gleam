@@ -1,5 +1,5 @@
 // Authored fixtures for an independent external oracle. Not a public schema importer.
-import concord as s
+import gargamelle as s
 import gleam/list
 import gleam/option.{None, Some}
 

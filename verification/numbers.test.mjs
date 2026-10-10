@@ -4,7 +4,7 @@ import {build,evaluate,evaluateText,emitted,s,unwrap,Some,None,Ok,toList} from '
 import {compileOracle} from './oracle.mjs';
 import {compileSupplementary} from './supplementary-oracle.mjs';
 import {reference} from './reference.mjs';
-import * as docs from '../build/dev/javascript/concord/concord/documentation.mjs';
+import * as docs from '../build/dev/javascript/gargamelle/gargamelle/documentation.mjs';
 
 const bounded=(lo,hi)=>unwrap(s.number_bounds(s.number(),lo,hi));
 function next(value,up){

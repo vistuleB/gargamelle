@@ -1,9 +1,62 @@
-# Concord
+# Gargamelle
 
-Isolated Node-targeted project governed by
-[contract revision 3](docs/verification.md).
-The equation-flashcards application imports this package from the sibling `concord` checkout for its provider contracts.
-It remains unpublished; no historical data is rewritten by that integration.
+Gargamelle builds a typed JSON decoder and a JSON Schema 2020-12 document from the
+same Gleam definition. Validate incoming JSON, construct application values, and
+optionally render HTML documentation with checked examples.
+
+Version 0.1.0 is being prepared for publication. JavaScript is the supported target;
+Node 24 is the verified runtime. Erlang, browsers, Bun and Deno are not verified.
+Gargamelle implements the schema vocabulary exposed by its constructors, not a
+validator for arbitrary imported JSON Schemas. APIs may change before 1.0.
+
+## Getting started
+
+Before publication, use a Git dependency pinned to a reviewed commit:
+
+```toml
+[dependencies]
+gargamelle = { git = "https://github.com/vistuleB/gargamelle", ref = "<full-commit-sha>" }
+```
+
+Set `target = "javascript"` in the consuming project. After a Hex release exists,
+install it with `gleam add gargamelle@0.1.0`. Until publication completes,
+use the Git dependency above. The repository is private, so Git access currently
+requires permission.
+
+```gleam
+import gargamelle
+
+pub fn read_names(source: String) {
+  let assert Ok(value) = gargamelle.parse(source)
+  gargamelle.decode(gargamelle.array(gargamelle.text()), value)
+}
+
+pub fn names_schema() {
+  gargamelle.emit_text(gargamelle.array(gargamelle.text()))
+}
+```
+
+Handle admission errors separately from validation errors in application code;
+these assertions only keep the introductory example short. `validate` checks
+acceptance without invoking converters. `decode` validates before constructing
+output. See the record and recursive examples below and the generated API docs.
+
+## Compatibility with glon
+
+Gargamelle covers glon’s core workflows, with a different record builder and error
+model. It is not a drop-in replacement. `safe_integer` deliberately restricts
+integers to JavaScript’s safe range; `number` accepts finite binary64 values.
+`one_of` rejects overlapping matches; `any_of` converts the first matching branch.
+Defaults are validated JSON inputs decoded through the field definition.
+`optional` distinguishes absence from null; combine it with `nullable` when both
+are allowed (the result is `Option(Option(a))`). Map or flatten that output if the
+application wants one option. Parse text before decoding; `emit_json` returns
+Gargamelle’s `Value`, while `emit_text` returns portable schema text.
+
+Gargamelle also supports numeric/size bounds, patterns, dictionaries, guarded
+recursion, exact tuples, property names, membership, conditionals and exclusion.
+It does not currently provide arbitrary schema import, general intersections,
+format assertions, `multipleOf`, fractional constants, encoding or migrations.
 
 ## Setup and checks
 
@@ -30,18 +83,17 @@ fail verification. The generated report counts classified splits. This explicitl
 does not change schemas, decoder behavior or Ajv options. See
 `verification/known-oracle-discrepancies.json`.
 
-## Implementation decision
+## Design and scope
 
-Start with a fresh core. Glon's general idea (a typed definition producing both
-a decoder and a schema) is retained, but its continuation-probing object API
-would need replacement. A fresh static builder makes the preservation arguments
-easier to inspect. No glon source is copied into this scaffold. Any later reuse
-must record source/version and retain applicable MIT notices before distribution.
-This is a private experiment, not a published or publish-ready package.
+Gargamelle is a fresh implementation of the typed-definition/schema idea; no glon
+source is copied. Static curried builders avoid probing constructors with invented
+values. The acceptance/decoding contract is described in
+[contract revision 3](https://github.com/vistuleB/gargamelle/blob/main/docs/verification.md) and [PRESERVATION.md](https://github.com/vistuleB/gargamelle/blob/main/PRESERVATION.md).
 
-The initial work is implementation and verification of the standalone contract.
-Cloze is the first integrated provider. Further provider migration and publication
-remain separate decisions.
+Callbacks are trusted code. Their exceptions, stack exhaustion and invalid reference
+graphs are operational failures, not rejected JSON data. Validation does not run
+callbacks; structural constraints inspect the original input before defaults or
+projection. See [release preparation](https://github.com/vistuleB/gargamelle/blob/main/docs/releasing.md) for package checks.
 
 ## Verification coverage
 
@@ -63,18 +115,17 @@ make it fit our constructors. Optional suite collections and full-dialect
 conformance are not claimed. Existing cloze schemas are frozen from checkpoint `ceb244a` for independent compatibility comparisons; safe-integer limits and the provider's UTF-16 length difference
 are explicitly exercised.
 
-See [PRESERVATION.md](PRESERVATION.md) for constructor reasoning and
-[generated notes](verification/generated-notes.md) for failure retention,
+See [PRESERVATION.md](https://github.com/vistuleB/gargamelle/blob/main/PRESERVATION.md) for constructor reasoning and
+[generated notes](https://github.com/vistuleB/gargamelle/blob/main/verification/generated-notes.md) for failure retention,
 shrinking, and implementation findings. `reports/evidence.json` is the current
 verification result; it is generated locally and excluded from source control.
 The original contract document's unverified status records its specification-time
-state, not the current candidate report. Browser/Erlang support, publication and
-broader production adoption remain outside this milestone.
+state, not the current candidate report. Browser/Erlang support and broader production adoption remain unverified.
 
 ## Static object API example
 
 ```gleam
-import concord as s
+import gargamelle as s
 
 pub type User { User(name: String, active: Bool) }
 
@@ -118,17 +169,17 @@ unbounded. Apply bounds before naming a definition or composing it into a union.
 Annotations and maps preserve the underlying number node and support bounds.
 
 ```gleam
-import concord
+import gargamelle
 import gleam/option.{None, Some}
 
 let assert Ok(probability) =
-  concord.number_bounds(
-    concord.number(),
-    Some(concord.Inclusive(0.0)),
-    Some(concord.Inclusive(1.0)),
+  gargamelle.number_bounds(
+    gargamelle.number(),
+    Some(gargamelle.Inclusive(0.0)),
+    Some(gargamelle.Inclusive(1.0)),
   )
 let assert Ok(positive) =
-  concord.number_bounds(concord.number(), Some(concord.Exclusive(0.0)), None)
+  gargamelle.number_bounds(gargamelle.number(), Some(gargamelle.Exclusive(0.0)), None)
 ```
 
 This is the parsed IEEE-754 binary64 model, not arbitrary-precision decimal
@@ -154,7 +205,7 @@ runs once with a typed definition reference, never a fabricated decoded value.
 The builder returns `Result(Definition(a), ConstructionError)`. For example:
 
 ```gleam
-import concord as s
+import gargamelle as s
 import gleam/result
 
 pub type Tree {
@@ -205,23 +256,23 @@ are unchanged; migrating them would be a separate app behavior decision.
 
 ## Optional HTML documentation
 
-`concord/documentation` renders annotated definitions as collapsible HTML
+`gargamelle/documentation` renders annotated definitions as collapsible HTML
 fragments. It is independent of the decoding module: applications that only
 validate data need not import or ship it.
 
 ```gleam
-import concord as concord
-import concord/documentation
+import gargamelle as gargamelle
+import gargamelle/documentation
 
-let name = concord.text() |> concord.description("Name shown to the learner")
+let name = gargamelle.text() |> gargamelle.description("Name shown to the learner")
 let fragment = documentation.render(name, "learner-name")
 ```
 
 `render(definition, id)` returns an `<article>` fragment. Give each article a unique
-ID. The renderer consumes Concord's emitted representation internally rather than
+ID. The renderer consumes Gargamelle's emitted representation internally rather than
 exposing its private definition AST. `render_emitted(schema_json, id, aliases)`
-accepts already-emitted Concord schema JSON and returns `Result(String, String)`.
-This is a renderer for Concord's schema vocabulary, not a general JSON Schema
+accepts already-emitted Gargamelle schema JSON and returns `Result(String, String)`.
+This is a renderer for Gargamelle's schema vocabulary, not a general JSON Schema
 validator or documentation engine for arbitrary schema dialects.
 
 Descriptions, field labels, constants, defaults and IDs are HTML-escaped. Object
@@ -230,7 +281,7 @@ Shared `$defs` render once with local links; arbitrary discriminator names work.
 Optional aliases are `(omitted_definition, displayed_definition)` pairs. They must
 refer to existing definitions and may not chain. They only compress presentation;
 the caller must explain any omitted distinctions. No domain-specific aliases are
-built into Concord.
+built into Gargamelle.
 
 Use `documentation/reference.css` for the supplied page styling and
 `documentation/reference.js` for optional expand/collapse and print restoration.
@@ -248,10 +299,10 @@ that length. The result may be a Gleam tuple, a custom type, or another typed
 value:
 
 ```gleam
-let entry = concord.tuple(fn(label) { fn(weight) { #(label, weight) } })
-  |> concord.element(concord.text())
-  |> concord.element(concord.number())
-  |> concord.finish_tuple
+let entry = gargamelle.tuple(fn(label) { fn(weight) { #(label, weight) } })
+  |> gargamelle.element(gargamelle.text())
+  |> gargamelle.element(gargamelle.number())
+  |> gargamelle.finish_tuple
 // ["x", 1.25] decodes to #(String, Float); shorter/longer arrays are rejected.
 ```
 
@@ -273,11 +324,11 @@ result with the same decoded output type as the original object. For example,
 a locale dictionary can share the app's existing locale-field syntax:
 
 ```gleam
-let assert Ok(locale) = concord.pattern(
-  concord.text(), "^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$",
+let assert Ok(locale) = gargamelle.pattern(
+  gargamelle.text(), "^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$",
 )
-let assert Ok(translations) = concord.property_names(
-  concord.dictionary(concord.text()), locale,
+let assert Ok(translations) = gargamelle.property_names(
+  gargamelle.dictionary(gargamelle.text()), locale,
 )
 ```
 
@@ -302,7 +353,7 @@ its numeric acceptance schema. Used for property names, it accepts only empty
 objects because actual names are strings. Ajv's `strictTypes` lint refuses this
 valid unsatisfiable key contract. Verification retains an exact-schema exception
 for that audit fixture, explicitly disables only `strictTypes`, and compares
-Concord with both Ajv and Hyperjump. The ordinary oracle remains strict; no
+Gargamelle with both Ajv and Hyperjump. The ordinary oracle remains strict; no
 automatic fallback or runtime behavior change is introduced.
 
 ## Array membership
@@ -314,8 +365,8 @@ least that minimum. For example, require one or two integer-valued elements
 while preserving all decoded numbers:
 
 ```gleam
-let assert Ok(values) = concord.contains(
-  concord.array(concord.number()), concord.safe_integer(), 1, Some(2),
+let assert Ok(values) = gargamelle.contains(
+  gargamelle.array(gargamelle.number()), gargamelle.safe_integer(), 1, Some(2),
 )
 ```
 
@@ -353,11 +404,11 @@ with the base's original output type; the auxiliary definitions may have
 independent output types. For example:
 
 ```gleam
-let assert Ok(positive) = concord.number_bounds(
-  concord.number(), Some(concord.Exclusive(0.0)), None,
+let assert Ok(positive) = gargamelle.number_bounds(
+  gargamelle.number(), Some(gargamelle.Exclusive(0.0)), None,
 )
-let checked = concord.if_then(
-  concord.number(), positive, concord.safe_integer(),
+let checked = gargamelle.if_then(
+  gargamelle.number(), positive, gargamelle.safe_integer(),
 )
 // Positive numbers must be safe integers; nonpositive finite numbers remain valid.
 ```
@@ -399,7 +450,7 @@ its converters and mappings never run. For example, forbid integer-valued
 numbers while retaining fractional `Float` values:
 
 ```gleam
-let fractional = concord.exclude(concord.number(), concord.safe_integer())
+let fractional = gargamelle.exclude(gargamelle.number(), gargamelle.safe_integer())
 ```
 
 This example excludes only safe integers; it does not impose arbitrary-precision
@@ -435,3 +486,8 @@ Examples represent input JSON, including its original missing fields, rather
 than projected/defaulted outputs. HTML escapes examples, and an empty example
 list produces the ordinary renderer output. Rechecking at render time catches
 examples that become invalid after a definition changes.
+
+## License
+
+Gargamelle is distributed under the [MIT License](LICENSE). The retained JSON Schema
+test-suite fixtures carry their own [license](https://github.com/vistuleB/gargamelle/blob/main/verification/official/LICENSE).

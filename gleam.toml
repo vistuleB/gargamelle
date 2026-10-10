@@ -1,5 +1,9 @@
-name = "concord"
-version = "0.0.10"
+name = "gargamelle"
+version = "0.1.0"
+licences = ["MIT"]
+description = "Typed JSON decoding and JSON Schema 2020-12 from one Gleam definition"
+repository = { type = "github", user = "vistuleB", repo = "gargamelle" }
+internal_modules = ["schema_fixtures"]
 target = "javascript"
 gleam = ">= 1.18.1"
 

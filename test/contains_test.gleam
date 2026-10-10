@@ -1,4 +1,4 @@
-import concord as s
+import gargamelle as s
 import gleam/option.{None, Some}
 import gleeunit/should
 

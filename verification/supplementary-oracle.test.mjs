@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { compileSupplementary } from './supplementary-oracle.mjs';
 import { compileOracle } from './oracle.mjs';
-import { fixture_schema, fixture_decode } from '../build/dev/javascript/concord/schema_fixtures.mjs';
-import { Ok } from '../build/dev/javascript/concord/gleam.mjs';
+import { fixture_schema, fixture_decode } from '../build/dev/javascript/gargamelle/schema_fixtures.mjs';
+import { Ok } from '../build/dev/javascript/gargamelle/gleam.mjs';
 
 test('declared __proto__ acceptance is independently verified without changing Ajv', async () => {
   const [f] = JSON.parse(readFileSync(new URL('./known-oracle-discrepancies.json', import.meta.url)));

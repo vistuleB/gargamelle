@@ -1,4 +1,4 @@
-import concord as s
+import gargamelle as s
 import gleeunit/should
 
 pub fn typed_keyed_dictionary_test() {

@@ -12,11 +12,11 @@ const mutations=[
  ['key-schema-emission-dropped','"propertyNames", key_schema','"x-propertyNames", key_schema',`assert.equal(JSON.parse(s.emit_text(d)).propertyNames?.const,'en');`],
 ];
 test('key validation, key/value distinction, and schema emission mutants fail assertions',()=>{
- const dir=mkdtempSync(join(tmpdir(),'concord-key-mutants-'));
+ const dir=mkdtempSync(join(tmpdir(),'gargamelle-key-mutants-'));
  try{
  cpSync(join(root,'build/dev/javascript'),dir,{recursive:true});
- const target=join(dir,'concord/concord.mjs'),original=readFileSync(target,'utf8');
- const header=`import assert from 'node:assert/strict';import * as s from './concord/concord.mjs';import {Ok,toList} from './concord/gleam.mjs';const unwrap=r=>{assert.ok(r instanceof Ok);return r[0];};const d=unwrap(s.property_names(s.dictionary(s.number()),s.string_constant('en')));\n`;
+ const target=join(dir,'gargamelle/gargamelle.mjs'),original=readFileSync(target,'utf8');
+ const header=`import assert from 'node:assert/strict';import * as s from './gargamelle/gargamelle.mjs';import {Ok,toList} from './gargamelle/gleam.mjs';const unwrap=r=>{assert.ok(r instanceof Ok);return r[0];};const d=unwrap(s.property_names(s.dictionary(s.number()),s.string_constant('en')));\n`;
  for(const [name,from,to,assertion] of mutations){
  assert.equal(original.split(from).length-1,1,name+' unique mutation');
  writeFileSync(join(dir,'check.mjs'),header+assertion);

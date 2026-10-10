@@ -1,3 +1,10 @@
+//// Typed JSON decoding and JSON Schema 2020-12 emission from one definition.
+////
+//// Parse JSON with `parse`, then call `validate` or `decode`. Validation never
+//// invokes user converters; decoding invokes them only after structural success.
+//// Converters are trusted application code: exceptions are operational failures.
+//// JavaScript is the supported target; Node 24 is the verified runtime.
+
 import gleam/json
 import gleam/list
 import gleam/option.{type Option, None, Some}
@@ -5,6 +12,8 @@ import gleam/result
 import gleam/string
 
 // Values can enter only through the JSON parser. Runtime helpers preserve own keys.
+/// An admitted JSON value. Construct values through `parse`; arbitrary runtime
+/// objects cannot enter the validation boundary.
 pub opaque type Value {
   JNull
   JBool(Bool)
@@ -14,14 +23,19 @@ pub opaque type Value {
   JObject(List(#(String, Value)))
 }
 
+/// JSON syntax or nonfinite-number admission failure.
 pub type AdmissionError {
   AdmissionError(String)
 }
 
+/// An invalid definition, constraint, default, or reference graph.
 pub type ConstructionError {
   ConstructionError(String)
 }
 
+/// A structural validation failure. `path` is a JSON Pointer (empty at the root).
+/// `branches` contains indexed union errors and `matches` identifies matching
+/// branches. Categories and diagnostic wording may evolve before version 1.0.
 pub type DataError {
   DataError(
     category: String,
@@ -32,6 +46,8 @@ pub type DataError {
   )
 }
 
+/// Treatment of undeclared record keys. `Closed` rejects them; `Open` accepts
+/// them but omits them from the constructed output.
 pub type Policy {
   Closed
   Open
@@ -127,22 +143,28 @@ type Presence {
   Default(Value)
 }
 
+/// A structural acceptance contract paired with a typed conversion function.
 pub opaque type Definition(a) {
   Definition(Node, fn(Value) -> a)
 }
 
+/// An unfinished record consuming a curried constructor one field at a time.
 pub opaque type Record(a) {
   Record(List(Field), fn(Value) -> a)
 }
 
+/// An unfinished exact-length tuple consuming a curried constructor by position.
 pub opaque type Tuple(a) {
   Tuple(List(Node), fn(Value) -> a)
 }
 
+/// A record branch for `tagged`, with its discriminator supplied automatically.
 pub opaque type Variant(a) {
   Variant(String, List(Field), Policy, fn(Value) -> a, Option(String))
 }
 
+/// Admit JSON text without invoking a definition or converter. Duplicate object
+/// keys use the parser’s last value; numeric values use IEEE-754 binary64.
 pub fn parse(text: String) -> Result(Value, AdmissionError) {
   parse_runtime(text, fn() { JNull }, JBool, JNumber, JString, JArray, JObject)
 }
@@ -158,6 +180,7 @@ fn parse_runtime(
   object: fn(List(#(String, Value))) -> Value,
 ) -> Result(Value, AdmissionError)
 
+/// Serialize an admitted value as canonical JSON text. Negative zero becomes `0`.
 pub fn value_text(value: Value) -> String {
   canonical(json.to_string(json_value(value)))
 }
@@ -200,6 +223,7 @@ fn as_int(value: Float) -> Int
 @external(javascript, "./runtime.mjs", "as_float")
 fn as_float(value: Int) -> Float
 
+/// Accept JSON booleans.
 pub fn boolean() -> Definition(Bool) {
   Definition(BooleanNode, fn(v) {
     case v {
@@ -209,10 +233,12 @@ pub fn boolean() -> Definition(Bool) {
   })
 }
 
+/// Accept JSON null and decode it to `Nil`.
 pub fn null() -> Definition(Nil) {
   Definition(NullNode, fn(_) { Nil })
 }
 
+/// Accept JSON strings.
 pub fn text() -> Definition(String) {
   Definition(StringNode(None, None, []), fn(v) {
     case v {
@@ -222,6 +248,7 @@ pub fn text() -> Definition(String) {
   })
 }
 
+/// Accept integral numbers between -9007199254740991 and 9007199254740991.
 pub fn safe_integer() -> Definition(Int) {
   Definition(IntegerNode(-9_007_199_254_740_991, 9_007_199_254_740_991), fn(v) {
     case v {
@@ -350,6 +377,7 @@ fn number_ok(
   low && high
 }
 
+/// Accept one of the supplied strings. Empty or duplicate alternatives fail construction.
 pub fn string_enum(
   values: List(String),
 ) -> Result(Definition(String), ConstructionError) {
@@ -367,18 +395,22 @@ pub fn string_enum(
   }
 }
 
+/// Accept exactly this string.
 pub fn string_constant(v: String) -> Definition(String) {
   Definition(ConstNode(JString(v), "string"), fn(_) { v })
 }
 
+/// Accept exactly this boolean.
 pub fn boolean_constant(v: Bool) -> Definition(Bool) {
   Definition(ConstNode(JBool(v), "boolean"), fn(_) { v })
 }
 
+/// Accept exactly null.
 pub fn null_constant() -> Definition(Nil) {
   Definition(ConstNode(JNull, "null"), fn(_) { Nil })
 }
 
+/// Accept exactly this safe integer; reject constants outside the safe range.
 pub fn integer_constant(v: Int) -> Result(Definition(Int), ConstructionError) {
   case
     v < -9_007_199_254_740_991
@@ -391,11 +423,15 @@ pub fn integer_constant(v: Int) -> Result(Definition(Int), ConstructionError) {
   }
 }
 
+/// Transform decoded output without changing schema acceptance. The callback
+/// runs only during successful decoding and must return the declared output type.
 pub fn map(def: Definition(a), f: fn(a) -> b) -> Definition(b) {
   let Definition(n, d) = def
   Definition(n, fn(v) { f(d(v)) })
 }
 
+/// Accept null as `None`, or decode the child as `Some`. This does not make
+/// a record field optional.
 pub fn nullable(def: Definition(a)) -> Definition(Option(a)) {
   let Definition(n, d) = def
   Definition(NullableNode(n), fn(v) {
@@ -406,6 +442,7 @@ pub fn nullable(def: Definition(a)) -> Definition(Option(a)) {
   })
 }
 
+/// Accept homogeneous arrays and decode every element in input order.
 pub fn array(def: Definition(a)) -> Definition(List(a)) {
   let Definition(n, d) = def
   Definition(ArrayNode(n, None, None), fn(v) {
@@ -538,6 +575,8 @@ pub fn exclude(def: Definition(a), forbidden: Definition(b)) -> Definition(a) {
   Definition(next, convert)
 }
 
+/// Accept objects whose values satisfy the child definition. Decode to a Gleam
+/// list of key/value pairs, preserving original keys rather than a JS object.
 pub fn dictionary(def: Definition(a)) -> Definition(List(#(String, a))) {
   let Definition(n, d) = def
   Definition(DictNode(n, None, None), fn(v) {
@@ -689,6 +728,9 @@ pub fn recursive_pair(
 
 // Named definitions reuse finite structures; recursive definitions use explicit
 // references whose complete graph is checked before returning to the caller.
+/// Name a definition for local `$defs`/`$ref` reuse. Names must start with an
+/// ASCII letter and contain only ASCII letters, digits, underscores or hyphens.
+/// Conflicting names fail when the composed graph is validated or emitted.
 pub fn named(
   name: String,
   def: Definition(a),
@@ -700,6 +742,8 @@ pub fn named(
   }
 }
 
+/// Require structurally distinct JSON items in a direct homogeneous array
+/// definition. Uniqueness is checked before mapping, not on decoded outputs.
 pub fn unique_items(
   def: Definition(List(a)),
 ) -> Result(Definition(List(a)), ConstructionError) {
@@ -710,16 +754,20 @@ pub fn unique_items(
   }
 }
 
+/// Add a schema description without changing validation or decoding.
 pub fn description(def: Definition(a), s: String) -> Definition(a) {
   let Definition(n, d) = def
   Definition(AnnotatedNode(n, "description", s), d)
 }
 
+/// Add a schema title without changing validation or decoding.
 pub fn title(def: Definition(a), s: String) -> Definition(a) {
   let Definition(n, d) = def
   Definition(AnnotatedNode(n, "title", s), d)
 }
 
+/// Start a record with a curried constructor. Each field consumes one argument;
+/// call `finish` after supplying all fields. Multi-argument constructors need currying.
 pub fn record(constructor: a) -> Record(a) {
   Record([], fn(_) { constructor })
 }
@@ -753,6 +801,7 @@ fn add_field(
   }
 }
 
+/// Add a required field. Duplicate field names fail construction.
 pub fn required(
   r: Record(fn(a) -> b),
   name: String,
@@ -761,6 +810,9 @@ pub fn required(
   add_field(r, name, child, Required)
 }
 
+/// Add a field with an admitted JSON default validated during construction.
+/// When absent, decode the default with the child converter. A present invalid
+/// value still fails; defaults do not mutate the input or bypass validation.
 pub fn defaulted(
   r: Record(fn(a) -> b),
   name: String,
@@ -777,6 +829,8 @@ pub fn defaulted(
   }
 }
 
+/// Add an optional field, consuming an `Option(a)` constructor argument.
+/// Absence is `None`; present values must satisfy the child, including null.
 pub fn optional(
   r: Record(fn(Option(a)) -> b),
   name: String,
@@ -800,26 +854,32 @@ pub fn optional(
   }
 }
 
+/// Finish a typed record with the chosen undeclared-key policy.
 pub fn finish(r: Record(a), policy: Policy) -> Definition(a) {
   let Record(fs, d) = r
   Definition(RecordNode(fs, policy), d)
 }
 
+/// Finish a tagged record branch. Do not declare the discriminator as a field.
 pub fn variant(tag: String, r: Record(a), policy: Policy) -> Variant(a) {
   let Record(fs, d) = r
   Variant(tag, fs, policy, d, None)
 }
 
+/// Describe a tagged branch without changing its acceptance contract.
 pub fn variant_description(v: Variant(a), s: String) -> Variant(a) {
   let Variant(t, f, p, d, _) = v
   Variant(t, f, p, d, Some(s))
 }
 
+/// Transform a tagged branch’s decoded output without changing its schema.
 pub fn variant_map(v: Variant(a), f: fn(a) -> b) -> Variant(b) {
   let Variant(t, fs, p, d, s) = v
   Variant(t, fs, p, fn(x) { f(d(x)) }, s)
 }
 
+/// Construct a discriminated union of record variants. Empty lists, duplicate
+/// tags and fields redeclaring the discriminator are construction errors.
 pub fn tagged(
   discriminator: String,
   variants: List(Variant(a)),
@@ -874,12 +934,16 @@ pub fn tagged(
   }
 }
 
+/// Accept one or more matching branches and decode with the first matching
+/// branch in list order. Empty unions fail construction.
 pub fn any_of(
   defs: List(Definition(a)),
 ) -> Result(Definition(a), ConstructionError) {
   union(defs, False)
 }
 
+/// Accept exactly one structurally matching branch and decode with it.
+/// Overlapping matches are rejected. Empty unions fail construction.
 pub fn one_of(
   defs: List(Definition(a)),
 ) -> Result(Definition(a), ConstructionError) {
@@ -951,6 +1015,9 @@ fn bad_bounds(lo: Option(Int), hi: Option(Int), size: Bool) -> Bool {
   }
 }
 
+/// Intersect inclusive integer bounds, Unicode code-point string lengths,
+/// homogeneous array lengths or dictionary key counts. `None` leaves a side
+/// unbounded. Unsupported definitions and invalid intervals fail construction.
 pub fn bounds(
   def: Definition(a),
   lower: Option(Int),
@@ -1026,6 +1093,9 @@ fn sizes(lo, hi, make, raw_lo, raw_hi) {
   }
 }
 
+/// Intersect an unanchored ECMAScript Unicode regular expression with a string
+/// definition. Anchor explicitly for whole-string matching. Invalid expressions
+/// and unsupported underlying definitions fail construction.
 pub fn pattern(
   def: Definition(String),
   p: String,
@@ -1047,6 +1117,9 @@ fn pattern_node(n: Node, p: String) -> Result(Node, ConstructionError) {
   }
 }
 
+/// Validate an admitted value without invoking constructors or map callbacks.
+/// Unfinished/conflicting reference graphs and resource exhaustion are operational
+/// failures rather than data errors.
 pub fn validate(
   def: Definition(a),
   value: Value,
@@ -1061,6 +1134,8 @@ pub fn validate(
   }
 }
 
+/// Validate first, then construct the typed output. Invalid input returns data
+/// errors without running converters. Exceptions from trusted callbacks propagate.
 pub fn decode(def: Definition(a), value: Value) -> Result(a, List(DataError)) {
   use _ <- result.try(validate(def, value))
   let Definition(_, d) = def
@@ -1310,6 +1385,8 @@ fn check(n: Node, v: Value, p: String) -> List(DataError) {
 @external(javascript, "./runtime.mjs", "int_text")
 fn int_text(n: Int) -> String
 
+/// Emit a JSON Schema 2020-12 document as Gargamelle’s opaque `Value`, not
+/// `gleam/json.Json`. Unfinished or conflicting reference graphs fail operationally.
 pub fn emit_json(def: Definition(a)) -> Value {
   let Definition(n, _) = def
   put(
@@ -1319,6 +1396,7 @@ pub fn emit_json(def: Definition(a)) -> Value {
   )
 }
 
+/// Emit canonical JSON Schema 2020-12 text, including finite local references.
 pub fn emit_text(def: Definition(a)) -> String {
   value_text(emit_json(def))
 }

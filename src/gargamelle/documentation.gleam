@@ -1,7 +1,7 @@
-//// Optional HTML documentation for Concord's emitted schema vocabulary.
+//// Optional HTML documentation for Gargamelle's emitted schema vocabulary.
 //// This is a presentation module, not a general JSON Schema validator.
 
-import concord
+import gargamelle
 import gleam/bit_array
 import gleam/dict
 import gleam/dynamic/decode
@@ -382,12 +382,12 @@ fn node(
 
 /// Render a definition with every shared definition visible in its own section.
 /// Supply a unique article ID when embedding multiple contracts on one page.
-pub fn render(definition: concord.Definition(a), id: String) -> String {
-  let assert Ok(html) = render_emitted(concord.emit_text(definition), id, [])
+pub fn render(definition: gargamelle.Definition(a), id: String) -> String {
+  let assert Ok(html) = render_emitted(gargamelle.emit_text(definition), id, [])
   html
 }
 
-/// Render JSON emitted by Concord. Aliases are optional *presentation-only*
+/// Render JSON emitted by Gargamelle. Aliases are optional *presentation-only*
 /// pairs (omitted definition, displayed definition); they must name existing
 /// definitions and point directly to a displayed definition. They do not change
 /// the schema or decoding. Explain any such compression in the surrounding page.
@@ -455,21 +455,21 @@ pub fn render_emitted(
 
 /// A rejected example's zero-based position and ordinary validation errors.
 pub type ExampleError {
-  ExampleError(index: Int, errors: List(concord.DataError))
+  ExampleError(index: Int, errors: List(gargamelle.DataError))
 }
 
 /// Validate admitted input examples before displaying them. This never invokes
 /// decoding callbacks or modifies schema acceptance. Examples are JSON inputs,
 /// not decoded values; checking again at render time prevents silent drift.
 pub fn render_examples(
-  definition: concord.Definition(a),
+  definition: gargamelle.Definition(a),
   id: String,
-  examples: List(concord.Value),
+  examples: List(gargamelle.Value),
 ) -> Result(String, List(ExampleError)) {
   let errors =
     examples
     |> list.index_map(fn(value, index) {
-      case concord.validate(definition, value) {
+      case gargamelle.validate(definition, value) {
         Ok(_) -> []
         Error(errors) -> [ExampleError(index, errors)]
       }
@@ -486,7 +486,7 @@ pub fn render_examples(
             examples
             |> list.map(fn(value) {
               "<pre><code>"
-              <> escape_html(concord.value_text(value))
+              <> escape_html(gargamelle.value_text(value))
               <> "</code></pre>"
             })
             |> string.join("")

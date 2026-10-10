@@ -1,5 +1,5 @@
-import concord as s
-import concord/documentation
+import gargamelle as s
+import gargamelle/documentation
 import gleam/option.{type Option, None, Some}
 import gleam/result
 import gleam/string

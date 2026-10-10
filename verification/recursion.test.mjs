@@ -4,8 +4,8 @@ import assert from 'node:assert/strict';
 import {s,unwrap,toList,Some,None,Ok,emitted,evaluate,evaluateText} from './generated-api.mjs';
 import {compileOracle} from './oracle.mjs';
 import {compileSupplementary} from './supplementary-oracle.mjs';
-import {Error as GleamError} from '../build/dev/javascript/concord/gleam.mjs';
-import * as docs from '../build/dev/javascript/concord/concord/documentation.mjs';
+import {Error as GleamError} from '../build/dev/javascript/gargamelle/gleam.mjs';
+import * as docs from '../build/dev/javascript/gargamelle/gargamelle/documentation.mjs';
 const tree=(name='tree',onLeaf=x=>x)=>unwrap(s.recursive(name,self=>s.any_of(toList([
  s.map(s.number(),x=>({leaf:onLeaf(x)})),
  s.map(s.array(self),xs=>({children:[...xs]})),

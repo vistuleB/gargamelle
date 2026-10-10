@@ -4,7 +4,7 @@ import {compileOracle} from './oracle.mjs';
 // Merely containing that key is NOT enough to excuse a disagreement.
 export function classifySplit(schema,value,ajv,hyperjump) {
  if(ajv.accepted===hyperjump.accepted)return null;
- const replacement='__concord_proto_probe__';
+ const replacement='__gargamelle_proto_probe__';
  assert.ok(!JSON.stringify([schema,value]).includes(replacement),'rename probe collision');
  let found=false;
  function rewrite(s){

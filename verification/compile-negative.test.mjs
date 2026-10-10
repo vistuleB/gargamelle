@@ -33,8 +33,8 @@ test('compile-time boundary: positive baseline and twenty forbidden API programs
  try{
  mkdirSync(join(dir,'src'));
  const q=p=>JSON.stringify(p);
- writeFileSync(join(dir,'gleam.toml'),`name = "negative_probe"\nversion = "0.1.0"\ntarget = "javascript"\n[dependencies]\nconcord = { path = ${q(root)} }\ngleam_stdlib = { path = ${q(resolve(root,'build/packages/gleam_stdlib'))} }\ngleam_json = { path = ${q(resolve(root,'build/packages/gleam_json'))} }\n`);
- const compile=body=>{writeFileSync(join(dir,'src/negative_probe.gleam'),'import concord as s\nimport gleam/option as gleam_option\n'+body+'\n');const run=spawnSync('gleam',['build'],{cwd:dir,encoding:'utf8',timeout:30000});if(run.error)throw run.error;return {status:run.status,output:run.stdout+run.stderr};};
+ writeFileSync(join(dir,'gleam.toml'),`name = "negative_probe"\nversion = "0.1.0"\ntarget = "javascript"\n[dependencies]\ngargamelle = { path = ${q(root)} }\ngleam_stdlib = { path = ${q(resolve(root,'build/packages/gleam_stdlib'))} }\ngleam_json = { path = ${q(resolve(root,'build/packages/gleam_json'))} }\n`);
+ const compile=body=>{writeFileSync(join(dir,'src/negative_probe.gleam'),'import gargamelle as s\nimport gleam/option as gleam_option\n'+body+'\n');const run=spawnSync('gleam',['build'],{cwd:dir,encoding:'utf8',timeout:30000});if(run.error)throw run.error;return {status:run.status,output:run.stdout+run.stderr};};
  const positive=compile('pub fn main() { s.variant("x",s.record(Nil),s.Closed) }');
  assert.equal(positive.status,0,positive.output);
  for(const [name,body,diagnostic] of cases){const result=compile(body);assert.notEqual(result.status,0,name);assert.match(result.output,new RegExp(diagnostic),name+'\n'+result.output);}

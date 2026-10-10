@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {s,unwrap,toList,Some,None,Ok,emitted,evaluate,build} from './generated-api.mjs';
 import {compileOracle} from './oracle.mjs';
 import {compileSupplementary} from './supplementary-oracle.mjs';
-import * as docs from '../build/dev/javascript/concord/concord/documentation.mjs';
+import * as docs from '../build/dev/javascript/gargamelle/gargamelle/documentation.mjs';
 const tuple=children=>{
  const curry=(i,out)=>i===children.length?out:x=>curry(i+1,[...out,x]);
  return s.finish_tuple(children.reduce((t,d)=>s.element(t,d),s.tuple(curry(0,[]))));

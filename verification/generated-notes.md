@@ -74,7 +74,7 @@ retain and independently resolve the documented Ajv `__proto__` discrepancy.
 ## Hardening pass
 
 Each generated input is serialized once; both external validators receive its
-parsed value, and Concord receives exactly that text. Explicit text fixtures
+parsed value, and Gargamelle receives exactly that text. Explicit text fixtures
 retain negative zero rather than accidentally serializing it away. Hyperjump
 checks the entire corpus. Ajv splits require a successful declared-`__proto__`
 key-renaming diagnosis; unexplained splits fail. Classification does not alter

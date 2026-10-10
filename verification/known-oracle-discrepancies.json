@@ -45,7 +45,7 @@
     "oracleOptionsOverride": {
       "strictTypes": false
     },
-    "resolution": "Normal compileOracle remains strict. compileNumericPropertyNamesOracle checks exact schema equality before disabling only strictTypes for this fixture. Hyperjump and that explicit Ajv instance independently agree with Concord. Mapped key converters never run. See property-names.test.mjs.",
+    "resolution": "Normal compileOracle remains strict. compileNumericPropertyNamesOracle checks exact schema equality before disabling only strictTypes for this fixture. Hyperjump and that explicit Ajv instance independently agree with Gargamelle. Mapped key converters never run. See property-names.test.mjs.",
     "reason": "property_names accepts any String-output definition, including map(number(), Float -> String). Mapping preserves structural acceptance; every actual object key is a string, so only an empty object satisfies this key contract."
   }
 ]

@@ -12,11 +12,11 @@ const mutations=[
  ['minimum-emission-dropped','"minContains"','"x-minContains"',`assert.equal(JSON.parse(s.emit_text(d)).minContains,1);`],
 ];
 test('membership counting, maximum, and schema emission mutants fail assertions',()=>{
- const dir=mkdtempSync(join(tmpdir(),'concord-membership-mutants-'));
+ const dir=mkdtempSync(join(tmpdir(),'gargamelle-membership-mutants-'));
  try{
  cpSync(join(root,'build/dev/javascript'),dir,{recursive:true});
- const target=join(dir,'concord/concord.mjs'),original=readFileSync(target,'utf8');
- const header=`import assert from 'node:assert/strict';import * as s from './concord/concord.mjs';import {Ok,toList} from './concord/gleam.mjs';import {Some} from './gleam_stdlib/gleam/option.mjs';const unwrap=r=>{assert.ok(r instanceof Ok);return r[0];};const d=unwrap(s.contains(s.array(s.number()),s.safe_integer(),1,new Some(2)));\n`;
+ const target=join(dir,'gargamelle/gargamelle.mjs'),original=readFileSync(target,'utf8');
+ const header=`import assert from 'node:assert/strict';import * as s from './gargamelle/gargamelle.mjs';import {Ok,toList} from './gargamelle/gleam.mjs';import {Some} from './gleam_stdlib/gleam/option.mjs';const unwrap=r=>{assert.ok(r instanceof Ok);return r[0];};const d=unwrap(s.contains(s.array(s.number()),s.safe_integer(),1,new Some(2)));\n`;
  for(const [name,from,to,assertion] of mutations){
  assert.equal(original.split(from).length-1,1,name+' unique mutation');
  writeFileSync(join(dir,'check.mjs'),header+assertion);
