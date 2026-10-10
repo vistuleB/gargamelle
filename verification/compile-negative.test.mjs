@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 const root=fileURLToPath(new URL('../',import.meta.url));
 const cases=[
+ ['key_definition_type','pub fn main() { s.property_names(s.dictionary(s.text()),s.number()) }','Type mismatch'],
  ['tuple_position_type','pub fn main() { s.element(s.tuple(fn(x: Int){x}),s.text()) }','Type mismatch'],
  ['opaque_tuple','pub fn main() { s.Tuple([],fn(x){x}) }','Unknown module value'],
  ['recursive_output_type','pub fn main() { s.recursive("tree",fn(self: s.Definition(Int)) { Ok(s.text()) }) }','Type mismatch'],
@@ -23,7 +24,7 @@ const cases=[
  ['optional_is_option','pub fn main() { s.optional(s.record(fn(x: String){x}),"x",s.text()) }','Type mismatch'],
  ['no_predicate_escape','pub fn main() { s.predicate(s.text(),fn(_){False}) }','Unknown module value'],
 ];
-test('compile-time boundary: positive baseline and fifteen forbidden API programs',()=>{
+test('compile-time boundary: positive baseline and sixteen forbidden API programs',()=>{
  const dir=mkdtempSync(join(tmpdir(),'schema-contract-negative-'));
  try{
  mkdirSync(join(dir,'src'));

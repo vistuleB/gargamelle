@@ -20,9 +20,9 @@ not the generator, determines validity. Extra-key, missing-field, wrong-type,
 length and numeric mutations are proposals, never assumed invalid. Arbitrary
 JSON values supplement them. Proposals vary union branch, nullable presence,
 optional/defaulted presence, names and tags, including hostile keys. Coverage
-requires both outcomes for every root and nested constructor and all 209 generic parent/child constructor combinations.
+requires both outcomes for every root and nested constructor and all 240 generic parent/child constructor combinations.
 
-Ten additional depth-50 chains use linear structure. Arrays/dictionaries have
+Eleven additional depth-50 chains use linear structure. Arrays/dictionaries have
 nonempty witnesses; nullable chains use non-null witnesses; each also has an
 invalid leaf so validation reaches the deepest child. Coverage JSON records
 counts, seeds, edges, outcomes and requested random depths. The artifact is
@@ -100,3 +100,8 @@ all generic parent/child combinations. The pinned Ajv declared-`__proto__`
 defect can also occur beneath `prefixItems`; the existing semantics-preserving
 rename probe now traverses those positions before classifying a split. The
 retained seed 270544960, definition 47 records the initial harness failure.
+
+The `property_names` recipe wraps a dictionary of each generated child kind and
+uses an independently interpreted key definition. It participates in all generic
+parent/child combinations and a nonempty depth-50 chain. Key and value outcomes
+are recorded separately; decoded keys are compared without normalization.

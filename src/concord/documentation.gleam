@@ -266,6 +266,12 @@ fn node(
         aliases,
       )
     })
+  let key_names = case get(s, "propertyNames") {
+    Object(_) as key -> [
+      node(key, "each property name", depth + 1, "", id, aliases),
+    ]
+    _ -> []
+  }
   let maps = case get(s, "additionalProperties") {
     Object(_) as item -> [
       node(item, "each map value", depth + 1, "", id, aliases),
@@ -281,7 +287,8 @@ fn node(
       })
     })
   let children =
-    list.flatten([fields, items, positions, maps, unions]) |> string.join("")
+    list.flatten([fields, items, positions, key_names, maps, unions])
+    |> string.join("")
   let kind = case has(s, "oneOf"), has(s, "anyOf"), has(s, "allOf") {
     True, _, _ -> "exactly one alternative"
     _, True, _ -> "any matching alternative"

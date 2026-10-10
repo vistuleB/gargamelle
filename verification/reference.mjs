@@ -20,6 +20,11 @@ export function reference(a,v,visit=()=>{},path='$') {
   else if(Array.isArray(v)){const results=v.map((x,i)=>child(a,x,path+'/child/'+i));if(results.every(x=>x.accepted))r=yes({children:results.map(x=>x.value)});}
   break;
  }
+ case 'property_names': {
+  if(!object(v))break;
+  const values=Object.entries(v).map(([k,x])=>[k,child(a.child,x,path+'/child'),child(a.keys,k,path+'/key')]);
+  if(values.every(([,x,k])=>x.accepted&&k.accepted))r=yes(Object.fromEntries(values.map(([k,x])=>[k,x.value])));break;
+ }
  case 'tuple': {
   if(!Array.isArray(v)||v.length!==a.children.length)break;
   const results=a.children.map((c,i)=>child(c,v[i],path+'/position/'+i));

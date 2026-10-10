@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.5 — 2026-10-10
+
+- Add `property_names` constraints for dictionaries and records, preserving their typed outputs.
+- Intersect repeated key constraints and render property-name contracts in HTML documentation.
+- Extend typed, compile-negative, independent-validator, mutation, and generated-composition evidence for object keys.
+
 ## 0.0.4 — 2026-10-10
 
 - Add typed exact-length tuple builders and positional HTML documentation.

@@ -55,6 +55,7 @@ type Node {
   TupleNode(List(Node))
   DictNode(Node, Option(Int), Option(Int))
   RecordNode(List(Field), Policy)
+  PropertyNamesNode(Node, List(Node))
   NullableNode(Node)
   UnionNode(List(Node), Bool)
   TaggedNode(String, List(#(String, Node, Option(String))))
@@ -438,6 +439,48 @@ pub fn dictionary(def: Definition(a)) -> Definition(List(#(String, a))) {
   })
 }
 
+/// Constrain every own object key without changing decoded values or keys.
+/// The key definition is used for validation only; its converter never runs.
+pub fn property_names(
+  def: Definition(a),
+  keys: Definition(String),
+) -> Result(Definition(a), ConstructionError) {
+  let Definition(node, convert) = def
+  let Definition(key, _) = keys
+  use next <- result.try(property_names_node(node, key))
+  Ok(Definition(next, convert))
+}
+
+fn object_node(node: Node) -> Bool {
+  case node {
+    DictNode(_, _, _) | RecordNode(_, _) -> True
+    NamedNode(_, child)
+    | AnnotatedNode(child, _, _)
+    | PropertyNamesNode(child, _) -> object_node(child)
+    _ -> False
+  }
+}
+
+fn property_names_node(
+  node: Node,
+  key: Node,
+) -> Result(Node, ConstructionError) {
+  case node {
+    AnnotatedNode(child, name, value) ->
+      result.map(property_names_node(child, key), AnnotatedNode(_, name, value))
+    PropertyNamesNode(child, keys) ->
+      Ok(PropertyNamesNode(child, list.append(keys, [key])))
+    _ ->
+      case object_node(node) {
+        True -> Ok(PropertyNamesNode(node, [key]))
+        False ->
+          Error(ConstructionError(
+            "property_names requires an object definition",
+          ))
+      }
+  }
+}
+
 fn valid_name(name: String) -> Bool {
   pattern_matches("^[A-Za-z][A-Za-z0-9_-]*$", name)
   && !pattern_matches("[^A-Za-z0-9_-]", name)
@@ -817,6 +860,8 @@ fn bound_node(
   case n {
     AnnotatedNode(child, k, v) ->
       result.map(bound_node(child, lo, hi), AnnotatedNode(_, k, v))
+    PropertyNamesNode(child, keys) ->
+      result.map(bound_node(child, lo, hi), PropertyNamesNode(_, keys))
     IntegerNode(a, b) -> {
       let l = max_lower(Some(a), lo)
       let h = min_upper(Some(b), hi)
@@ -998,6 +1043,21 @@ fn check(n: Node, v: Value, p: String) -> List(DataError) {
           list.index_map(xs, fn(x, i) { check(child, x, path(p, int_text(i))) })
           |> list.flatten
       }
+    PropertyNamesNode(child, keys), _ -> {
+      let errors = check(child, v, p)
+      case v {
+        JObject(entries) ->
+          list.append(
+            errors,
+            list.flat_map(entries, fn(pair) {
+              list.flat_map(keys, fn(key) {
+                check(key, JString(pair.0), path(p, pair.0))
+              })
+            }),
+          )
+        _ -> errors
+      }
+    }
     TupleNode(children), JArray(xs) ->
       case list.length(children) == list.length(xs) {
         False -> err("tuple_size", p)
@@ -1140,6 +1200,7 @@ fn node_children(n: Node) -> Result(List(Node), ConstructionError) {
           child
         }),
       )
+    PropertyNamesNode(child, keys) -> Ok([child, ..keys])
     TupleNode(children) | UnionNode(children, _) -> Ok(children)
     TaggedNode(_, branches) -> Ok(list.map(branches, fn(b) { b.1 }))
     _ -> Ok([])
@@ -1205,6 +1266,7 @@ fn collect_definitions_result(
 // fields instead descend into a strict child value and therefore break cycles.
 fn same_input_children(n: Node) -> Result(List(Node), ConstructionError) {
   case n {
+    PropertyNamesNode(child, _) -> Ok([child])
     ArrayNode(_, _, _) | TupleNode(_) | DictNode(_, _, _) | RecordNode(_, _) ->
       Ok([])
     _ -> node_children(n)
@@ -1332,6 +1394,15 @@ fn emit(n: Node) -> Value {
       |> put("items", emit(c))
       |> emit_bound("minItems", lo)
       |> emit_bound("maxItems", hi)
+    PropertyNamesNode(child, keys) -> {
+      let key_schema = case keys {
+        [key] -> emit(key)
+        _ -> obj([#("allOf", JArray(list.map(keys, emit)))])
+      }
+      emit(child)
+      |> put("type", JString("object"))
+      |> put("propertyNames", key_schema)
+    }
     TupleNode(children) -> {
       let schema =
         typ("array")

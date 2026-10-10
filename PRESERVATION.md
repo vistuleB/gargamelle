@@ -133,15 +133,15 @@ conversion. There is no generic FFI cast or forged typed provider value.
 
 ## Current evidence and remaining work
 
-`gleam test` currently runs 30 tests, including concrete typed records/custom
+`gleam test` currently runs 31 tests, including concrete typed records/custom
 variants, dictionaries/arrays, glon regressions, optional/null states, callback
 suppression, hostile keys, Unicode, tags, constraints, constants and defaults.
 `schema_fixtures` supplies 25 authored independent-oracle fixtures.
 
 `verification/generated*.test.mjs` adds 10,000 seeded definition/input pairs,
-all 209 generic parent/child combinations, nonempty depth-50 chains, independently
+all 240 generic parent/child combinations, nonempty depth-50 chains, independently
 specified output/error fixtures, admission/operational tests, callback counters,
-and actual isolated mutations for all five required defect classes. Fifteen
+and actual isolated mutations for all five required defect classes. Sixteen
 compile-negative programs establish the public opaque/static API boundary.
 Generated coverage and retained findings are documented in
 `verification/generated-notes.md`; operational failures are not rejections.
@@ -170,3 +170,23 @@ a node checked. Both sets are shared across all collected definition roots and
 discarded when finalization returns. Shared union layers therefore no longer
 recheck each duplicate branch exponentially. This does not change schema emission
 or impose a decoding-depth limit.
+
+## Object property names
+
+For an admitted object, every own property name is a JSON string. The
+property-name wrapper retains the original object's validation and applies each
+key node to that string; emitted `propertyNames` evaluates the same string with
+the same child schemas. Repeated constraints use conjunction, not replacement.
+The explicit object type is redundant with the supported dictionary/record body
+and lets strict validators check constraints adjacent to a named reference.
+An empty object vacuously satisfies its key constraints; nonobjects still fail
+the original typed body.
+
+The original converter is retained unchanged. Key converters are never stored
+or called; key names remain unchanged even if the key definition has a mapping.
+Open-record projection and default insertion occur only after input validation
+and do not add keys to the input being checked. Definition collection visits both
+body and key nodes so missing references and name conflicts cannot be hidden.
+The recursion guard follows the body as a same-input edge; key checks inspect
+synthesized primitive strings, not the enclosing object. Named key bodies are
+independently finalized under the existing graph guard.

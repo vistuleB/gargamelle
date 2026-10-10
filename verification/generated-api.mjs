@@ -34,6 +34,7 @@ export function build(a) {
       for(const child of a.children)t=s.element(t,build(child));
       d=s.finish_tuple(t);break;
     }
+    case 'property_names': d=s.map(unwrap(s.property_names(s.dictionary(build(a.child)),build(a.keys))),xs=>Object.fromEntries(xs));break;
     case 'dictionary': d=s.dictionary(build(a.child)); if(a.min!=null||a.max!=null)d=unwrap(s.bounds(d,option(a.min),option(a.max))); d=s.map(d,x=>Object.fromEntries(x)); break;
     case 'record': d=s.finish(objectRecord(a.fields),a.open?s.Policy$Open$const:s.Policy$Closed$const); break;
     case 'nullable': d=s.map(s.nullable(build(a.child)),presence); break;
@@ -62,9 +63,9 @@ export function evaluateText(definition, text) {
   return {accepted:result instanceof Ok, value:result[0]};
 }
 export const emitted=d=>JSON.parse(s.emit_text(d));
-export const allKinds=['boolean','null','string','integer','enum','constant','number','recursive','array','dictionary','record','nullable','any','one','tagged','description','title','map','tuple'];
+export const allKinds=['boolean','null','string','integer','enum','constant','number','recursive','array','dictionary','record','nullable','any','one','tagged','description','title','map','tuple','property_names'];
 export function childNodes(a) {
-  return a.child?[a.child]:a.children??(a.fields?a.fields.map(f=>f.child):a.branches?a.branches.flatMap(b=>b.fields.map(f=>f.child)):[]);
+  return a.keys?[a.child,a.keys]:a.child?[a.child]:a.children??(a.fields?a.fields.map(f=>f.child):a.branches?a.branches.flatMap(b=>b.fields.map(f=>f.child)):[]);
 }
 // Construction witness is generated from the recipe, never from the library's decoder.
 // Overlapping unions may have no witness; the independent oracle classifies all proposals.
@@ -75,6 +76,7 @@ export function proposal(a,r=()=>0) {
  case 'recursive':return r(2)?[0.5,[]]:0.5;
  case 'number':return a.min==null?(a.max==null?0.5:a.max-(a.exclusiveMax?0.5:0)) : a.min+(a.exclusiveMin?0.5:0);
  case 'enum':return a.values[r(a.values.length)];case 'constant':return a.value;
+ case 'property_names':return {k0:p(a.child)};
  case 'tuple':return a.children.map(p);
  case 'array':return Array.from({length:a.min??1},()=>p(a.child));
  case 'dictionary':return Object.fromEntries(Array.from({length:a.min??1},(_,i)=>['k'+i,p(a.child)]));
@@ -86,6 +88,7 @@ export function proposal(a,r=()=>0) {
 }
 export function specimen(kind,child={kind:'string'}) {
  switch(kind){
+ case 'property_names':return {kind,child,keys:{kind:'string',min:1,max:8,patterns:['^k']}};
  case 'tuple':return {kind,children:[child,{kind:'string'}]};
  case 'enum':return {kind,values:['a','b']};case 'constant':return {kind,value:'constant'};
  case 'array':case 'dictionary':return {kind,child,min:0,max:3};

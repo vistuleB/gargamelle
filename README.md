@@ -49,11 +49,11 @@ The implementation agent completed the core and generated, mutation, runtime,
 typed-output and compile-negative evidence. The coordinating agent reviewed it
 and added independent validator checks, official-suite selection, cloze payload
 comparisons and the final evidence gate. The generated suite includes 10,000
-seeded pairs, all 209 generic parent/child combinations and ten depth-50 chains.
-Nineteen actual compiled-library mutations must fail behavioral assertions,
-including five numeric, three recursion, and three tuple mutants. The three
+seeded pairs, all 240 generic parent/child combinations and eleven depth-50 chains.
+Twenty-two actual compiled-library mutations must fail behavioral assertions,
+including five numeric, three recursion, and three tuple, and three key-constraint mutants. The three
 new revision-3 mutations run the full foundation, typed-value and hardening suites.
-Fifteen forbidden Gleam programs must fail compilation after a positive baseline.
+Sixteen forbidden Gleam programs must fail compilation after a positive baseline.
 
 The official suite is pinned to commit
 `7de0e6a06031ede80028583dd45d0cd41105ae5b`. All 46 core files are retained with
@@ -265,3 +265,34 @@ There are no optional trailing positions or rest elements. Use a disjoint union
 of exact-length definitions, mapped to one output type, for two alternative
 lengths. `bounds` and `unique_items` remain homogeneous-array operations and
 reject tuple nodes, including tuples mapped to lists.
+
+## Object key constraints
+
+`property_names(object_definition, key_definition)` returns a construction
+result with the same decoded output type as the original object. For example,
+a locale dictionary can share the app's existing locale-field syntax:
+
+```gleam
+let assert Ok(locale) = concord.pattern(
+  concord.text(), "^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$",
+)
+let assert Ok(translations) = concord.property_names(
+  concord.dictionary(concord.text()), locale,
+)
+```
+
+The key definition has output type `String`, but only its structural validation
+is used; its conversion and mapping callbacks never run. Original dictionary
+keys and value decoding are preserved. Every present own key is checked,
+including undeclared fields in open records. Empty objects have no key checks.
+Absent optional or defaulted record fields do not introduce input keys to check.
+Key failures use the property's escaped JSON Pointer path, so a key and its value
+can produce separate errors at the same path.
+
+Repeated calls intersect the key contracts using `propertyNames: {allOf: ...}`.
+Object type, value contracts, and property-count bounds remain enforced. Named
+and annotated dictionary/record definitions are supported; arbitrary unions,
+nullable objects, and unfinished recursive object placeholders are rejected by
+this constructor. Apply constraints to the dictionary body inside a recursive
+builder instead. Key definitions themselves may use names, unions, and maps.
+`patternProperties` and generalized additional-property handling remain deferred.

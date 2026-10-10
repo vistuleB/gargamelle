@@ -105,6 +105,7 @@ These are conceptual constructors, not committed API spellings.
 | C05 | Any-of | At least one child accepts | Select the first successful branch in declaration order |
 | C06 | One-of | Exactly one child accepts | Decode that unique branch; reject overlapping matches |
 | C07 | Tagged union | Object branches with required, distinct string-constant discriminators; equivalent to their emitted one-of | Select the matching variant; discriminator is consumed, not duplicated in branch output |
+| C10 | Property names | Dictionary/record input; each present own key satisfies every supplied string-output key definition | Retain original output and keys; never invoke key converters |
 | C09 | Exact-length tuple | Array of exactly N elements; position i satisfies child i | Apply the curried typed constructor in positional order |
 | C08 | Guarded recursion | Local `$defs`/`$ref` graphs; every cycle must descend through an item, tuple position, dictionary value, or record field | Preserve the declared recursive output type; mutually recursive pairs may have distinct output types |
 | A01 | Description/title | Annotation only; no change in accepted inputs or decoded values | Preserve child result |
@@ -206,6 +207,7 @@ the in-memory JSON representation.
 | Safe integer | `{"type":"integer","minimum":effective_min,"maximum":effective_max}`; always include safe bounds or tighter bounds |
 | String enum | `{"type":"string","enum":[declared values]}` |
 | Constant | `{"type":corresponding_type,"const":value}`; safe-integer constants use type `integer` |
+| Property names | Object body plus `propertyNames: key`; repeated constraints use `allOf`; explicit object type beside named references |
 | Tuple | `{"type":"array","prefixItems":[children],"items":false,"minItems":N}`; omit `prefixItems` for N=0 |
 | Array | `{"type":"array","items":child}` plus supplied `minItems`/`maxItems` |
 | Record | `{"type":"object","properties":{...},"required":[...],"additionalProperties":true_or_false}`; include empty properties/required |
