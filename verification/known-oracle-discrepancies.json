@@ -1,0 +1,18 @@
+[
+  {
+    "id": "ajv-8.20.0-declared-proto-property",
+    "schema": {
+      "type": "object",
+      "properties": { "__proto__": { "type": "string" } },
+      "required": ["__proto__"],
+      "additionalProperties": false
+    },
+    "instance": { "__proto__": "x" },
+    "expectedAcceptance": true,
+    "observedAjvAcceptance": false,
+    "status": "resolved-with-supplementary-independent-validator",
+    "resolution": "Pinned Hyperjump 1.18.0 independently accepts the valid instance and rejects missing, wrong-type and extra-key variants. Ajv behavior remains characterized, never copied into decoder semantics. See supplementary-oracle.test.mjs.",
+    "reason": "The instance has its only property explicitly declared and its string value satisfies the child schema. Ajv 8.20.0 allSchemaProperties excludes __proto__, causing additionalProperties rejection.",
+    "source": "node_modules/ajv/dist/vocabularies/code.js: allSchemaProperties"
+  }
+]

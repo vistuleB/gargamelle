@@ -1,0 +1,2835 @@
+{
+  "commit": "7de0e6a06031ede80028583dd45d0cd41105ae5b",
+  "groups": [
+    {
+      "id": "draft2020-12/additionalProperties.json#0",
+      "description": "additionalProperties being false does not allow other properties",
+      "tests": 6,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/additionalProperties.json#1",
+      "description": "non-ASCII pattern with additionalProperties",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/additionalProperties.json#2",
+      "description": "additionalProperties with schema",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/additionalProperties.json#3",
+      "description": "additionalProperties can exist by itself",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/additionalProperties.json#4",
+      "description": "additionalProperties are allowed by default",
+      "tests": 1,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/additionalProperties.json#5",
+      "description": "additionalProperties does not look in applicators",
+      "tests": 1,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/additionalProperties.json#6",
+      "description": "additionalProperties with null valued instance properties",
+      "tests": 1,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/additionalProperties.json#7",
+      "description": "additionalProperties with propertyNames",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/additionalProperties.json#8",
+      "description": "dependentSchemas with additionalProperties",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/allOf.json#0",
+      "description": "allOf",
+      "tests": 4,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/allOf.json#1",
+      "description": "allOf with base schema",
+      "tests": 5,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/allOf.json#2",
+      "description": "allOf simple types",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/allOf.json#3",
+      "description": "allOf with boolean schemas, all true",
+      "tests": 1,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/allOf.json#4",
+      "description": "allOf with boolean schemas, some false",
+      "tests": 1,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/allOf.json#5",
+      "description": "allOf with boolean schemas, all false",
+      "tests": 1,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/allOf.json#6",
+      "description": "allOf with one empty schema",
+      "tests": 1,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/allOf.json#7",
+      "description": "allOf with two empty schemas",
+      "tests": 1,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/allOf.json#8",
+      "description": "allOf with the first empty schema",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/allOf.json#9",
+      "description": "allOf with the last empty schema",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/allOf.json#10",
+      "description": "nested allOf, to check validation semantics",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/allOf.json#11",
+      "description": "allOf combined with anyOf, oneOf",
+      "tests": 8,
+      "status": "excluded",
+      "reason": "Unsupported source-keyword combination: allOf, oneOf"
+    },
+    {
+      "id": "draft2020-12/anchor.json#0",
+      "description": "Location-independent identifier",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/anchor.json#1",
+      "description": "Location-independent identifier with absolute URI",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/anchor.json#2",
+      "description": "Location-independent identifier with base URI change in subschema",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/anchor.json#3",
+      "description": "same $anchor with different base uri",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/anyOf.json#0",
+      "description": "anyOf",
+      "tests": 4,
+      "status": "excluded",
+      "reason": "Unbounded integer schema is not equivalent to bounded safe-integer constructor"
+    },
+    {
+      "id": "draft2020-12/anyOf.json#1",
+      "description": "anyOf with base schema",
+      "tests": 3,
+      "recipe": {
+        "kind": "any",
+        "children": [
+          {
+            "kind": "string",
+            "max": 2,
+            "patterns": []
+          },
+          {
+            "kind": "string",
+            "min": 4,
+            "patterns": []
+          }
+        ]
+      },
+      "status": "selected"
+    },
+    {
+      "id": "draft2020-12/anyOf.json#2",
+      "description": "anyOf with boolean schemas, all true",
+      "tests": 1,
+      "status": "excluded",
+      "reason": "Boolean schema has no direct constructor in selected subset"
+    },
+    {
+      "id": "draft2020-12/anyOf.json#3",
+      "description": "anyOf with boolean schemas, some true",
+      "tests": 1,
+      "status": "excluded",
+      "reason": "Boolean schema has no direct constructor in selected subset"
+    },
+    {
+      "id": "draft2020-12/anyOf.json#4",
+      "description": "anyOf with boolean schemas, all false",
+      "tests": 1,
+      "status": "excluded",
+      "reason": "Boolean schema has no direct constructor in selected subset"
+    },
+    {
+      "id": "draft2020-12/anyOf.json#5",
+      "description": "anyOf complex types",
+      "tests": 4,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/anyOf.json#6",
+      "description": "anyOf with one empty schema",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "General number constructor deferred"
+    },
+    {
+      "id": "draft2020-12/anyOf.json#7",
+      "description": "nested anyOf, to check validation semantics",
+      "tests": 2,
+      "recipe": {
+        "kind": "any",
+        "children": [
+          {
+            "kind": "any",
+            "children": [
+              {
+                "kind": "null"
+              }
+            ]
+          }
+        ]
+      },
+      "status": "selected"
+    },
+    {
+      "id": "draft2020-12/boolean_schema.json#0",
+      "description": "boolean schema 'true'",
+      "tests": 9,
+      "status": "excluded",
+      "reason": "Boolean schema has no direct constructor in selected subset"
+    },
+    {
+      "id": "draft2020-12/boolean_schema.json#1",
+      "description": "boolean schema 'false'",
+      "tests": 9,
+      "status": "excluded",
+      "reason": "Boolean schema has no direct constructor in selected subset"
+    },
+    {
+      "id": "draft2020-12/const.json#0",
+      "description": "const validation",
+      "tests": 3,
+      "recipe": {
+        "kind": "constant",
+        "value": 2
+      },
+      "status": "selected"
+    },
+    {
+      "id": "draft2020-12/const.json#1",
+      "description": "const with object",
+      "tests": 4,
+      "status": "excluded",
+      "reason": "General JSON or unsafe-number constants are deferred"
+    },
+    {
+      "id": "draft2020-12/const.json#2",
+      "description": "const with array",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "General JSON or unsafe-number constants are deferred"
+    },
+    {
+      "id": "draft2020-12/const.json#3",
+      "description": "const with null",
+      "tests": 2,
+      "recipe": {
+        "kind": "constant",
+        "value": null
+      },
+      "status": "selected"
+    },
+    {
+      "id": "draft2020-12/const.json#4",
+      "description": "const with false does not match 0",
+      "tests": 3,
+      "recipe": {
+        "kind": "constant",
+        "value": false
+      },
+      "status": "selected"
+    },
+    {
+      "id": "draft2020-12/const.json#5",
+      "description": "const with true does not match 1",
+      "tests": 3,
+      "recipe": {
+        "kind": "constant",
+        "value": true
+      },
+      "status": "selected"
+    },
+    {
+      "id": "draft2020-12/const.json#6",
+      "description": "const with [false] does not match [0]",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "General JSON or unsafe-number constants are deferred"
+    },
+    {
+      "id": "draft2020-12/const.json#7",
+      "description": "const with [true] does not match [1]",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "General JSON or unsafe-number constants are deferred"
+    },
+    {
+      "id": "draft2020-12/const.json#8",
+      "description": "const with {\"a\": false} does not match {\"a\": 0}",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "General JSON or unsafe-number constants are deferred"
+    },
+    {
+      "id": "draft2020-12/const.json#9",
+      "description": "const with {\"a\": true} does not match {\"a\": 1}",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "General JSON or unsafe-number constants are deferred"
+    },
+    {
+      "id": "draft2020-12/const.json#10",
+      "description": "const with 0 does not match other zero-like types",
+      "tests": 6,
+      "recipe": {
+        "kind": "constant",
+        "value": 0
+      },
+      "status": "selected"
+    },
+    {
+      "id": "draft2020-12/const.json#11",
+      "description": "const with 1 does not match true",
+      "tests": 3,
+      "recipe": {
+        "kind": "constant",
+        "value": 1
+      },
+      "status": "selected"
+    },
+    {
+      "id": "draft2020-12/const.json#12",
+      "description": "const with -2.0 matches integer and float types",
+      "tests": 5,
+      "recipe": {
+        "kind": "constant",
+        "value": -2
+      },
+      "status": "selected"
+    },
+    {
+      "id": "draft2020-12/const.json#13",
+      "description": "float and integers are equal up to 64-bit representation limits",
+      "tests": 4,
+      "status": "excluded",
+      "reason": "General JSON or unsafe-number constants are deferred"
+    },
+    {
+      "id": "draft2020-12/const.json#14",
+      "description": "nul characters in strings",
+      "tests": 2,
+      "recipe": {
+        "kind": "constant",
+        "value": "hello\u0000there"
+      },
+      "status": "selected"
+    },
+    {
+      "id": "draft2020-12/const.json#15",
+      "description": "characters with the same visual representation but different codepoint",
+      "tests": 2,
+      "recipe": {
+        "kind": "constant",
+        "value": "μ"
+      },
+      "status": "selected"
+    },
+    {
+      "id": "draft2020-12/const.json#16",
+      "description": "characters with the same visual representation, but different number of codepoints",
+      "tests": 2,
+      "recipe": {
+        "kind": "constant",
+        "value": "ä"
+      },
+      "status": "selected"
+    },
+    {
+      "id": "draft2020-12/contains.json#0",
+      "description": "contains keyword validation",
+      "tests": 6,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/contains.json#1",
+      "description": "contains keyword with const keyword",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/contains.json#2",
+      "description": "contains keyword with boolean schema true",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/contains.json#3",
+      "description": "contains keyword with boolean schema false",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/contains.json#4",
+      "description": "items + contains",
+      "tests": 4,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/contains.json#5",
+      "description": "contains with false if subschema",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/contains.json#6",
+      "description": "contains with null instance elements",
+      "tests": 1,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/content.json#0",
+      "description": "validation of string-encoded content based on media type",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/content.json#1",
+      "description": "validation of binary string-encoding",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/content.json#2",
+      "description": "validation of binary-encoded media type documents",
+      "tests": 4,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/content.json#3",
+      "description": "validation of binary-encoded media type documents with schema",
+      "tests": 8,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/default.json#0",
+      "description": "invalid type for default",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/default.json#1",
+      "description": "invalid string value for default",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/default.json#2",
+      "description": "the default keyword does not do anything if the property is missing",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "General number constructor deferred"
+    },
+    {
+      "id": "draft2020-12/defs.json#0",
+      "description": "validate definition against metaschema",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/dependentRequired.json#0",
+      "description": "single dependency",
+      "tests": 7,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/dependentRequired.json#1",
+      "description": "empty dependents",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/dependentRequired.json#2",
+      "description": "multiple dependents required",
+      "tests": 6,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/dependentRequired.json#3",
+      "description": "dependencies with escaped characters",
+      "tests": 4,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/dependentSchemas.json#0",
+      "description": "single dependency",
+      "tests": 8,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/dependentSchemas.json#1",
+      "description": "boolean subschemas",
+      "tests": 4,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/dependentSchemas.json#2",
+      "description": "dependencies with escaped characters",
+      "tests": 4,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/dependentSchemas.json#3",
+      "description": "dependent subschema incompatible with root",
+      "tests": 4,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/dynamicRef.json#0",
+      "description": "A $dynamicRef to a $dynamicAnchor in the same schema resource behaves like a normal $ref to an $anchor",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Unsupported source-keyword combination: $id, $defs"
+    },
+    {
+      "id": "draft2020-12/dynamicRef.json#1",
+      "description": "A $dynamicRef to an $anchor in the same schema resource behaves like a normal $ref to an $anchor",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Unsupported source-keyword combination: $id, $defs"
+    },
+    {
+      "id": "draft2020-12/dynamicRef.json#2",
+      "description": "A $ref to a $dynamicAnchor in the same schema resource behaves like a normal $ref to an $anchor",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Unsupported source-keyword combination: $id, $defs"
+    },
+    {
+      "id": "draft2020-12/dynamicRef.json#3",
+      "description": "A $dynamicRef resolves to the first $dynamicAnchor still in scope that is encountered when the schema is evaluated",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/dynamicRef.json#4",
+      "description": "A $dynamicRef without anchor in fragment behaves identical to $ref",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/dynamicRef.json#5",
+      "description": "A $dynamicRef with intermediate scopes that don't include a matching $dynamicAnchor does not affect dynamic scope resolution",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/dynamicRef.json#6",
+      "description": "An $anchor with the same name as a $dynamicAnchor is not used for dynamic scope resolution",
+      "tests": 1,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/dynamicRef.json#7",
+      "description": "A $dynamicRef without a matching $dynamicAnchor in the same schema resource behaves like a normal $ref to $anchor",
+      "tests": 1,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/dynamicRef.json#8",
+      "description": "A $dynamicRef with a non-matching $dynamicAnchor in the same schema resource behaves like a normal $ref to $anchor",
+      "tests": 1,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/dynamicRef.json#9",
+      "description": "A $dynamicRef that initially resolves to a schema with a matching $dynamicAnchor resolves to the first $dynamicAnchor in the dynamic scope",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Unsupported source-keyword combination: $id, $dynamicAnchor, $ref, $defs"
+    },
+    {
+      "id": "draft2020-12/dynamicRef.json#10",
+      "description": "A $dynamicRef that initially resolves to a schema without a matching $dynamicAnchor behaves like a normal $ref to $anchor",
+      "tests": 1,
+      "status": "excluded",
+      "reason": "Unsupported source-keyword combination: $id, $dynamicAnchor, $ref, $defs"
+    },
+    {
+      "id": "draft2020-12/dynamicRef.json#11",
+      "description": "multiple dynamic paths to the $dynamicRef keyword",
+      "tests": 4,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/dynamicRef.json#12",
+      "description": "after leaving a dynamic scope, it is not used by a $dynamicRef",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/dynamicRef.json#13",
+      "description": "strict-tree schema, guards against misspelled properties",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/dynamicRef.json#14",
+      "description": "tests for implementation dynamic anchor and reference link",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/dynamicRef.json#15",
+      "description": "$ref and $dynamicAnchor are independent of order - $defs first",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/dynamicRef.json#16",
+      "description": "$ref and $dynamicAnchor are independent of order - $ref first",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/dynamicRef.json#17",
+      "description": "$ref to $dynamicRef finds detached $dynamicAnchor",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/dynamicRef.json#18",
+      "description": "$dynamicRef points to a boolean schema",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/dynamicRef.json#19",
+      "description": "$dynamicRef skips over intermediate resources - direct reference",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Unsupported source-keyword combination: $id, $defs"
+    },
+    {
+      "id": "draft2020-12/dynamicRef.json#20",
+      "description": "$dynamicRef avoids the root of each schema, but scopes are still registered",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/enum.json#0",
+      "description": "simple enum validation",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Only nonempty string enums selected"
+    },
+    {
+      "id": "draft2020-12/enum.json#1",
+      "description": "heterogeneous enum validation",
+      "tests": 5,
+      "status": "excluded",
+      "reason": "Only nonempty string enums selected"
+    },
+    {
+      "id": "draft2020-12/enum.json#2",
+      "description": "heterogeneous enum-with-null validation",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "Only nonempty string enums selected"
+    },
+    {
+      "id": "draft2020-12/enum.json#3",
+      "description": "enums in properties",
+      "tests": 6,
+      "recipe": {
+        "kind": "record",
+        "open": true,
+        "fields": [
+          {
+            "name": "foo",
+            "child": {
+              "kind": "enum",
+              "values": [
+                "foo"
+              ]
+            },
+            "presence": "optional"
+          },
+          {
+            "name": "bar",
+            "child": {
+              "kind": "enum",
+              "values": [
+                "bar"
+              ]
+            },
+            "presence": "required"
+          }
+        ]
+      },
+      "status": "selected"
+    },
+    {
+      "id": "draft2020-12/enum.json#4",
+      "description": "enum with escaped characters",
+      "tests": 3,
+      "recipe": {
+        "kind": "enum",
+        "values": [
+          "foo\nbar",
+          "foo\rbar"
+        ]
+      },
+      "status": "selected"
+    },
+    {
+      "id": "draft2020-12/enum.json#5",
+      "description": "enum with false does not match 0",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "Only nonempty string enums selected"
+    },
+    {
+      "id": "draft2020-12/enum.json#6",
+      "description": "enum with [false] does not match [0]",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "Only nonempty string enums selected"
+    },
+    {
+      "id": "draft2020-12/enum.json#7",
+      "description": "enum with true does not match 1",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "Only nonempty string enums selected"
+    },
+    {
+      "id": "draft2020-12/enum.json#8",
+      "description": "enum with [true] does not match [1]",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "Only nonempty string enums selected"
+    },
+    {
+      "id": "draft2020-12/enum.json#9",
+      "description": "enum with 0 does not match false",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "Only nonempty string enums selected"
+    },
+    {
+      "id": "draft2020-12/enum.json#10",
+      "description": "enum with [0] does not match [false]",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "Only nonempty string enums selected"
+    },
+    {
+      "id": "draft2020-12/enum.json#11",
+      "description": "enum with 1 does not match true",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "Only nonempty string enums selected"
+    },
+    {
+      "id": "draft2020-12/enum.json#12",
+      "description": "enum with [1] does not match [true]",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "Only nonempty string enums selected"
+    },
+    {
+      "id": "draft2020-12/enum.json#13",
+      "description": "nul characters in strings",
+      "tests": 2,
+      "recipe": {
+        "kind": "enum",
+        "values": [
+          "hello\u0000there"
+        ]
+      },
+      "status": "selected"
+    },
+    {
+      "id": "draft2020-12/enum.json#14",
+      "description": "empty enum",
+      "tests": 6,
+      "status": "excluded",
+      "reason": "Only nonempty string enums selected"
+    },
+    {
+      "id": "draft2020-12/enum.json#15",
+      "description": "characters with the same visual representation, but different number of codepoints",
+      "tests": 2,
+      "recipe": {
+        "kind": "enum",
+        "values": [
+          "ä"
+        ]
+      },
+      "status": "selected"
+    },
+    {
+      "id": "draft2020-12/exclusiveMaximum.json#0",
+      "description": "exclusiveMaximum validation",
+      "tests": 4,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/exclusiveMinimum.json#0",
+      "description": "exclusiveMinimum validation",
+      "tests": 4,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/format.json#0",
+      "description": "email format",
+      "tests": 7,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/format.json#1",
+      "description": "idn-email format",
+      "tests": 7,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/format.json#2",
+      "description": "regex format",
+      "tests": 7,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/format.json#3",
+      "description": "ipv4 format",
+      "tests": 7,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/format.json#4",
+      "description": "ipv6 format",
+      "tests": 7,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/format.json#5",
+      "description": "idn-hostname format",
+      "tests": 7,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/format.json#6",
+      "description": "hostname format",
+      "tests": 7,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/format.json#7",
+      "description": "date format",
+      "tests": 7,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/format.json#8",
+      "description": "date-time format",
+      "tests": 7,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/format.json#9",
+      "description": "time format",
+      "tests": 7,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/format.json#10",
+      "description": "json-pointer format",
+      "tests": 7,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/format.json#11",
+      "description": "relative-json-pointer format",
+      "tests": 7,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/format.json#12",
+      "description": "iri format",
+      "tests": 7,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/format.json#13",
+      "description": "iri-reference format",
+      "tests": 7,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/format.json#14",
+      "description": "uri format",
+      "tests": 7,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/format.json#15",
+      "description": "uri-reference format",
+      "tests": 7,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/format.json#16",
+      "description": "uri-template format",
+      "tests": 7,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/format.json#17",
+      "description": "uuid format",
+      "tests": 7,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/format.json#18",
+      "description": "duration format",
+      "tests": 7,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/if-then-else.json#0",
+      "description": "ignore if without then or else",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/if-then-else.json#1",
+      "description": "ignore then without if",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/if-then-else.json#2",
+      "description": "ignore else without if",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/if-then-else.json#3",
+      "description": "if and then without else",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/if-then-else.json#4",
+      "description": "if and else without then",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/if-then-else.json#5",
+      "description": "validate against correct branch, then vs else",
+      "tests": 4,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/if-then-else.json#6",
+      "description": "non-interference across combined schemas",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/if-then-else.json#7",
+      "description": "if with boolean schema true",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/if-then-else.json#8",
+      "description": "if with boolean schema false",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/if-then-else.json#9",
+      "description": "if appears at the end when serialized (keyword processing sequence)",
+      "tests": 4,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/if-then-else.json#10",
+      "description": "then: false fails when condition matches",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/if-then-else.json#11",
+      "description": "else: false fails when condition does not match",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/infinite-loop-detection.json#0",
+      "description": "evaluating the same schema location against the same data location twice is not a sign of an infinite loop",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/items.json#0",
+      "description": "a schema given for items",
+      "tests": 4,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/items.json#1",
+      "description": "items with boolean schema (true)",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/items.json#2",
+      "description": "items with boolean schema (false)",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/items.json#3",
+      "description": "items and subitems",
+      "tests": 6,
+      "status": "excluded",
+      "reason": "Unsupported source-keyword combination: $defs, prefixItems"
+    },
+    {
+      "id": "draft2020-12/items.json#4",
+      "description": "nested items",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "General number constructor deferred"
+    },
+    {
+      "id": "draft2020-12/items.json#5",
+      "description": "prefixItems with no additional items allowed",
+      "tests": 5,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/items.json#6",
+      "description": "items does not look in applicators, valid case",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/items.json#7",
+      "description": "prefixItems validation adjusts the starting index for items",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/items.json#8",
+      "description": "items with heterogeneous array",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/items.json#9",
+      "description": "items with null instance elements",
+      "tests": 1,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/maxContains.json#0",
+      "description": "maxContains without contains is ignored",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/maxContains.json#1",
+      "description": "maxContains with contains",
+      "tests": 5,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/maxContains.json#2",
+      "description": "maxContains with contains, value with a decimal",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/maxContains.json#3",
+      "description": "minContains < maxContains",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/maxContains.json#4",
+      "description": "maxContains = 0 with minContains = 0",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/maxItems.json#0",
+      "description": "maxItems validation",
+      "tests": 4,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/maxItems.json#1",
+      "description": "maxItems validation with a decimal",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/maxLength.json#0",
+      "description": "maxLength validation",
+      "tests": 5,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/maxLength.json#1",
+      "description": "maxLength validation with a decimal",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/maxProperties.json#0",
+      "description": "maxProperties validation",
+      "tests": 6,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/maxProperties.json#1",
+      "description": "maxProperties validation with a decimal",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/maxProperties.json#2",
+      "description": "maxProperties = 0 means the object is empty",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/maximum.json#0",
+      "description": "maximum validation",
+      "tests": 4,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/maximum.json#1",
+      "description": "maximum validation with unsigned integer",
+      "tests": 4,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/minContains.json#0",
+      "description": "minContains without contains is ignored",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/minContains.json#1",
+      "description": "minContains=1 with contains",
+      "tests": 5,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/minContains.json#2",
+      "description": "minContains=2 with contains",
+      "tests": 6,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/minContains.json#3",
+      "description": "minContains=2 with contains with a decimal value",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/minContains.json#4",
+      "description": "maxContains = minContains",
+      "tests": 4,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/minContains.json#5",
+      "description": "maxContains < minContains",
+      "tests": 4,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/minContains.json#6",
+      "description": "minContains = 0",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/minContains.json#7",
+      "description": "minContains = 0 with maxContains",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/minItems.json#0",
+      "description": "minItems validation",
+      "tests": 4,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/minItems.json#1",
+      "description": "minItems validation with a decimal",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/minLength.json#0",
+      "description": "minLength validation",
+      "tests": 5,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/minLength.json#1",
+      "description": "minLength validation with a decimal",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/minProperties.json#0",
+      "description": "minProperties validation",
+      "tests": 8,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/minProperties.json#1",
+      "description": "minProperties validation with a decimal",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/minimum.json#0",
+      "description": "minimum validation",
+      "tests": 4,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/minimum.json#1",
+      "description": "minimum validation with signed integer",
+      "tests": 7,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/multipleOf.json#0",
+      "description": "by int",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/multipleOf.json#1",
+      "description": "by number",
+      "tests": 4,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/multipleOf.json#2",
+      "description": "by small number",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/multipleOf.json#3",
+      "description": "float division = inf",
+      "tests": 1,
+      "status": "excluded",
+      "reason": "Unsupported source-keyword combination: multipleOf"
+    },
+    {
+      "id": "draft2020-12/multipleOf.json#4",
+      "description": "small multiple of large integer",
+      "tests": 1,
+      "status": "excluded",
+      "reason": "Unsupported source-keyword combination: multipleOf"
+    },
+    {
+      "id": "draft2020-12/not.json#0",
+      "description": "not",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/not.json#1",
+      "description": "not multiple types",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/not.json#2",
+      "description": "not more complex schema",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/not.json#3",
+      "description": "forbidden property",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/not.json#4",
+      "description": "forbid everything with empty schema",
+      "tests": 9,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/not.json#5",
+      "description": "forbid everything with boolean schema true",
+      "tests": 9,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/not.json#6",
+      "description": "allow everything with boolean schema false",
+      "tests": 9,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/not.json#7",
+      "description": "double negation",
+      "tests": 1,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/not.json#8",
+      "description": "collect annotations inside a 'not', even if collection is disabled",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/oneOf.json#0",
+      "description": "oneOf",
+      "tests": 4,
+      "status": "excluded",
+      "reason": "Unbounded integer schema is not equivalent to bounded safe-integer constructor"
+    },
+    {
+      "id": "draft2020-12/oneOf.json#1",
+      "description": "oneOf with base schema",
+      "tests": 3,
+      "recipe": {
+        "kind": "one",
+        "children": [
+          {
+            "kind": "string",
+            "min": 2,
+            "patterns": []
+          },
+          {
+            "kind": "string",
+            "max": 4,
+            "patterns": []
+          }
+        ]
+      },
+      "status": "selected"
+    },
+    {
+      "id": "draft2020-12/oneOf.json#2",
+      "description": "oneOf with boolean schemas, all true",
+      "tests": 1,
+      "status": "excluded",
+      "reason": "Boolean schema has no direct constructor in selected subset"
+    },
+    {
+      "id": "draft2020-12/oneOf.json#3",
+      "description": "oneOf with boolean schemas, one true",
+      "tests": 1,
+      "status": "excluded",
+      "reason": "Boolean schema has no direct constructor in selected subset"
+    },
+    {
+      "id": "draft2020-12/oneOf.json#4",
+      "description": "oneOf with boolean schemas, more than one true",
+      "tests": 1,
+      "status": "excluded",
+      "reason": "Boolean schema has no direct constructor in selected subset"
+    },
+    {
+      "id": "draft2020-12/oneOf.json#5",
+      "description": "oneOf with boolean schemas, all false",
+      "tests": 1,
+      "status": "excluded",
+      "reason": "Boolean schema has no direct constructor in selected subset"
+    },
+    {
+      "id": "draft2020-12/oneOf.json#6",
+      "description": "oneOf complex types",
+      "tests": 4,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/oneOf.json#7",
+      "description": "oneOf with empty schema",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "General number constructor deferred"
+    },
+    {
+      "id": "draft2020-12/oneOf.json#8",
+      "description": "oneOf with required",
+      "tests": 4,
+      "status": "excluded",
+      "reason": "Required unrestricted fields need an unrestricted JSON-value constructor"
+    },
+    {
+      "id": "draft2020-12/oneOf.json#9",
+      "description": "oneOf with missing optional property",
+      "tests": 4,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/oneOf.json#10",
+      "description": "nested oneOf, to check validation semantics",
+      "tests": 2,
+      "recipe": {
+        "kind": "one",
+        "children": [
+          {
+            "kind": "one",
+            "children": [
+              {
+                "kind": "null"
+              }
+            ]
+          }
+        ]
+      },
+      "status": "selected"
+    },
+    {
+      "id": "draft2020-12/pattern.json#0",
+      "description": "pattern validation",
+      "tests": 8,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/pattern.json#1",
+      "description": "pattern is not anchored",
+      "tests": 1,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/pattern.json#2",
+      "description": "pattern with Unicode property escape requires unicode mode",
+      "tests": 3,
+      "recipe": {
+        "kind": "string",
+        "patterns": [
+          "^\\p{Letter}+$"
+        ]
+      },
+      "status": "selected"
+    },
+    {
+      "id": "draft2020-12/patternProperties.json#0",
+      "description": "patternProperties validates properties matching a regex",
+      "tests": 7,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/patternProperties.json#1",
+      "description": "multiple simultaneous patternProperties are validated",
+      "tests": 6,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/patternProperties.json#2",
+      "description": "regexes are not anchored by default and are case sensitive",
+      "tests": 4,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/patternProperties.json#3",
+      "description": "patternProperties with boolean schemas",
+      "tests": 5,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/patternProperties.json#4",
+      "description": "patternProperties with null valued instance properties",
+      "tests": 1,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/patternProperties.json#5",
+      "description": "patternProperties with Unicode property escape",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Unsupported source-keyword combination: patternProperties"
+    },
+    {
+      "id": "draft2020-12/prefixItems.json#0",
+      "description": "a schema given for prefixItems",
+      "tests": 6,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/prefixItems.json#1",
+      "description": "prefixItems with boolean schemas",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/prefixItems.json#2",
+      "description": "additional items are allowed by default",
+      "tests": 1,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/prefixItems.json#3",
+      "description": "prefixItems with null instance elements",
+      "tests": 1,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/properties.json#0",
+      "description": "object properties validation",
+      "tests": 6,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/properties.json#1",
+      "description": "properties, patternProperties, additionalProperties interaction",
+      "tests": 8,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/properties.json#2",
+      "description": "properties with boolean schema",
+      "tests": 4,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/properties.json#3",
+      "description": "properties with escaped characters",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/properties.json#4",
+      "description": "properties with null valued instance properties",
+      "tests": 1,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/properties.json#5",
+      "description": "properties whose names are Javascript object property names",
+      "tests": 7,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/propertyNames.json#0",
+      "description": "propertyNames validation",
+      "tests": 8,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/propertyNames.json#1",
+      "description": "propertyNames validation with pattern",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/propertyNames.json#2",
+      "description": "propertyNames with boolean schema true",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/propertyNames.json#3",
+      "description": "propertyNames with boolean schema false",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/propertyNames.json#4",
+      "description": "propertyNames with const",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/propertyNames.json#5",
+      "description": "propertyNames with enum",
+      "tests": 4,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/ref.json#0",
+      "description": "root pointer ref",
+      "tests": 4,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/ref.json#1",
+      "description": "relative pointer ref to object",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/ref.json#2",
+      "description": "relative pointer ref to array",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/ref.json#3",
+      "description": "escaped pointer ref",
+      "tests": 6,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/ref.json#4",
+      "description": "nested refs",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/ref.json#5",
+      "description": "ref applies alongside sibling keywords",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/ref.json#6",
+      "description": "remote ref, containing refs itself",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/ref.json#7",
+      "description": "property named $ref that is not a reference",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/ref.json#8",
+      "description": "property named $ref, containing an actual $ref",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/ref.json#9",
+      "description": "$ref to boolean schema true",
+      "tests": 1,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/ref.json#10",
+      "description": "$ref to boolean schema false",
+      "tests": 1,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/ref.json#11",
+      "description": "Recursive references between schemas",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Unsupported source-keyword combination: $id, description, $defs"
+    },
+    {
+      "id": "draft2020-12/ref.json#12",
+      "description": "refs with quote",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/ref.json#13",
+      "description": "ref creates new scope when adjacent to keywords",
+      "tests": 1,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/ref.json#14",
+      "description": "naive replacement of $ref with its destination is not correct",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "Unsupported source-keyword combination: $defs"
+    },
+    {
+      "id": "draft2020-12/ref.json#15",
+      "description": "refs with relative uris and defs",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/ref.json#16",
+      "description": "relative refs with absolute uris and defs",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/ref.json#17",
+      "description": "$id must be resolved against nearest parent, not just immediate parent",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/ref.json#18",
+      "description": "order of evaluation: $id and $ref",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/ref.json#19",
+      "description": "order of evaluation: $id and $anchor and $ref",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/ref.json#20",
+      "description": "order of evaluation: $id and $ref on nested schema",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/ref.json#21",
+      "description": "simple URN base URI with $ref via the URN",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/ref.json#22",
+      "description": "simple URN base URI with JSON pointer",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/ref.json#23",
+      "description": "URN base URI with NSS",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/ref.json#24",
+      "description": "URN base URI with r-component",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/ref.json#25",
+      "description": "URN base URI with q-component",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/ref.json#26",
+      "description": "URN base URI with URN and JSON pointer ref",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/ref.json#27",
+      "description": "URN base URI with URN and anchor ref",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/ref.json#28",
+      "description": "URN ref with nested pointer ref",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/ref.json#29",
+      "description": "ref to if",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/ref.json#30",
+      "description": "ref to then",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/ref.json#31",
+      "description": "ref to else",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/ref.json#32",
+      "description": "ref with absolute-path-reference",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/ref.json#33",
+      "description": "$id with file URI still resolves pointers - *nix",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/ref.json#34",
+      "description": "$id with file URI still resolves pointers - windows",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/ref.json#35",
+      "description": "empty tokens in $ref json-pointer",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/refRemote.json#0",
+      "description": "remote ref",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/refRemote.json#1",
+      "description": "fragment within remote ref",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/refRemote.json#2",
+      "description": "anchor within remote ref",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/refRemote.json#3",
+      "description": "ref within remote ref",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/refRemote.json#4",
+      "description": "base URI change",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/refRemote.json#5",
+      "description": "base URI change - change folder",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Unsupported source-keyword combination: $id, $defs"
+    },
+    {
+      "id": "draft2020-12/refRemote.json#6",
+      "description": "base URI change - change folder in subschema",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Unsupported source-keyword combination: $id, $defs"
+    },
+    {
+      "id": "draft2020-12/refRemote.json#7",
+      "description": "root ref in remote ref",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "Unsupported source-keyword combination: $id"
+    },
+    {
+      "id": "draft2020-12/refRemote.json#8",
+      "description": "remote ref with ref to defs",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/refRemote.json#9",
+      "description": "Location-independent identifier in remote ref",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/refRemote.json#10",
+      "description": "retrieved nested refs resolve relative to their URI not $id",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/refRemote.json#11",
+      "description": "remote HTTP ref with different $id",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/refRemote.json#12",
+      "description": "remote HTTP ref with different URN $id",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/refRemote.json#13",
+      "description": "remote HTTP ref with nested absolute ref",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/refRemote.json#14",
+      "description": "$ref to $ref finds detached $anchor",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/required.json#0",
+      "description": "required validation",
+      "tests": 7,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/required.json#1",
+      "description": "required default validation",
+      "tests": 1,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/required.json#2",
+      "description": "required with empty array",
+      "tests": 1,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/required.json#3",
+      "description": "required with escaped characters",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/required.json#4",
+      "description": "required properties whose names are Javascript object property names",
+      "tests": 7,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/type.json#0",
+      "description": "integer type matches integers",
+      "tests": 9,
+      "status": "excluded",
+      "reason": "Unbounded integer schema is not equivalent to bounded safe-integer constructor"
+    },
+    {
+      "id": "draft2020-12/type.json#1",
+      "description": "number type matches numbers",
+      "tests": 9,
+      "status": "excluded",
+      "reason": "General number constructor deferred"
+    },
+    {
+      "id": "draft2020-12/type.json#2",
+      "description": "string type matches strings",
+      "tests": 9,
+      "recipe": {
+        "kind": "string",
+        "patterns": []
+      },
+      "status": "selected"
+    },
+    {
+      "id": "draft2020-12/type.json#3",
+      "description": "object type matches objects",
+      "tests": 7,
+      "recipe": {
+        "kind": "record",
+        "open": true,
+        "fields": []
+      },
+      "status": "selected"
+    },
+    {
+      "id": "draft2020-12/type.json#4",
+      "description": "array type matches arrays",
+      "tests": 7,
+      "status": "excluded",
+      "reason": "Unconstrained array items require unrestricted JSON-value constructor"
+    },
+    {
+      "id": "draft2020-12/type.json#5",
+      "description": "boolean type matches booleans",
+      "tests": 10,
+      "recipe": {
+        "kind": "boolean"
+      },
+      "status": "selected"
+    },
+    {
+      "id": "draft2020-12/type.json#6",
+      "description": "null type matches only the null object",
+      "tests": 10,
+      "recipe": {
+        "kind": "null"
+      },
+      "status": "selected"
+    },
+    {
+      "id": "draft2020-12/type.json#7",
+      "description": "multiple types can be specified in an array",
+      "tests": 7,
+      "status": "excluded",
+      "reason": "Multi-type source schema not selected; nullable/general unions tested through explicit constructors"
+    },
+    {
+      "id": "draft2020-12/type.json#8",
+      "description": "type as array with one item",
+      "tests": 2,
+      "recipe": {
+        "kind": "string",
+        "patterns": []
+      },
+      "status": "selected"
+    },
+    {
+      "id": "draft2020-12/type.json#9",
+      "description": "type: array or object",
+      "tests": 5,
+      "status": "excluded",
+      "reason": "Multi-type source schema not selected; nullable/general unions tested through explicit constructors"
+    },
+    {
+      "id": "draft2020-12/type.json#10",
+      "description": "type: array, object or null",
+      "tests": 5,
+      "status": "excluded",
+      "reason": "Multi-type source schema not selected; nullable/general unions tested through explicit constructors"
+    },
+    {
+      "id": "draft2020-12/unevaluatedItems.json#0",
+      "description": "unevaluatedItems true",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedItems.json#1",
+      "description": "unevaluatedItems false",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedItems.json#2",
+      "description": "unevaluatedItems as schema",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedItems.json#3",
+      "description": "unevaluatedItems with uniform items",
+      "tests": 1,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedItems.json#4",
+      "description": "unevaluatedItems with tuple",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedItems.json#5",
+      "description": "unevaluatedItems with items and prefixItems",
+      "tests": 1,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedItems.json#6",
+      "description": "unevaluatedItems with items",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedItems.json#7",
+      "description": "unevaluatedItems with nested tuple",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedItems.json#8",
+      "description": "unevaluatedItems with nested items",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "Unsupported source-keyword combination: unevaluatedItems"
+    },
+    {
+      "id": "draft2020-12/unevaluatedItems.json#9",
+      "description": "unevaluatedItems with nested prefixItems and items",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedItems.json#10",
+      "description": "unevaluatedItems with nested unevaluatedItems",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedItems.json#11",
+      "description": "unevaluatedItems with anyOf",
+      "tests": 4,
+      "status": "excluded",
+      "reason": "Unsupported source-keyword combination: prefixItems, unevaluatedItems"
+    },
+    {
+      "id": "draft2020-12/unevaluatedItems.json#12",
+      "description": "unevaluatedItems with oneOf",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Unsupported source-keyword combination: prefixItems, unevaluatedItems"
+    },
+    {
+      "id": "draft2020-12/unevaluatedItems.json#13",
+      "description": "unevaluatedItems with not",
+      "tests": 1,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedItems.json#14",
+      "description": "unevaluatedItems with if/then/else",
+      "tests": 4,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedItems.json#15",
+      "description": "unevaluatedItems with boolean schemas",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedItems.json#16",
+      "description": "unevaluatedItems with $ref",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedItems.json#17",
+      "description": "unevaluatedItems before $ref",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedItems.json#18",
+      "description": "unevaluatedItems with $dynamicRef",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedItems.json#19",
+      "description": "unevaluatedItems can't see inside cousins",
+      "tests": 1,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedItems.json#20",
+      "description": "item is evaluated in an uncle schema to unevaluatedItems",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Unsupported source-keyword combination: properties"
+    },
+    {
+      "id": "draft2020-12/unevaluatedItems.json#21",
+      "description": "unevaluatedItems depends on adjacent contains",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedItems.json#22",
+      "description": "unevaluatedItems depends on multiple nested contains",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedItems.json#23",
+      "description": "unevaluatedItems and contains interact to control item dependency relationship",
+      "tests": 8,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedItems.json#24",
+      "description": "unevaluatedItems with minContains = 0",
+      "tests": 4,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedItems.json#25",
+      "description": "non-array instances are valid",
+      "tests": 6,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedItems.json#26",
+      "description": "unevaluatedItems with null instance elements",
+      "tests": 1,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedItems.json#27",
+      "description": "unevaluatedItems can see annotations from if without then and else",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedItems.json#28",
+      "description": "Evaluated items collection needs to consider instance location",
+      "tests": 1,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedProperties.json#0",
+      "description": "unevaluatedProperties true",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedProperties.json#1",
+      "description": "unevaluatedProperties schema",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedProperties.json#2",
+      "description": "unevaluatedProperties false",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedProperties.json#3",
+      "description": "unevaluatedProperties with adjacent properties",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedProperties.json#4",
+      "description": "unevaluatedProperties with adjacent patternProperties",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedProperties.json#5",
+      "description": "unevaluatedProperties with adjacent bool additionalProperties",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Unsupported source-keyword combination: unevaluatedProperties"
+    },
+    {
+      "id": "draft2020-12/unevaluatedProperties.json#6",
+      "description": "unevaluatedProperties with adjacent non-bool additionalProperties",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Unsupported source-keyword combination: unevaluatedProperties"
+    },
+    {
+      "id": "draft2020-12/unevaluatedProperties.json#7",
+      "description": "unevaluatedProperties with nested properties",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedProperties.json#8",
+      "description": "unevaluatedProperties with nested patternProperties",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedProperties.json#9",
+      "description": "unevaluatedProperties with nested additionalProperties",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedProperties.json#10",
+      "description": "unevaluatedProperties with nested unevaluatedProperties",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedProperties.json#11",
+      "description": "unevaluatedProperties with anyOf",
+      "tests": 4,
+      "status": "excluded",
+      "reason": "Unsupported source-keyword combination: properties, unevaluatedProperties"
+    },
+    {
+      "id": "draft2020-12/unevaluatedProperties.json#12",
+      "description": "unevaluatedProperties with oneOf",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Unsupported source-keyword combination: properties, unevaluatedProperties"
+    },
+    {
+      "id": "draft2020-12/unevaluatedProperties.json#13",
+      "description": "unevaluatedProperties with not",
+      "tests": 1,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedProperties.json#14",
+      "description": "unevaluatedProperties with if/then/else",
+      "tests": 4,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedProperties.json#15",
+      "description": "unevaluatedProperties with if/then/else, then not defined",
+      "tests": 4,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedProperties.json#16",
+      "description": "unevaluatedProperties with if/then/else, else not defined",
+      "tests": 4,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedProperties.json#17",
+      "description": "unevaluatedProperties with dependentSchemas",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedProperties.json#18",
+      "description": "unevaluatedProperties with boolean schemas",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedProperties.json#19",
+      "description": "unevaluatedProperties with $ref",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedProperties.json#20",
+      "description": "unevaluatedProperties before $ref",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedProperties.json#21",
+      "description": "unevaluatedProperties with $dynamicRef",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedProperties.json#22",
+      "description": "unevaluatedProperties can't see inside cousins",
+      "tests": 1,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedProperties.json#23",
+      "description": "unevaluatedProperties can't see inside cousins (reverse order)",
+      "tests": 1,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedProperties.json#24",
+      "description": "nested unevaluatedProperties, outer false, inner true, properties outside",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedProperties.json#25",
+      "description": "nested unevaluatedProperties, outer false, inner true, properties inside",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedProperties.json#26",
+      "description": "nested unevaluatedProperties, outer true, inner false, properties outside",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedProperties.json#27",
+      "description": "nested unevaluatedProperties, outer true, inner false, properties inside",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedProperties.json#28",
+      "description": "cousin unevaluatedProperties, true and false, true with properties",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedProperties.json#29",
+      "description": "cousin unevaluatedProperties, true and false, false with properties",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedProperties.json#30",
+      "description": "property is evaluated in an uncle schema to unevaluatedProperties",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Unsupported source-keyword combination: properties"
+    },
+    {
+      "id": "draft2020-12/unevaluatedProperties.json#31",
+      "description": "in-place applicator siblings, allOf has unevaluated",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "Unsupported source-keyword combination: allOf"
+    },
+    {
+      "id": "draft2020-12/unevaluatedProperties.json#32",
+      "description": "in-place applicator siblings, anyOf has unevaluated",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "Unsupported source-keyword combination: allOf"
+    },
+    {
+      "id": "draft2020-12/unevaluatedProperties.json#33",
+      "description": "unevaluatedProperties + single cyclic ref",
+      "tests": 7,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedProperties.json#34",
+      "description": "unevaluatedProperties + ref inside allOf / oneOf",
+      "tests": 8,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedProperties.json#35",
+      "description": "dynamic evalation inside nested refs",
+      "tests": 21,
+      "status": "excluded",
+      "reason": "Unsupported source-keyword combination: $defs, unevaluatedProperties"
+    },
+    {
+      "id": "draft2020-12/unevaluatedProperties.json#36",
+      "description": "non-object instances are valid",
+      "tests": 6,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedProperties.json#37",
+      "description": "unevaluatedProperties with null valued instance properties",
+      "tests": 1,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedProperties.json#38",
+      "description": "unevaluatedProperties not affected by propertyNames",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedProperties.json#39",
+      "description": "unevaluatedProperties can see annotations from if without then and else",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedProperties.json#40",
+      "description": "dependentSchemas with unevaluatedProperties",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedProperties.json#41",
+      "description": "Evaluated properties collection needs to consider instance location",
+      "tests": 1,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedProperties.json#42",
+      "description": "Evaluated properties collection needs to consider instance location with patternProperties",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/unevaluatedProperties.json#43",
+      "description": "Evaluated properties collection needs to consider instance location with additionalProperties",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/uniqueItems.json#0",
+      "description": "uniqueItems validation",
+      "tests": 28,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/uniqueItems.json#1",
+      "description": "uniqueItems with an array of items",
+      "tests": 8,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/uniqueItems.json#2",
+      "description": "uniqueItems with an array of items and additionalItems=false",
+      "tests": 5,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/uniqueItems.json#3",
+      "description": "uniqueItems=false validation",
+      "tests": 15,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/uniqueItems.json#4",
+      "description": "uniqueItems=false with an array of items",
+      "tests": 8,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/uniqueItems.json#5",
+      "description": "uniqueItems=false with an array of items and additionalItems=false",
+      "tests": 5,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/vocabulary.json#0",
+      "description": "schema that uses custom metaschema with with no validation vocabulary",
+      "tests": 3,
+      "status": "excluded",
+      "reason": "Untyped keyword applicability or unsupported type cannot be strengthened to a typed constructor"
+    },
+    {
+      "id": "draft2020-12/vocabulary.json#1",
+      "description": "ignore unrecognized optional vocabulary",
+      "tests": 2,
+      "status": "excluded",
+      "reason": "General number constructor deferred"
+    }
+  ]
+}

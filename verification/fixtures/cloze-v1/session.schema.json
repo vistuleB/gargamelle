@@ -1,0 +1,21 @@
+{
+  "type": "object",
+  "required": [
+    "clozeSignature",
+    "responses"
+  ],
+  "properties": {
+    "clozeSignature": {
+      "type": "string"
+    },
+    "responses": {
+      "type": "object",
+      "maxProperties": 12,
+      "additionalProperties": {
+        "type": "string",
+        "maxLength": 500
+      }
+    }
+  },
+  "additionalProperties": true
+}
