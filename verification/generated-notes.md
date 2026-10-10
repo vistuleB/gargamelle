@@ -20,9 +20,9 @@ not the generator, determines validity. Extra-key, missing-field, wrong-type,
 length and numeric mutations are proposals, never assumed invalid. Arbitrary
 JSON values supplement them. Proposals vary union branch, nullable presence,
 optional/defaulted presence, names and tags, including hostile keys. Coverage
-requires both outcomes for every root and nested constructor and all 240 generic parent/child constructor combinations.
+requires both outcomes for every root and nested constructor and all 273 generic parent/child constructor combinations.
 
-Eleven additional depth-50 chains use linear structure. Arrays/dictionaries have
+Twelve additional depth-50 chains use linear structure. Arrays/dictionaries have
 nonempty witnesses; nullable chains use non-null witnesses; each also has an
 invalid leaf so validation reaches the deepest child. Coverage JSON records
 counts, seeds, edges, outcomes and requested random depths. The artifact is
@@ -105,3 +105,12 @@ The `property_names` recipe wraps a dictionary of each generated child kind and
 uses an independently interpreted key definition. It participates in all generic
 parent/child combinations and a nonempty depth-50 chain. Key and value outcomes
 are recorded separately; decoded keys are compared without normalization.
+
+Membership recipes wrap each generated item kind with an independent numeric
+matcher and count limits. The depth-50 chain uses a primitive matcher so each
+layer validates one child instead of duplicating the entire nested contract.
+An initial experiment using the same nested child for both `items` and `contains`
+was stopped because it induces exponential repeated validation. Such schemas
+remain legal; bounded composition evidence is not a complexity guarantee.
+Consumer and targeted tests cover nontrivial matches, zero counts, upper limits,
+duplicates, different matcher output types, and repeated constraints.

@@ -49,11 +49,11 @@ The implementation agent completed the core and generated, mutation, runtime,
 typed-output and compile-negative evidence. The coordinating agent reviewed it
 and added independent validator checks, official-suite selection, cloze payload
 comparisons and the final evidence gate. The generated suite includes 10,000
-seeded pairs, all 240 generic parent/child combinations and eleven depth-50 chains.
-Twenty-two actual compiled-library mutations must fail behavioral assertions,
-including five numeric, three recursion, and three tuple, and three key-constraint mutants. The three
+seeded pairs, all 273 generic parent/child combinations and twelve depth-50 chains.
+Twenty-five actual compiled-library mutations must fail behavioral assertions,
+including five numeric, three recursion, and three tuple, and three key-constraint, and three membership mutants. The three
 new revision-3 mutations run the full foundation, typed-value and hardening suites.
-Sixteen forbidden Gleam programs must fail compilation after a positive baseline.
+Seventeen forbidden Gleam programs must fail compilation after a positive baseline.
 
 The official suite is pinned to commit
 `7de0e6a06031ede80028583dd45d0cd41105ae5b`. All 46 core files are retained with
@@ -304,3 +304,42 @@ valid unsatisfiable key contract. Verification retains an exact-schema exception
 for that audit fixture, explicitly disables only `strictTypes`, and compares
 Concord with both Ajv and Hyperjump. The ordinary oracle remains strict; no
 automatic fallback or runtime behavior change is introduced.
+
+## Array membership
+
+`contains(array_definition, matching_definition, minimum, maximum)` returns a
+construction result with the original decoded output type. `minimum` is a
+nonnegative safe integer; `maximum` is `None` or an inclusive safe integer at
+least that minimum. For example, require one or two integer-valued elements
+while preserving all decoded numbers:
+
+```gleam
+let assert Ok(values) = concord.contains(
+  concord.array(concord.number()), concord.safe_integer(), 1, Some(2),
+)
+```
+
+Every item must still satisfy the original array/tuple contract. Matches count
+positions, including duplicates, rather than distinct values. A match uses only
+structural validation; its conversion and mapping callbacks never run. The
+original converter runs only after the complete definition accepts the input.
+The matching definition may have a different output type from an array element.
+Count failures use `contains_count` at the array's JSON Pointer path.
+
+Repeated calls intersect their membership requirements, emitted as separate
+`allOf` branches. Zero minimum permits no matches; maximum zero requires none.
+Zero minimum with no maximum is vacuous and emits no membership keywords, which
+also avoids Ajv's strict-mode rejection of an ignored `contains` keyword. Its
+matching definition still participates in reference/name validation.
+
+Array and fixed-tuple bodies, names, descriptions, titles, and existing unique
+arrays are supported. Nullable arrays and arbitrary unions are rejected as base
+contracts. Apply bounds and uniqueness before membership constraints when those
+operations require an unwrapped homogeneous array. Recursive membership checks
+consume array items; no depth cap is introduced. Complex overlapping body and
+match schemas may repeat validation work; there is no shared input cache.
+
+The verbatim provider's existing nonempty-answer check supplies a consumer
+example: an answer must contain non-whitespace text (`\S`) or a formula-reference
+object. Formula-ID existence is still a provider responsibility. The app has not
+been migrated to this feature.

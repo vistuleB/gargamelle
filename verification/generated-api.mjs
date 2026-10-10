@@ -27,6 +27,7 @@ export function build(a) {
     case 'enum': d=unwrap(s.string_enum(toList(a.values))); break;
     case 'constant': d=a.value===null?s.map(s.null_constant(),()=>null):typeof a.value==='string'?s.string_constant(a.value):typeof a.value==='boolean'?s.boolean_constant(a.value):unwrap(s.integer_constant(a.value)); break;
     case 'recursive': d=unwrap(s.recursive('generated-tree',self=>s.any_of(toList([s.map(s.number(),x=>({leaf:x})),s.map(s.array(self),xs=>({children:[...xs]}))])))); break;
+    case 'contains': d=s.map(unwrap(s.contains(s.array(build(a.child)),build(a.matching),a.minimum,option(a.maximum))),xs=>[...xs]);break;
     case 'array': d=s.array(build(a.child)); if(a.min!=null||a.max!=null)d=unwrap(s.bounds(d,option(a.min),option(a.max))); d=s.map(d,x=>[...x]); break;
     case 'tuple': {
       const combine=(i,values)=>i===a.children.length?values:x=>combine(i+1,[...values,x]);
@@ -63,9 +64,9 @@ export function evaluateText(definition, text) {
   return {accepted:result instanceof Ok, value:result[0]};
 }
 export const emitted=d=>JSON.parse(s.emit_text(d));
-export const allKinds=['boolean','null','string','integer','enum','constant','number','recursive','array','dictionary','record','nullable','any','one','tagged','description','title','map','tuple','property_names'];
+export const allKinds=['boolean','null','string','integer','enum','constant','number','recursive','array','dictionary','record','nullable','any','one','tagged','description','title','map','tuple','property_names','contains'];
 export function childNodes(a) {
-  return a.keys?[a.child,a.keys]:a.child?[a.child]:a.children??(a.fields?a.fields.map(f=>f.child):a.branches?a.branches.flatMap(b=>b.fields.map(f=>f.child)):[]);
+  return a.matching?[a.child,a.matching]:a.keys?[a.child,a.keys]:a.child?[a.child]:a.children??(a.fields?a.fields.map(f=>f.child):a.branches?a.branches.flatMap(b=>b.fields.map(f=>f.child)):[]);
 }
 // Construction witness is generated from the recipe, never from the library's decoder.
 // Overlapping unions may have no witness; the independent oracle classifies all proposals.
@@ -76,6 +77,7 @@ export function proposal(a,r=()=>0) {
  case 'recursive':return r(2)?[0.5,[]]:0.5;
  case 'number':return a.min==null?(a.max==null?0.5:a.max-(a.exclusiveMax?0.5:0)) : a.min+(a.exclusiveMin?0.5:0);
  case 'enum':return a.values[r(a.values.length)];case 'constant':return a.value;
+ case 'contains':return Array.from({length:Math.max(1,a.minimum)},()=>p(a.child));
  case 'property_names':return {k0:p(a.child)};
  case 'tuple':return a.children.map(p);
  case 'array':return Array.from({length:a.min??1},()=>p(a.child));
@@ -88,6 +90,7 @@ export function proposal(a,r=()=>0) {
 }
 export function specimen(kind,child={kind:'string'}) {
  switch(kind){
+ case 'contains':return {kind,child,matching:{kind:'number'},minimum:0,maximum:1};
  case 'property_names':return {kind,child,keys:{kind:'string',min:1,max:8,patterns:['^k']}};
  case 'tuple':return {kind,children:[child,{kind:'string'}]};
  case 'enum':return {kind,values:['a','b']};case 'constant':return {kind,value:'constant'};

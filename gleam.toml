@@ -1,5 +1,5 @@
 name = "concord"
-version = "0.0.6"
+version = "0.0.7"
 target = "javascript"
 gleam = ">= 1.18.1"
 

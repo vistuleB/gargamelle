@@ -53,6 +53,7 @@ type Node {
   EnumNode(List(String))
   ArrayNode(Node, Option(Int), Option(Int))
   TupleNode(List(Node))
+  ContainsNode(Node, List(Membership))
   DictNode(Node, Option(Int), Option(Int))
   RecordNode(List(Field), Policy)
   PropertyNamesNode(Node, List(Node))
@@ -104,6 +105,10 @@ fn bind_cell(cell: Cell(a), value: a) -> Nil {
 fn reject_cell(cell: Cell(a)) -> Nil {
   let Cell(_, _, reject) = cell
   reject()
+}
+
+type Membership {
+  Membership(Node, Int, Option(Int))
 }
 
 type Field {
@@ -427,6 +432,57 @@ pub fn element(t: Tuple(fn(a) -> b), child: Definition(a)) -> Tuple(b) {
 pub fn finish_tuple(t: Tuple(a)) -> Definition(a) {
   let Tuple(nodes, convert) = t
   Definition(TupleNode(nodes), convert)
+}
+
+/// Require between minimum and maximum structurally matching array items.
+/// Preserve the original decoder; matching-definition converters never run.
+pub fn contains(
+  def: Definition(a),
+  matching: Definition(b),
+  minimum: Int,
+  maximum: Option(Int),
+) -> Result(Definition(a), ConstructionError) {
+  let Definition(node, convert) = def
+  let Definition(match_node, _) = matching
+  case bad_bounds(Some(minimum), maximum, True) {
+    True -> Error(ConstructionError("invalid contains bounds"))
+    False -> {
+      use next <- result.try(contains_node(
+        node,
+        Membership(match_node, minimum, maximum),
+      ))
+      Ok(Definition(next, convert))
+    }
+  }
+}
+
+fn array_node(node: Node) -> Bool {
+  case node {
+    ArrayNode(_, _, _) | TupleNode(_) -> True
+    AnnotatedNode(child, _, _)
+    | NamedNode(_, child)
+    | UniqueNode(child)
+    | ContainsNode(child, _) -> array_node(child)
+    _ -> False
+  }
+}
+
+fn contains_node(
+  node: Node,
+  membership: Membership,
+) -> Result(Node, ConstructionError) {
+  case node {
+    AnnotatedNode(child, key, value) ->
+      result.map(contains_node(child, membership), AnnotatedNode(_, key, value))
+    ContainsNode(child, checks) ->
+      Ok(ContainsNode(child, list.append(checks, [membership])))
+    _ ->
+      case array_node(node) {
+        True -> Ok(ContainsNode(node, [membership]))
+        False ->
+          Error(ConstructionError("contains requires an array definition"))
+      }
+  }
 }
 
 pub fn dictionary(def: Definition(a)) -> Definition(List(#(String, a))) {
@@ -860,6 +916,8 @@ fn bound_node(
   case n {
     AnnotatedNode(child, k, v) ->
       result.map(bound_node(child, lo, hi), AnnotatedNode(_, k, v))
+    ContainsNode(child, checks) ->
+      result.map(bound_node(child, lo, hi), ContainsNode(_, checks))
     PropertyNamesNode(child, keys) ->
       result.map(bound_node(child, lo, hi), PropertyNamesNode(_, keys))
     IntegerNode(a, b) -> {
@@ -1043,6 +1101,32 @@ fn check(n: Node, v: Value, p: String) -> List(DataError) {
           list.index_map(xs, fn(x, i) { check(child, x, path(p, int_text(i))) })
           |> list.flatten
       }
+    ContainsNode(child, checks), _ -> {
+      let errors = check(child, v, p)
+      case v {
+        JArray(items) ->
+          list.append(
+            errors,
+            list.flat_map(checks, fn(membership) {
+              let Membership(matching, minimum, maximum) = membership
+              case minimum, maximum {
+                0, None -> []
+                _, _ -> {
+                  let count =
+                    list.count(items, fn(item) {
+                      check(matching, item, "") == []
+                    })
+                  case size_ok(count, Some(minimum), maximum) {
+                    True -> []
+                    False -> err("contains_count", p)
+                  }
+                }
+              }
+            }),
+          )
+        _ -> errors
+      }
+    }
     PropertyNamesNode(child, keys), _ -> {
       let errors = check(child, v, p)
       case v {
@@ -1200,6 +1284,14 @@ fn node_children(n: Node) -> Result(List(Node), ConstructionError) {
           child
         }),
       )
+    ContainsNode(child, checks) ->
+      Ok([
+        child,
+        ..list.map(checks, fn(m) {
+          let Membership(node, _, _) = m
+          node
+        })
+      ])
     PropertyNamesNode(child, keys) -> Ok([child, ..keys])
     TupleNode(children) | UnionNode(children, _) -> Ok(children)
     TaggedNode(_, branches) -> Ok(list.map(branches, fn(b) { b.1 }))
@@ -1266,7 +1358,7 @@ fn collect_definitions_result(
 // fields instead descend into a strict child value and therefore break cycles.
 fn same_input_children(n: Node) -> Result(List(Node), ConstructionError) {
   case n {
-    PropertyNamesNode(child, _) -> Ok([child])
+    ContainsNode(child, _) | PropertyNamesNode(child, _) -> Ok([child])
     ArrayNode(_, _, _) | TupleNode(_) | DictNode(_, _, _) | RecordNode(_, _) ->
       Ok([])
     _ -> node_children(n)
@@ -1394,6 +1486,31 @@ fn emit(n: Node) -> Value {
       |> put("items", emit(c))
       |> emit_bound("minItems", lo)
       |> emit_bound("maxItems", hi)
+    ContainsNode(child, checks) -> {
+      let schemas =
+        list.filter_map(checks, fn(membership) {
+          let Membership(matching, minimum, maximum) = membership
+          case minimum, maximum {
+            0, None -> Error(Nil)
+            _, _ ->
+              Ok(
+                typ("array")
+                |> put("contains", emit(matching))
+                |> emit_bound("minContains", Some(minimum))
+                |> emit_bound("maxContains", maximum),
+              )
+          }
+        })
+      let base = emit(child) |> put("type", JString("array"))
+      case schemas {
+        [] -> base
+        [JObject(fields)] ->
+          list.fold(fields, base, fn(schema, field) {
+            put(schema, field.0, field.1)
+          })
+        _ -> put(base, "allOf", JArray(schemas))
+      }
+    }
     PropertyNamesNode(child, keys) -> {
       let key_schema = case keys {
         [key] -> emit(key)

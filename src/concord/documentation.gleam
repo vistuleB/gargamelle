@@ -112,6 +112,7 @@ fn constraints(s: Value) {
   let bounds = [
     #("minLength", "maxLength", "characters"),
     #("minItems", "maxItems", "items"),
+    #("minContains", "maxContains", "matching items"),
     #("minProperties", "maxProperties", "keys"),
     #("minimum", "maximum", "value"),
   ]
@@ -266,6 +267,12 @@ fn node(
         aliases,
       )
     })
+  let membership = case get(s, "contains") {
+    Object(_) as child -> [
+      node(child, "matching items", depth + 1, "", id, aliases),
+    ]
+    _ -> []
+  }
   let key_names = case get(s, "propertyNames") {
     Object(_) as key -> [
       node(key, "each property name", depth + 1, "", id, aliases),
@@ -287,7 +294,7 @@ fn node(
       })
     })
   let children =
-    list.flatten([fields, items, positions, key_names, maps, unions])
+    list.flatten([fields, items, positions, membership, key_names, maps, unions])
     |> string.join("")
   let kind = case has(s, "oneOf"), has(s, "anyOf"), has(s, "allOf") {
     True, _, _ -> "exactly one alternative"

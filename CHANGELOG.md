@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.7 — 2026-10-10
+
+- Add structural array membership with `contains`, `minContains`, and `maxContains`, preserving original typed outputs.
+- Support repeated membership constraints, fixed tuples, named arrays, and recursive array values.
+- Extend documentation and typed, independent-validator, generated, and mutation verification.
+
 ## 0.0.6 — 2026-10-10
 
 - Retain the v0.0.5 mapped-number property-name audit case with an explicit exact-fixture Ajv strictTypes lint exception and Hyperjump comparison.

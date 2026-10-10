@@ -133,15 +133,15 @@ conversion. There is no generic FFI cast or forged typed provider value.
 
 ## Current evidence and remaining work
 
-`gleam test` currently runs 31 tests, including concrete typed records/custom
+`gleam test` currently runs 32 tests, including concrete typed records/custom
 variants, dictionaries/arrays, glon regressions, optional/null states, callback
 suppression, hostile keys, Unicode, tags, constraints, constants and defaults.
 `schema_fixtures` supplies 25 authored independent-oracle fixtures.
 
 `verification/generated*.test.mjs` adds 10,000 seeded definition/input pairs,
-all 240 generic parent/child combinations, nonempty depth-50 chains, independently
+all 273 generic parent/child combinations, nonempty depth-50 chains, independently
 specified output/error fixtures, admission/operational tests, callback counters,
-and actual isolated mutations for all five required defect classes. Sixteen
+and actual isolated mutations for all five required defect classes. Seventeen
 compile-negative programs establish the public opaque/static API boundary.
 Generated coverage and retained findings are documented in
 `verification/generated-notes.md`; operational failures are not rejections.
@@ -190,3 +190,21 @@ body and key nodes so missing references and name conflicts cannot be hidden.
 The recursion guard follows the body as a same-input edge; key checks inspect
 synthesized primitive strings, not the enclosing object. Named key bodies are
 independently finalized under the existing graph guard.
+
+## Array membership
+
+Membership retains the base array/tuple validator and counts positions accepted
+by the matching node. Emitted `contains` and its explicit inclusive minimum and
+optional maximum impose the identical count constraint. Duplicated values count
+separately. Multiple requirements are conjoined using `allOf`; they do not
+replace one another. A zero minimum without a maximum is true for every array,
+so its redundant schema keywords and counting work can be omitted. Nonarrays
+still fail the base typed definition.
+
+Only the original converter is retained. Matching converters are not invoked,
+and unmatched elements are neither removed nor changed. Thus the accepted output
+is exactly the base definition's typed result. Membership checks consume an
+array item, so graph guards follow only the base as a same-input edge while
+collection still visits every matcher to reject unresolved/conflicting names.
+Repeated evaluation of overlapping complex schemas may be expensive; this
+extension does not claim linear validation cost for arbitrary compositions.

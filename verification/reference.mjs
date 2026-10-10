@@ -20,6 +20,12 @@ export function reference(a,v,visit=()=>{},path='$') {
   else if(Array.isArray(v)){const results=v.map((x,i)=>child(a,x,path+'/child/'+i));if(results.every(x=>x.accepted))r=yes({children:results.map(x=>x.value)});}
   break;
  }
+ case 'contains': {
+  if(!Array.isArray(v))break;
+  const items=v.map(x=>child(a.child,x,path+'/child'));
+  const count=v.filter(x=>child(a.matching,x,path+'/matching').accepted).length;
+  if(items.every(x=>x.accepted)&&count>=a.minimum&&(a.maximum==null||count<=a.maximum))r=yes(items.map(x=>x.value));break;
+ }
  case 'property_names': {
   if(!object(v))break;
   const values=Object.entries(v).map(([k,x])=>[k,child(a.child,x,path+'/child'),child(a.keys,k,path+'/key')]);
