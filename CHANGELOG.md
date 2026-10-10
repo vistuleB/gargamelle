@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.10 — 2026-10-10
+
+- Add checked documentation examples with indexed validation errors, HTML escaping, and no decoder callback execution.
+
 ## 0.0.9 — 2026-10-10
 
 - Add `exclude(base, forbidden)` structural exclusion, emitting JSON Schema `not` and retaining the base typed output.

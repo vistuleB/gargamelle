@@ -424,3 +424,14 @@ The verbatim provider's formula-code syntax supplies a consumer example:
 nonempty strings excluding those matching whitespace, backslash, or Unicode
 punctuation. Prefix-free code uniqueness remains a provider check. No app
 validator or dependency pin was changed.
+
+## Checked documentation examples
+
+`documentation.render_examples(definition, id, examples)` accepts admitted JSON
+values and returns HTML only when all examples validate against the current
+definition. It returns every rejected example's zero-based index and ordinary
+validation errors. It never decodes examples or executes mapping callbacks.
+Examples represent input JSON, including its original missing fields, rather
+than projected/defaulted outputs. HTML escapes examples, and an empty example
+list produces the ordinary renderer output. Rechecking at render time catches
+examples that become invalid after a definition changes.

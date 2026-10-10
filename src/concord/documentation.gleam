@@ -452,3 +452,49 @@ pub fn render_emitted(
     <> "</article>",
   )
 }
+
+/// A rejected example's zero-based position and ordinary validation errors.
+pub type ExampleError {
+  ExampleError(index: Int, errors: List(concord.DataError))
+}
+
+/// Validate admitted input examples before displaying them. This never invokes
+/// decoding callbacks or modifies schema acceptance. Examples are JSON inputs,
+/// not decoded values; checking again at render time prevents silent drift.
+pub fn render_examples(
+  definition: concord.Definition(a),
+  id: String,
+  examples: List(concord.Value),
+) -> Result(String, List(ExampleError)) {
+  let errors =
+    examples
+    |> list.index_map(fn(value, index) {
+      case concord.validate(definition, value) {
+        Ok(_) -> []
+        Error(errors) -> [ExampleError(index, errors)]
+      }
+    })
+    |> list.flatten
+  case errors {
+    [] -> {
+      let html = render(definition, id)
+      let section = case examples {
+        [] -> ""
+        _ ->
+          "<section class=\"examples\"><h4>Checked examples</h4>"
+          <> {
+            examples
+            |> list.map(fn(value) {
+              "<pre><code>"
+              <> escape_html(concord.value_text(value))
+              <> "</code></pre>"
+            })
+            |> string.join("")
+          }
+          <> "</section>"
+      }
+      Ok(string.replace(html, "</article>", section <> "</article>"))
+    }
+    _ -> Error(errors)
+  }
+}
