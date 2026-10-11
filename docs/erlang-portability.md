@@ -311,15 +311,17 @@ binding. They pass 53 native tests, twelve cross-target compile-negative checks 
 schema/output/diagnostic comparisons. All sixteen portability groups pass. A
 separate binding check covers 594 syntax/search cases and operational failures.
 
-The native setup is tested on macOS with OTP 29, Node 24 and a C compiler. Linux,
-Windows and minimum OTP versions still need verification; the helper currently
-uses POSIX APIs. The generated native gate checks 886 definitions and 17,788
+The native setup passes on macOS arm64/OTP 29 and Ubuntu 24.04 x86_64 with OTP
+28.5.0.7 and 29.1.1, using Gleam 1.18.1, Node 24.10.0 and a C compiler. Other
+platforms and OTP releases remain unverified; the helper uses POSIX APIs. The generated native gate checks 886 definitions and 17,788
 inputs with two independent schema validators, including 6,459 independently
 interpreted decoded outputs. Five public API paths detect an always-match regex
 adapter mutation. A macOS Gleam shipment passes after explicit helper installation
 and removal of source checkouts. See `native-oracle-evidence.md`. All 109 selected official cases also pass natively against unchanged expected
 results and both validators. Unsupported official groups remain excluded. Linux
-CI for OTP 28 and 29 is prepared but has no hosted pass yet. Broader operator
+CI passes both OTP builds in run 38132699640. The initial run exposed the Node
+24.21.0/Unicode 17 difference; the verified reference remains Unicode 16. See
+`linux-qualification.md` for the recorded evidence. Broader operator
 mutations, other release tooling and
 representative workload performance remain release gates. Working metadata is 0.2.0, contract revision 5.
 The 0.1.0 tag is unchanged. No native dependency or new version has been published.

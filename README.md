@@ -20,8 +20,9 @@ specifies schema/decoder equivalence, decoded-value semantics, canonical emissio
 and the assumptions and limits of those guarantees.
 
 JavaScript is tested on Node 24. The native Erlang implementation is tested on
-macOS arm64 with OTP 29 and requires a C helper; see [Native Erlang setup](https://hexdocs.pm/gargamelle/0.2.0/native-erlang.html).
-Broader Erlang support is awaiting platform verification. APIs may change before 1.0.
+macOS arm64 with OTP 29 and Ubuntu 24.04 x86_64 with OTP 28.5.0.7 and 29.1.1,
+and requires a C helper; see [Native Erlang setup](https://hexdocs.pm/gargamelle/0.2.0/native-erlang.html).
+Other native platforms and OTP releases remain unverified. APIs may change before 1.0.
 
 ## Getting started
 
@@ -134,8 +135,10 @@ The safe-integer and trusted-callback limitations are part of the contract.
 
 ## Limitations
 
-- Linux and other OTP versions are not yet verified for Erlang. The native regex
-  helper uses POSIX APIs; Windows is not supported. Browsers, Bun and Deno are unverified.
+- Native verification covers the runtime matrix above and Gleam shipment
+  deployment. Other platforms, OTP releases and deployment tools are unverified.
+  The regex helper uses POSIX APIs; Windows is not supported. Browsers, Bun and
+  Deno are unverified.
 - Native regex Unicode properties use Unicode 16 tables; JavaScript uses its
   host tables. Regex parity is verified against Node 24.10.0, not Node 24.21.0
   with Unicode 17.

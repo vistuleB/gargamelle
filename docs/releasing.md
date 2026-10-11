@@ -3,8 +3,9 @@
 The working tree contains the unreleased 0.2.0 candidate. Version 0.1.0 was
 published separately and its tag must remain unchanged. Candidate preparation does
 not tag, push, publish or change repository visibility. The release audit is in
-[0.2.0 candidate review](release-0.2.md). Broad Erlang qualification remains open;
-a preparation pass must not be presented as completing those platform checks.
+[0.2.0 candidate review](release-0.2.md). The tested native matrix now includes Ubuntu 24.04 x86_64 with OTP 28.5.0.7
+and 29.1.1, plus macOS arm64/OTP 29. See `linux-qualification.md`; a pass does not
+qualify every platform, OTP release or deployment format.
 
 The package was renamed from Concord to Gargamelle because Hex’s `concord`
 name is owned by an unrelated Elixir package. The maintainer checked Gargamelle’s
@@ -37,10 +38,11 @@ install the Gleam package; they do not need the npm verification dependencies.
    boundaries. It must match the candidate after the final edit. The separate
    `npm run check:release` checks JavaScript evidence only. Neither command
    replaces review of `PRESERVATION.md` or qualifies untested native platforms.
-4. Resolve the outstanding native platform qualification or explicitly agree on
-   a narrower release support statement. Linux, other OTP versions and other
-   deployment tooling have no retained pass yet. Windows uses unsupported POSIX
-   helper code. Do not infer broad Erlang support from macOS evidence.
+4. Declare the tested native matrix in the release support statement. Linux OTP
+   28.5.0.7 and 29.1.1 now pass, as does macOS arm64/OTP 29. Other OTP releases,
+   platforms and deployment tooling are not qualified. Windows uses unsupported
+   POSIX helper code. Native Unicode tables are version 16; parity with the
+   Unicode 17 tables in Node 24.21.0 is not claimed.
 5. Inspect the generated documentation under `build/dev/docs/gargamelle`. Only
    `gargamelle` and `gargamelle/documentation` are public API modules. Versioned
    0.2.0 links become available only after publication; keep the README's candidate
@@ -64,8 +66,8 @@ specified in [Native Erlang setup](native-erlang.md).
 ## Support and compatibility
 
 The supported compilation target is JavaScript. The full verification harness
-uses Node 24 and Gleam 1.18.1. Native Erlang evidence covers macOS arm64 with
-OTP 29; broader native support remains unqualified. Browser, Bun, Deno and Windows
+uses Node 24 and Gleam 1.18.1. Native Erlang evidence covers macOS arm64/OTP 29 and Ubuntu 24.04 x86_64 with
+OTP 28.5.0.7 and 29.1.1. Other native platforms and releases remain unqualified. Browser, Bun, Deno and Windows
 native-helper support are not claimed. No npm runtime dependency is required by the library.
 
 Dependency versions remain exact for this candidate because those versions

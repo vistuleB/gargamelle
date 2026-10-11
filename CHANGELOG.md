@@ -20,10 +20,11 @@
 - Extend cross-target compile-negative, process-lifetime, generated-oracle,
   mutation and deployment verification without adding JavaScript runtime dependencies.
 - Run all 109 selected official schema cases through the actual library on both
-  targets. Prepare Ubuntu 24.04 qualification CI for OTP 28 and 29; hosted
-  results are still pending.
+  targets. Qualify Ubuntu 24.04 x86_64 on OTP 28.5.0.7 and 29.1.1 through hosted CI.
 
-Linux, other OTP versions and broader Erlang support remain unqualified. This
+Other native platforms, OTP releases and deployment formats remain unqualified.
+Native regex uses Unicode 16 tables; Node 24.21.0 uses Unicode 17 and has known
+property-match differences. The verified reference is Node 24.10.0. This
 entry describes the candidate, not a published release.
 
 ## 0.1.0 — 2026-10-10

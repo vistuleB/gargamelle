@@ -47,9 +47,9 @@ one adapter mutation, not complete native operator mutation coverage.
 `deployment.test.mjs` exports a Gleam Erlang shipment and removes all source and
 build checkouts. It first verifies an operational failure without the helper,
 then installs the helper and exercises recursive decoding, Unicode patterns,
-duplicate named groups, schema emission and rendering. This deployment evidence
-is limited to macOS arm64, OTP 29 and Gleam 1.18.1. Linux, Windows, minimum OTP
-versions and other deployment tooling remain unverified.
+duplicate named groups, schema emission and rendering. This deployment evidence now covers macOS arm64/OTP 29 and Ubuntu 24.04 x86_64
+with OTP 28.5.0.7 and 29.1.1, using Gleam 1.18.1. Other platforms, OTP releases
+and deployment tooling remain unverified. See `linux-qualification.md`.
 
 These additions change verification code and documentation. Production shared
 Gleam, JavaScript and Erlang sources are unchanged from commit `87c8c03`.

@@ -93,8 +93,10 @@ All 109 selected official schema cases also run through both typed targets,
 with the original validity expectations unchanged and both original and emitted
 schemas checked by Ajv and Hyperjump. The 357 unsupported groups remain excluded.
 
-Current native evidence covers macOS arm64, OTP 29 and Gleam 1.18.1. It does not
-establish Linux, Windows, other OTP versions, every deployment tool or exhaustive
+Current native evidence covers macOS arm64/OTP 29 and Ubuntu 24.04 x86_64 with
+OTP 28.5.0.7 and 29.1.1, using Gleam 1.18.1 and the Node 24.10.0/Unicode 16
+reference. It does not establish other platforms or OTP releases, every deployment
+tool or exhaustive
 ECMAScript conformance. The source retains detailed investigation and measurement
 reports in `docs/erlang-portability.md`, `docs/native-oracle-evidence.md` and
 `docs/regex-workload-measurements.md`.

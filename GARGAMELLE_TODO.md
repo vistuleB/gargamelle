@@ -102,11 +102,13 @@ for Ubuntu 24.04 x86_64 with OTP 28 and 29. The initial hosted run passed
 all groups except the regex comparison: a floating Node 24 selection chose
 24.21.0/Unicode 17, whereas native tables use Unicode 16. CI now pins the verified
 24.10.0 reference; Unicode 17 parity remains unclaimed. No complete hosted pass
-is recorded yet.
+was recorded at that checkpoint. The corrected run 38132699640 now passes both
+Linux jobs on OTP 28.5.0.7 and 29.1.1. Downloaded fingerprints and log hashes
+match commit `715b8f0`; see `docs/linux-qualification.md`.
 See `docs/native-ci.md` for scope, version policy and evidence review.
 
-Next: run the prepared Linux/OTP CI, extend native operator mutation coverage,
-and check other release tooling. Measure representative application workloads
+Next: declare the tested native matrix for release, extend native operator
+mutation coverage when needed, and check other release tooling. Measure representative application workloads
 before optimizing further. Windows is unverified and the helper currently uses
 POSIX APIs. Complete Erlang support remains gated on these checks.
 Do not publish or move `v0.1.0` for this work.

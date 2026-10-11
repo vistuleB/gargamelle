@@ -1,10 +1,10 @@
 # Native Erlang setup
 
 The 0.2.0 source has native Erlang implementations for all core operations.
-JavaScript remains the supported target while broader native platform
-qualification is completed. The macOS implementation and Gleam shipment have
-passed the retained gates; this does not qualify Linux or other OTP versions. The published 0.1.0 package is unchanged.
-The current native setup is tested on macOS with OTP 29 and Gleam 1.18.1.
+The retained native gates pass on macOS arm64 with OTP 29 and Ubuntu 24.04
+x86_64 with OTP 28.5.0.7 and 29.1.1. Both Linux jobs include a deployed Gleam
+shipment. Other platforms, OTP releases and deployment tools remain unverified. The published 0.1.0 package is unchanged.
+The verified compiler is Gleam 1.18.1.
 
 ## Build the regex helper
 
@@ -53,7 +53,7 @@ sh build/erlang-shipment/entrypoint.sh run
 ```
 
 For a path dependency, copy the helper from that dependency's `build/native`
-directory. This shipment has been tested on macOS arm64 with OTP 29 after removing
+directory. This shipment has been tested on the native runtime matrix above after removing
 all source and build checkouts. The retained deployment test also verifies that
 omitting the helper raises an operational error.
 
@@ -77,7 +77,7 @@ finishes. The helper closes before conversion callbacks run. Standalone pattern
 checks still start a helper per call. A synthetic decode of 64 records with four
 patterned fields measured about 10.5 ms on the tested machine, versus 887 ms with
 the original helper-per-call transport. This is an observation, not a timing
-guarantee; representative application workloads still need measurements. Linux,
-Windows, other OTP versions and release tooling beyond the tested Gleam shipment
-remain unverified; the current helper uses POSIX APIs. The differential corpus provides
+guarantee; representative application workloads still need measurements. Other
+platforms, OTP releases and tooling beyond the tested Gleam shipment remain
+unverified; the current helper uses POSIX APIs. The differential corpus provides
 bounded evidence rather than complete ECMAScript conformance.

@@ -2,8 +2,9 @@
 
 This candidate contains the completed native implementation and two deliberate
 breaking changes. It is not yet published. JavaScript is verified on Node 24;
-native evidence covers macOS arm64, OTP 29 and Gleam 1.18.1. Broad Erlang support
-still requires platform qualification. No 0.1.0 tag or application dependency pin
+native evidence covers macOS arm64/OTP 29 and Ubuntu 24.04 x86_64 with OTP
+28.5.0.7 and 29.1.1, using Gleam 1.18.1. Broader platform and version claims
+remain outside that tested matrix. No 0.1.0 tag or application dependency pin
 is changed by this preparation.
 
 ## Audit findings
@@ -16,7 +17,7 @@ is changed by this preparation.
 | JavaScript preservation | The new native regex transport changes only Erlang modules. Generated schemas, acceptance, outputs and full diagnostics are compared across targets; intentional scalar and builder API changes are identified separately. |
 | Native failures | Missing helpers, port failures and execution limits remain operational exceptions, including under defaults and auxiliary checks. Temporary workers close before converters; owner exit, nesting and exception cleanup have regressions. |
 | Regex ownership and licensing | Vendored engine files have retained source hashes, patch descriptions and upstream MIT license. No interpreter or JavaScript runtime is required by the native backend. A generated host executable is not shipped in the Hex source archive. |
-| Deployment | A Gleam shipment passes on macOS after all source checkouts are removed and the helper is explicitly installed. Missing-helper failure is tested. This is not evidence for every release tool or operating system. |
+| Deployment | A Gleam shipment passes on macOS after all source checkouts are removed and the helper is explicitly installed. Missing-helper failure is tested. Both Linux OTP jobs also pass. This is not evidence for every release tool or operating system. |
 | Documentation | The changelog and migration guide describe both breaking changes. Obsolete temporary-regex-adapter statements are removed. Versioned links target 0.2.0 and remain pending until publication. |
 
 The preservation arguments support the design but are not a formal proof. V08
@@ -43,10 +44,10 @@ limits are operational boundaries, not extra schema rejection rules. The observe
 synthetic speedup is not a throughput guarantee for applications. No compiled
 regex cache or persistent service is introduced for this release.
 
-The current recommendation is to finish Linux and OTP-range qualification before
-claiming broad Erlang support. A release limited to JavaScript with a native
-preview would be a separate support-scope decision; this preparation does not
-make that decision implicitly. Additional vocabulary features should stay out
+Linux qualification now passes for OTP 28.5.0.7 and 29.1.1. The recommendation is
+to declare that tested native matrix, together with macOS arm64/OTP 29, rather
+than every OTP release. The qualification result and report hashes are in
+`linux-qualification.md`. Additional vocabulary features should stay out
 of 0.2.0.
 
 ## Preparation evidence and outstanding work
@@ -64,10 +65,10 @@ twelve cross-target compile-negative checks, an adapter mutation detected throug
 five API paths and the deployment check. Existing JavaScript evidence covers
 45 Gleam tests, 144 Node tests and 109 selected official-suite cases.
 
-Outstanding qualification: Linux, the supported OTP version range, and deployment
-formats beyond the tested Gleam shipment. All 109 selected official cases now pass on both targets against their unchanged
+Outstanding qualification: platforms and OTP releases beyond the tested matrix,
+and deployment formats beyond the Gleam shipment. All 109 selected official cases now pass on both targets against their unchanged
 expected results; 357 unsupported groups remain explicitly excluded. Broader native
-operator mutation coverage would strengthen evidence. Linux CI has been prepared
-for OTP 28 and 29, but no hosted pass is recorded yet. Publishing
+operator mutation coverage would strengthen evidence. The corrected Linux CI run passes on both OTP builds with the pinned Unicode 16
+reference. Publishing
 account access, repository visibility and external release availability must be
 checked when publication is requested. No tag, push or publication is included.

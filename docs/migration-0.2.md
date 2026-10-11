@@ -2,8 +2,10 @@
 
 Version 0.2.0 is an unreleased candidate. These changes are in the main source;
 the published 0.1.0 package is unchanged. JavaScript remains the supported target
-while broader native platform qualification remains open. Native tests and a
-Gleam deployment shipment pass on macOS arm64 with OTP 29.
+while release support claims are reviewed. Native tests and a Gleam deployment
+shipment pass on macOS arm64/OTP 29 and Ubuntu 24.04 x86_64 with OTP 28.5.0.7
+and 29.1.1. Native regex uses Unicode 16; parity with Node 24.21.0/Unicode 17 is
+not claimed.
 The native implementation requires an explicit build; see
 [Native Erlang setup](native-erlang.html).
 

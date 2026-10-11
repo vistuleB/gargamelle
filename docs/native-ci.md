@@ -1,6 +1,6 @@
 # Linux and OTP qualification
 
-The workflow `.github/workflows/native-qualification.yml` prepares independent
+The workflow `.github/workflows/native-qualification.yml` runs independent
 Ubuntu 24.04 x86_64 jobs for OTP 28 and OTP 29, using Gleam 1.18.1 and Node 24.10.0 (Unicode 16).
 It runs on main pushes, pull requests and manual dispatch. It has read-only
 repository permissions, does not retain checkout credentials and cannot publish
@@ -41,4 +41,9 @@ Review `reports/release-preparation.json`, the per-target logs and
 qualifies only its recorded platform, versions and source. It does not establish
 all deployment formats, exhaustive regex conformance or application throughput.
 Update the public support statement only after both jobs pass and the declared
-range is reviewed. Existing local evidence remains macOS arm64 with OTP 29.
+range is reviewed. Local macOS arm64/OTP 29 evidence remains separate from the hosted Linux jobs.
+
+The corrected [run 38132699640](https://github.com/vistuleB/gargamelle/actions/runs/38132699640)
+passed on OTP 28.5.0.7 and 29.1.1. Report fingerprints and log hashes were checked
+after download. See [the qualification record](linux-qualification.md) for the
+verified matrix, retained hashes, initial failure and remaining boundaries.
