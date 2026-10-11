@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Align unfolding and plain labels in HTML documentation, including record fields
+  and union alternatives. Preserve native disclosure behavior with a fixed
+  chevron space; update the copyable stylesheet.
+
 ## 0.2.0 — 2026-10-11
 
 - Restrict JSON strings, object keys and schema text to Unicode scalar values.

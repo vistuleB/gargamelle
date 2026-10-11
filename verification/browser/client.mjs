@@ -66,6 +66,29 @@ try{
   const container=document.createElement('div');container.innerHTML=examples;
   rendererCheck('checked examples suppress converters',calls===0);
   rendererCheck('checked examples escape markup',container.querySelectorAll('article').length===1&&!container.querySelector('script'));
+  const record=build({kind:'record',fields:[
+    {name:'name',child:{kind:'string'}},
+    {name:'tags',child:{kind:'array',child:{kind:'string'}}},
+    {name:'enabled',child:{kind:'boolean'}},
+    {name:'settings',child:{kind:'record',fields:[{name:'label',child:{kind:'string'}}]}},
+  ]});
+  renderer.insertAdjacentHTML('afterbegin',docs.render(record,'record-alignment'));
+  renderer.querySelector('details').open=true;
+  const aligned=parent=>{
+    const siblings=[...parent.children].filter(e=>e.classList.contains('node'));
+    require(siblings.some(e=>e.tagName==='DETAILS')&&siblings.some(e=>e.classList.contains('leaf')),'Mixed folding fixture missing');
+    const lefts=siblings.map(e=>e.querySelector('code').getBoundingClientRect().left);
+    return Math.max(...lefts)-Math.min(...lefts)<0.5;
+  };
+  const recordChildren=renderer.querySelector('#record-alignment details > .node-body > .children');
+  rendererCheck('record labels align with open children',aligned(recordChildren));
+  [...recordChildren.children].filter(e=>e.tagName==='DETAILS').forEach(e=>{e.open=false;});
+  rendererCheck('record labels align with closed children',aligned(recordChildren));
+  const alternatives=target.querySelector('details > .node-body > .children');
+  [...alternatives.children].filter(e=>e.tagName==='DETAILS').forEach(e=>{e.open=true;});
+  rendererCheck('alternative labels align with open children',aligned(alternatives));
+  [...alternatives.children].filter(e=>e.tagName==='DETAILS').forEach(e=>{e.open=false;});
+  rendererCheck('alternative labels align with closed children',aligned(alternatives));
   report.status='passed';
 }catch(error){report.status='failed';report.failure={checkpoint,message:String(error),stack:error.stack};}
 report.finishedAt=new Date().toISOString();
