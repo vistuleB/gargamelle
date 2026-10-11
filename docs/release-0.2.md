@@ -33,7 +33,10 @@ The native helper build and installation are explicit. This avoids distributing
 an executable for the maintainer's machine, but deployment tooling must copy a
 binary built for its own destination. The helper uses POSIX APIs; Windows support
 is not claimed. Native regex Unicode tables are pinned to Unicode 16, matching
-the tested Node 24 reference; other JavaScript hosts require separate checks.
+the tested Node 24.10.0 reference. The first Linux run selected Node 24.21.0
+with Unicode 17 and exposed two property-match differences for a newly assigned
+character. Linux CI now pins the Unicode 16 reference. Parity with Unicode 17
+is not claimed; upgrading the native tables is a separate compatibility decision.
 
 Native regex checks impose packet, stack, execution and timeout limits. Those
 limits are operational boundaries, not extra schema rejection rules. The observed

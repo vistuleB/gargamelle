@@ -136,6 +136,9 @@ The safe-integer and trusted-callback limitations are part of the contract.
 
 - Linux and other OTP versions are not yet verified for Erlang. The native regex
   helper uses POSIX APIs; Windows is not supported. Browsers, Bun and Deno are unverified.
+- Native regex Unicode properties use Unicode 16 tables; JavaScript uses its
+  host tables. Regex parity is verified against Node 24.10.0, not Node 24.21.0
+  with Unicode 17.
 - Only the JSON Schema features exposed by the constructors are supported.
   Gargamelle does not validate arbitrary imported schemas or implement the full
   Draft 2020-12 dialect.

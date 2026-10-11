@@ -98,7 +98,11 @@ The 27 selected official schema groups now run through the actual typed library
 on both targets: all 109 unchanged cases pass (38 accepted, 71 rejected), with
 original and emitted schemas checked by Ajv and Hyperjump. The official provenance
 and all 357 excluded groups remain unchanged. Native qualification CI is prepared
-for Ubuntu 24.04 x86_64 with OTP 28 and 29; no hosted pass is recorded yet.
+for Ubuntu 24.04 x86_64 with OTP 28 and 29. The initial hosted run passed
+all groups except the regex comparison: a floating Node 24 selection chose
+24.21.0/Unicode 17, whereas native tables use Unicode 16. CI now pins the verified
+24.10.0 reference; Unicode 17 parity remains unclaimed. No complete hosted pass
+is recorded yet.
 See `docs/native-ci.md` for scope, version policy and evidence review.
 
 Next: run the prepared Linux/OTP CI, extend native operator mutation coverage,

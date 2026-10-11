@@ -1,10 +1,15 @@
 # Linux and OTP qualification
 
 The workflow `.github/workflows/native-qualification.yml` prepares independent
-Ubuntu 24.04 x86_64 jobs for OTP 28 and OTP 29, using Gleam 1.18.1 and Node 24.
+Ubuntu 24.04 x86_64 jobs for OTP 28 and OTP 29, using Gleam 1.18.1 and Node 24.10.0 (Unicode 16).
 It runs on main pushes, pull requests and manual dispatch. It has read-only
 repository permissions, does not retain checkout credentials and cannot publish
-the package. No hosted run is recorded by this preparation.
+the package. The first hosted run failed the native regex comparison because the floating
+Node 24 selection resolved to Node 24.21.0 with Unicode 17. The native tables
+are pinned to Unicode 16; CI now pins the previously verified Node 24.10.0.
+See [the initial run](https://github.com/vistuleB/gargamelle/actions/runs/38132286154).
+The failure remains retained; selecting a matching reference does not establish
+parity with Unicode 17.
 
 Each job fetches the pinned dependencies, then runs `npm run prepare:release`:
 the JavaScript gate, sixteen native groups, docs generation, source archive

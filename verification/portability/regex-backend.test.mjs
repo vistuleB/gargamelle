@@ -34,10 +34,13 @@ test('production native regex preserves syntax/search and operational failures',
     mkdirSync(join(pkg,'inputs'));
     const input=join(pkg,'inputs/cases.json');writeFileSync(input,JSON.stringify(cases));
     const result=JSON.parse(run('escript',['verification/portability/regex-backend.escript',pkg,root,input]));
-    assert.deepEqual(result.cases,cases.map(({pattern,text})=>{
+    const expected=cases.map(({pattern,text})=>{
       try {return {valid:true,matched:new RegExp(pattern,'u').test(text)};}
       catch(error){assert.ok(error instanceof SyntaxError);return {valid:false};}
-    }));
+    });
+    assert.equal(result.cases.length,expected.length);
+    for(const [index,entry] of result.cases.entries())
+      assert.deepEqual(entry,expected[index],JSON.stringify({index,...cases[index],node:process.version,unicode:process.versions.unicode}));
     for(const flag of Object.values(result.failures)) assert.equal(flag,true);
     assert.equal(result.ports_restored,true);assert.equal(result.mailbox_restored,true);
     assert.equal(result.scoped_cases_equal,true);assert.equal(result.dictionary_restored,true);

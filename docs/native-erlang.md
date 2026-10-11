@@ -66,8 +66,10 @@ ordinary validation rejection.
 
 The engine combines QuickJS 2026-06-04 regex code with Unicode 16 tables from
 2025-09-13 and two recorded local patches. The Unicode version matches the tested
-Node 24 reference. JavaScript uses its host's Unicode tables; parity with other
-hosts requires verification. `priv/regex-src/PROVENANCE.json` records the sources,
+Node 24.10.0 reference. JavaScript uses its host's Unicode tables. Node 24.21.0
+uses Unicode 17 and differs on newly assigned characters, so regex parity with
+that runtime is not claimed. Changing the Node reference or native tables needs
+a separate compatibility review. `priv/regex-src/PROVENANCE.json` records the sources,
 hashes and patches, and `LICENSE.quickjs` preserves the upstream MIT license.
 
 Each native validation walk lazily starts one helper and reuses it until the walk

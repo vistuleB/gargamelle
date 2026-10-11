@@ -75,10 +75,10 @@ try {
   assert.equal(fingerprint().digest,before.digest,'Source changed during release preparation');
   const report={status:'prepared',version,generatedAt:new Date().toISOString(),source:before,
     platform:process.platform,architecture:process.arch,commands,logs,
-    versions:{node:process.version,gleam:run('gleam',['--version']).trim(),otp:run('erl',['-noshell','-eval','io:format("~s", [erlang:system_info(otp_release)]), halt().']).trim(),beam:run('erl',['-noshell','-eval','io:format("~s", [erlang:system_info(system_version)]), halt().']).trim()},
+    versions:{node:process.version,unicode:process.versions.unicode,gleam:run('gleam',['--version']).trim(),otp:run('erl',['-noshell','-eval','io:format("~s", [erlang:system_info(otp_release)]), halt().']).trim(),beam:run('erl',['-noshell','-eval','io:format("~s", [erlang:system_info(system_version)]), halt().']).trim()},
     archive:{path:`build/gargamelle-${version}.tar`,sha256:sha256(readFileSync(archive)),contentsSha256:sha256(readFileSync(contents)),members:entries},
     counts:{javascript:js.counts,nativeGroups:16,nativeOfficialCases:official.cases,nativeGeneratedPairs:generated.pairs,nativeDecodedOutputs:generated.coverage.decoded},
-    support:{javascript:'Node 24',nativeEvidence:`${process.platform} ${process.arch} / OTP ${official.otp} / explicit C helper installation`,unqualified:['Platforms and OTP versions outside this recorded run','Other deployment tooling'],unsupported:['Windows native helper','Browsers/Bun/Deno']},
+    support:{javascript:process.version,nativeEvidence:`${process.platform} ${process.arch} / OTP ${official.otp} / explicit C helper installation`,unqualified:['Platforms and OTP versions outside this recorded run','Other deployment tooling'],unsupported:['Windows native helper','Browsers/Bun/Deno']},
     reviewRequired:['V08 preservation argument','Declared Erlang support scope and remaining platform qualification'],
     scope:'Prepared local candidate; not publication approval or broad Erlang support qualification'};
   writeFileSync(reportPath,JSON.stringify(report,null,2)+'\n');
