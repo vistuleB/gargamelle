@@ -1,8 +1,10 @@
 # Gargamelle handoff and next work
 
-0.2.1 preparation is tracked in `docs/release-0.2.1.md`. Core semantics remain
-those of 0.2.0; this patch contains renderer/docs improvements and verification.
-Final results and archive hashes are in ignored reports. The maintainer publishes.
+0.3.0 preparation is tracked in `docs/release-0.3.0.md`. It introduces
+`schema_json` and `schema_string`, retaining `emit_json` and `emit_text` as
+deprecated aliases. Core schema, validation and decoding semantics are unchanged.
+The preceding 0.2.2 replacement handoff is retained in ignored reports.
+The maintainer publishes.
 
 Recorded 2026-10-10; updated through 0.2.0 release candidate preparation.
 This is a handoff and prioritized candidate list, not a commitment to implement

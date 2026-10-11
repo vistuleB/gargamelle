@@ -65,5 +65,5 @@ export function evaluateText(definition, text) {
   if(s.value_text(input)!==before)throw new Error('Decoder mutated input');
   return {accepted:result instanceof Ok, value:result[0]};
 }
-export const emitted=d=>JSON.parse(s.emit_text(d));
+export const emitted=d=>JSON.parse(s.schema_string(d));
 export {allKinds,childNodes,proposal,specimen} from './recipe-model.mjs';

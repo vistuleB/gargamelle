@@ -4,7 +4,7 @@
 //// invokes user converters; decoding invokes them only after structural success.
 //// Converters are trusted application code: exceptions are operational failures.
 //// JavaScript and Erlang targets are supported on the
-//// [tested runtimes](https://hexdocs.pm/gargamelle/0.2.2/native-erlang.html).
+//// [tested runtimes](https://hexdocs.pm/gargamelle/0.3.0/native-erlang.html).
 //// The Erlang target requires a separately compiled C regex helper.
 
 import gleam/json
@@ -1704,9 +1704,9 @@ fn constant_equal(a: Value, b: Value) -> Bool {
 @external(javascript, "./runtime.mjs", "int_text")
 fn int_text(n: Int) -> String
 
-/// Emit a JSON Schema 2020-12 document as Gargamelle’s opaque `Value`, not
+/// Return a JSON Schema 2020-12 document as Gargamelle’s opaque `Value`, not
 /// `gleam/json.Json`. Unfinished or conflicting reference graphs fail operationally.
-pub fn emit_json(def: Definition(a)) -> Value {
+pub fn schema_json(def: Definition(a)) -> Value {
   with_walk(fn() {
     let Plan(n, _) = def
     put(
@@ -1717,9 +1717,21 @@ pub fn emit_json(def: Definition(a)) -> Value {
   })
 }
 
-/// Emit canonical JSON Schema 2020-12 text, including finite local references.
+/// Return a canonical JSON Schema 2020-12 string, including finite local references.
+pub fn schema_string(def: Definition(a)) -> String {
+  value_text(schema_json(def))
+}
+
+/// Deprecated alias for `schema_json`.
+@deprecated("Use schema_json instead.")
+pub fn emit_json(def: Definition(a)) -> Value {
+  schema_json(def)
+}
+
+/// Deprecated alias for `schema_string`.
+@deprecated("Use schema_string instead.")
 pub fn emit_text(def: Definition(a)) -> String {
-  value_text(emit_json(def))
+  schema_string(def)
 }
 
 fn put(v: Value, k: String, x: Value) -> Value {

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.0 — Unreleased
+
+- Rename the preferred schema functions to `schema_json` and `schema_string`.
+  Keep `emit_json` and `emit_text` as deprecated aliases. Update examples and
+  documentation; schema bytes, validation and decoding behavior are unchanged.
+
 ## 0.2.2 — 2026-10-11
 
 - Demonstrate typed record decoding and provide a runnable nested renderer recipe.

@@ -10,7 +10,7 @@ const mutations=[
  ['exclusive-lower-admits-equality','gargamelle.mjs','_block = x > b;','_block = x >= b;',`const d=bound(new s.Exclusive(0),null); assert.equal(s.decode(d,unwrap(s.parse('0'))) instanceof Ok,false);`],
  ['exclusive-upper-admits-equality','gargamelle.mjs','_block$1 = x < b;','_block$1 = x <= b;',`const d=bound(null,new s.Exclusive(1)); assert.equal(s.decode(d,unwrap(s.parse('1'))) instanceof Ok,false);`],
  ['inclusive-lower-rejects-equality','gargamelle.mjs','_block = x >= b;','_block = x > b;',`const d=bound(new s.Inclusive(0.25),null); assert.equal(s.decode(d,unwrap(s.parse('0.25'))) instanceof Ok,true);`],
- ['wrong-exclusive-emission','gargamelle.mjs','"minimum", "exclusiveMinimum"','"minimum", "minimum"',`assert.equal(JSON.parse(s.emit_text(bound(new s.Exclusive(0.25),null))).exclusiveMinimum,0.25);`],
+ ['wrong-exclusive-emission','gargamelle.mjs','"minimum", "exclusiveMinimum"','"minimum", "minimum"',`assert.equal(JSON.parse(s.schema_string(bound(new s.Exclusive(0.25),null))).exclusiveMinimum,0.25);`],
  ['nonfinite-bound-admitted','runtime.mjs','export const finite = Number.isFinite;','export const finite = () => true;',`assert.equal(s.number_bounds(s.number(),new Some(new s.Inclusive(Infinity)),None) instanceof Ok,false);`],
 ];
 test('numeric validation, emission, and construction mutants fail behavioral assertions',()=>{

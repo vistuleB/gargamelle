@@ -62,13 +62,13 @@ pub fn main() {
     let #(index, construct, inputs) = fixture
     checkpoint(index, -1)
     let definition = construct()
-    let schema = s.emit_text(definition)
+    let schema = s.schema_string(definition)
     let cases =
       list.index_map(inputs, fn(input, input_index) {
         checkpoint(index, input_index)
         entry(definition, input)
       })
-    let assert True = schema == s.emit_text(definition)
+    let assert True = schema == s.schema_string(definition)
     json.object([
       #("index", json.int(index)),
       #("schema", json.string(schema)),

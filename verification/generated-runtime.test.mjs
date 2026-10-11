@@ -19,7 +19,7 @@ test('callback and resource exceptions remain operational failures, not schema r
  const d=s.map(s.text(),()=>{throw marker;});
  const input=unwrap(s.parse('"x"'));
  assert.ok(s.validate(d,input) instanceof Ok);
- assert.doesNotThrow(()=>s.emit_text(d));
+ assert.doesNotThrow(()=>s.schema_string(d));
  assert.throws(()=>s.decode(d,input),e=>e===marker);
  const source=`import {parse} from ${JSON.stringify(new URL('../build/dev/javascript/gargamelle/gargamelle.mjs',import.meta.url).href)};
  try { const r=parse('['.repeat(10000)+'null'+']'.repeat(10000)); console.error('incorrectly returned',r.constructor.name); process.exit(3); }

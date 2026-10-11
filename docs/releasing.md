@@ -30,7 +30,7 @@ are separate work. Do not perform them as part of release preparation.
 - [ ] Review the changelog and migration guide against the actual changes,
   including breaking changes. Check version-specific assumptions in the
   preparation script, source/archive URLs and documentation links. The current
-  script explicitly checks version 0.2.2.
+  script explicitly checks version 0.3.0.
 - [ ] Check compiler and dependency requirements against the evidence. Do not
   widen dependency ranges or runtime support claims without compatibility checks.
 - [ ] Preserve the package license, vendored regex license and provenance, and

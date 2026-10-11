@@ -9,7 +9,7 @@ const root=fileURLToPath(new URL('../',import.meta.url));
 const mutations=[
  ['all-items-counted','return inspect(matching, item, "", bindings)[0] instanceof $Empty;','return true;',`assert.equal(s.validate(d,unwrap(s.parse('[0.5,0.25,1]'))) instanceof Ok,true);`],
  ['maximum-ignored','size_ok(count, new Some(minimum), maximum)','size_ok(count, new Some(minimum), Option$None$const)',`assert.equal(s.validate(d,unwrap(s.parse('[1,2,3]'))) instanceof Ok,false);`],
- ['minimum-emission-dropped','"minContains"','"x-minContains"',`assert.equal(JSON.parse(s.emit_text(d)).minContains,1);`],
+ ['minimum-emission-dropped','"minContains"','"x-minContains"',`assert.equal(JSON.parse(s.schema_string(d)).minContains,1);`],
 ];
 test('membership counting, maximum, and schema emission mutants fail assertions',()=>{
  const dir=mkdtempSync(join(tmpdir(),'gargamelle-membership-mutants-'));

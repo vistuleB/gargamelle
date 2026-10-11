@@ -47,6 +47,6 @@ test('exclusion collects forbidden references and rejects same-input recursive c
  await compare(d,[[[1,[2]],true],[[],false],[['bad'],false]]);
  assert.equal(s.recursive('loop',self=>new Ok(s.exclude(s.number(),self))) instanceof Ok,false);
  let escaped;assert.throws(()=>s.recursive('unbound',self=>{escaped=s.exclude(s.number(),self);throw new Error('stop');}),/stop/);
- assert.throws(()=>s.emit_text(escaped),/unfinalized/);assert.throws(()=>evaluate(escaped,1),/unfinalized/);
- const conflict=s.exclude(unwrap(s.named('same',s.number())),unwrap(s.named('same',s.text())));assert.throws(()=>s.emit_text(conflict),/Conflicting/);
+ assert.throws(()=>s.schema_string(escaped),/unfinalized/);assert.throws(()=>evaluate(escaped,1),/unfinalized/);
+ const conflict=s.exclude(unwrap(s.named('same',s.number())),unwrap(s.named('same',s.text())));assert.throws(()=>s.schema_string(conflict),/Conflicting/);
 });

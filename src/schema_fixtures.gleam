@@ -164,7 +164,7 @@ fn show_option(o) {
 fn int_text(i: Int) -> String
 
 pub fn fixture_schema(name: String) -> String {
-  s.emit_text(definition(name))
+  s.schema_string(definition(name))
 }
 
 pub fn fixture_decode(

@@ -1,7 +1,7 @@
 # Advanced definitions and documentation
 
 These examples extend the core record and array workflows. Acceptance and output
-semantics are specified in the [technical contract](https://hexdocs.pm/gargamelle/0.2.2/contract.html).
+semantics are specified in the [technical contract](https://hexdocs.pm/gargamelle/0.3.0/contract.html).
 
 ## Fractional numbers
 

@@ -1,6 +1,6 @@
 # Gargamelle technical contract
 
-This document specifies the intended public semantics of Gargamelle 0.2.2.
+This document specifies the intended public semantics of Gargamelle 0.3.0.
 “Must” denotes a requirement, not a claim that the implementation has been
 formally proved. Verification results and implementation history are separate.
 
@@ -52,7 +52,7 @@ For every well-formed, finalized definition S and x in J, assuming sufficient
 runtime resources and pure, total conversion callbacks:
 
 ```text
-Valid202012(emit_json(S), x)
+Valid202012(schema_json(S), x)
     ⇔ validate(S, x) = Ok(Nil)
     ⇔ ∃v. decode(S, x) = Ok(v)
 ```
@@ -239,8 +239,8 @@ compositions, overlapping branches or patterns.
 
 ## 8. Schema emission and canonical serialization
 
-`emit_json` returns an opaque JSON value describing the definition;
-`emit_text` returns its canonical JSON string. Emission must not depend on
+`schema_json` returns an opaque JSON value describing the definition;
+`schema_string` returns its canonical JSON string. Emission must not depend on
 conversion callbacks or process history. The schematic forms are:
 
 | Construct | Emitted form (schematic) |
@@ -292,8 +292,8 @@ without invoking inherited setters or changing prototypes.
 For the same finalized definition, text emission must be byte-identical:
 
 ```text
-parse(emit_text(S)) = Ok(emit_json(S))  // JSON value equality
-emit_text(S) = emit_text(S)            // byte equality on repeated emission
+parse(schema_string(S)) = Ok(schema_json(S))  // JSON value equality
+schema_string(S) = schema_string(S)            // byte equality on repeated emission
 ```
 
 JSON object member order is not part of value equality. Serialization normalizes

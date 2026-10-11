@@ -57,7 +57,12 @@ test('main library preserves baseline behavior with immutable recursive plans',(
     rmSync(join(directory,'test'),{recursive:true});
     cpSync(join(root,'verification/portability/integration/baseline.gleam'),join(directory,'src/gargamelle.gleam'));
     cpSync(join(root,'verification/portability/integration/baseline-runtime.mjs'),join(directory,'src/runtime.mjs'));
+    // Adapt only function names in copied callers; preserve the frozen baseline.
+    const callers=['schema_fixtures.gleam','integration_probe.gleam','gargamelle/documentation.gleam'];
+    const originals=callers.map(name=>[name,readFileSync(join(directory,'src',name),'utf8')]);
+    for(const [name,source] of originals)writeFileSync(join(directory,'src',name),source.replaceAll('schema_string','emit_text').replaceAll('schema_json','emit_json'));
     assert.deepEqual(probe('javascript'),integrated,'schema bytes, decoded outputs or full DataError structures changed');
+    for(const [name,source] of originals)writeFileSync(join(directory,'src',name),source);
     writeFileSync(join(directory,'src/gargamelle.gleam'),integratedSource);
     writeFileSync(join(directory,'src/runtime.mjs'),currentRuntime);
     cpSync(join(root,'test'),join(directory,'test'),{recursive:true});
@@ -81,7 +86,7 @@ test('main library preserves baseline behavior with immutable recursive plans',(
     for(const [name,body,privateValue] of [
       ['decode','s.decode(self, value)',false],
       ['validate','s.validate(self, value)',false],
-      ['emit','s.emit_text(self)',false],
+      ['emit','s.schema_string(self)',false],
       ['render','documentation.render(self, "test")',false],
       ['private-evidence','s.Atomic',true],
       ['private-runner','s.Recursive(fn(_, _) { Nil })',true],

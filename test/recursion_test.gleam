@@ -82,6 +82,6 @@ pub fn recursive_documentation_links_test() {
   string.contains(html, "href=\"#tree-docs-definition-116-114-101-101\"")
   |> should.be_true
   should.be_true(string.length(html) < 5000)
-  string.contains(s.emit_text(definition), "\"$ref\":\"#/$defs/tree\"")
+  string.contains(s.schema_string(definition), "\"$ref\":\"#/$defs/tree\"")
   |> should.be_true
 }

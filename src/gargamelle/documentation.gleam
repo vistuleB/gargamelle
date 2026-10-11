@@ -395,7 +395,8 @@ fn node(
 /// Render a definition with every shared definition visible in its own section.
 /// Supply a unique article ID when embedding multiple contracts on one page.
 pub fn render(definition: gargamelle.Definition(a), id: String) -> String {
-  let assert Ok(html) = render_emitted(gargamelle.emit_text(definition), id, [])
+  let assert Ok(html) =
+    render_emitted(gargamelle.schema_string(definition), id, [])
   html
 }
 

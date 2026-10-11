@@ -150,7 +150,7 @@ pub fn main() {
     let d = definition(name)
     json.object([
       #("name", json.string(name)),
-      #("schema", json.string(s.emit_text(d))),
+      #("schema", json.string(s.schema_string(d))),
       #("cases", json.array(integration_inputs.values(), entry(d, _))),
     ])
   })

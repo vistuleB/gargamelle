@@ -20,7 +20,7 @@ const cases=[
  ['private_recursion_runner','pub fn main() { s.Recursive(fn(_,_) { Nil }) }','Unknown module value'],
  ['open_plan_decode','pub fn main() { let assert Ok(v) = s.parse("[]") s.recursive("tree",fn(self) { s.decode(self,v) Ok(self) }) }','Type mismatch'],
  ['open_plan_validate','pub fn main() { let assert Ok(v) = s.parse("[]") s.recursive("tree",fn(self) { s.validate(self,v) Ok(self) }) }','Type mismatch'],
- ['open_plan_emit','pub fn main() { s.recursive("tree",fn(self) { s.emit_text(self) Ok(self) }) }','Type mismatch'],
+ ['open_plan_emit','pub fn main() { s.recursive("tree",fn(self) { s.schema_string(self) Ok(self) }) }','Type mismatch'],
  ['open_plan_render','pub fn main() { s.recursive("tree",fn(self) { documentation.render(self,"tree") Ok(self) }) }','Type mismatch'],
  ['opaque_plan','pub fn main() { s.Plan(Nil, fn(_,_,_) { Nil }) }','Unknown module value'],
  ['private_evidence','pub fn main() { s.Atomic }','Unknown module value'],

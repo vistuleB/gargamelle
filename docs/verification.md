@@ -56,7 +56,7 @@ Terminology used throughout:
 
 For every successfully constructed definition S and input value x in domain J:
 
-    Valid202012(emit_json(S), x) iff decode(S, x) = Ok(v) for some v
+    Valid202012(schema_json(S), x) iff decode(S, x) = Ok(v) for some v
 
 The decoder must return Error for schema-invalid values, not throw. For accepted
 values, v must also satisfy the value contract of S. Agreement about acceptance
@@ -197,10 +197,10 @@ Equivalent schema forms can be correct. These choices additionally fix a stable,
 reviewable output form for this library; optimizations need an explicit contract
 amendment rather than changing snapshots incidentally. Child schemas are inline.
 
-Two operations are required (names are conceptual): `emit_json(S)` returns a JSON
-schema value, and `emit_text(S)` returns its canonical JSON string. Parsing
-`emit_text(S)` must recover `emit_json(S)` as a JSON value; object member order is
-not part of that value equality. Byte-stability applies to `emit_text`, not to
+Two operations are required (names are conceptual): `schema_json(S)` returns a JSON
+schema value, and `schema_string(S)` returns its canonical JSON string. Parsing
+`schema_string(S)` must recover `schema_json(S)` as a JSON value; object member order is
+not part of that value equality. Byte-stability applies to `schema_string`, not to
 the in-memory JSON representation.
 
 | Construct | Emitted form (schematic) |

@@ -46,6 +46,6 @@ test('membership composes with named arrays, tuples, uniqueness and recursive va
  const d=unwrap(s.recursive('member-tree',self=>s.any_of(toList([s.map(s.number(),x=>x),s.map(contains(s.array(self),s.number(),1),xs=>[...xs])]))));
  await compare(d,[[[1,[2,3]],true],[[[1]],false],[[1,[]],false]]);
  let escaped;assert.throws(()=>s.recursive('unbound',self=>{escaped=contains(numbers,self);throw new Error('stop');}),/stop/);
- assert.throws(()=>s.emit_text(escaped),/unfinalized/);assert.throws(()=>evaluate(escaped,[]),/unfinalized/);
- const conflict=contains(unwrap(s.named('same',numbers)),unwrap(s.named('same',s.number())));assert.throws(()=>s.emit_text(conflict),/Conflicting/);
+ assert.throws(()=>s.schema_string(escaped),/unfinalized/);assert.throws(()=>evaluate(escaped,[]),/unfinalized/);
+ const conflict=contains(unwrap(s.named('same',numbers)),unwrap(s.named('same',s.number())));assert.throws(()=>s.schema_string(conflict),/Conflicting/);
 });
