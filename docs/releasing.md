@@ -28,7 +28,7 @@ install the Gleam package; they do not need the npm verification dependencies.
    their own license in `verification/official/LICENSE`.
 2. Install pinned dependencies with `npm ci` and `gleam deps download` on first
    setup. Run `npm run prepare:release` with Node 24, Gleam 1.18.1, OTP 29,
-   `make` and a C compiler. It runs JavaScript evidence, fifteen native groups,
+   `make` and a C compiler. It runs JavaScript evidence, sixteen native groups,
    docs generation, archive inspection and fresh extracted-archive consumers on
    both targets. The native deployment group tests a shipment without source
    checkouts. All checks run offline once dependencies are available.

@@ -76,7 +76,7 @@ checkpoint commit, regenerate evidence to identify the containing commit.
 ## Native Erlang verification
 
 With Erlang/OTP 29, `make` and a C compiler installed, run
-`npm run verify:erlang-primitives`. The command runs fifteen groups covering the
+`npm run verify:erlang-primitives`. The command runs sixteen groups covering the
 actual native library, numeric and scalar admission checks, immutable recursion,
 process transfer and exit, native regex behavior and operational failures.
 Historical prototypes and regex counterexamples remain as regression evidence.
@@ -88,6 +88,10 @@ interpreter checks 6,459 accepted outputs. Full diagnostic structures are compar
 across targets. The deployment gate removes source checkouts and tests an exported
 Gleam shipment with an explicitly installed helper. See
 [Native Erlang setup](native-erlang.html) for installation.
+
+All 109 selected official schema cases also run through both typed targets,
+with the original validity expectations unchanged and both original and emitted
+schemas checked by Ajv and Hyperjump. The 357 unsupported groups remain excluded.
 
 Current native evidence covers macOS arm64, OTP 29 and Gleam 1.18.1. It does not
 establish Linux, Windows, other OTP versions, every deployment tool or exhaustive
@@ -103,3 +107,7 @@ targets. It writes `reports/release-preparation.json`, including archive hashes 
 support boundaries. It does not tag, push or publish. The separate
 `npm run check:release` remains a JavaScript evidence check; it is not a whole
 Erlang release qualification.
+
+Linux/OTP qualification CI is prepared in `.github/workflows/native-qualification.yml`;
+see `docs/native-ci.md` for the evidence policy. A workflow definition is not a
+hosted test result or a supported-version declaration.

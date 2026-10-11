@@ -1,0 +1,53 @@
+name: Native qualification
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: native-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux:
+    name: Ubuntu 24.04 / OTP ${{ matrix.otp }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        otp: ['28', '29']
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: '24'
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
+        with:
+          otp-version: ${{ matrix.otp }}
+          gleam-version: '1.18.1'
+      - name: Fetch pinned dependencies
+        run: |
+          npm ci
+          gleam deps download
+      - name: Check native build tools
+        run: |
+          cc --version
+          make --version
+      - name: Run both target gates and deployment/archive checks
+        run: npm run prepare:release
+      - name: Retain evidence and failure logs
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: linux-otp-${{ matrix.otp }}-${{ github.run_id }}
+          path: reports/
+          if-no-files-found: warn
+          retention-days: 14

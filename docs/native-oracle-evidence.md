@@ -22,8 +22,9 @@ JSON normalization does not establish signed-zero or host integer/float
 representation equivalence. The separate numeric portability gates cover those
 properties. Nested coverage records interpreter visits, rather than instrumenting
 native constructor execution. The generated corpus is bounded evidence; it does
-not replace native execution of the complete official schema suite, exhaustive
-parser or regex conformance, or checks on other platforms and OTP versions.
+not replace exhaustive
+parser or regex conformance, or checks on other platforms and OTP versions. The separate official gate now
+runs all 109 selected cases unchanged; unsupported groups remain excluded.
 
 ## Reproduction and failure evidence
 
@@ -52,3 +53,10 @@ versions and other deployment tooling remain unverified.
 
 These additions change verification code and documentation. Production shared
 Gleam, JavaScript and Erlang sources are unchanged from commit `87c8c03`.
+
+`official-conformance.test.mjs` verifies the pinned suite hashes and complete
+selection inventory, compiles typed definitions and runs all 27 selected groups
+on both targets. Original and emitted schemas are checked by Ajv and Hyperjump
+against the fixtures' unchanged validity expectations. All 109 cases pass: 38
+accepted and 71 rejected. The report is `reports/native-official-evidence.json`.
+This adds no arbitrary-schema importer or claim of full-dialect support.

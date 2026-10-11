@@ -56,14 +56,15 @@ It is a local preparation report, not publication approval.
 
 The retained native corpus checks 886 definitions and 17,788 input cases with
 Ajv and Hyperjump; 6,459 accepted outputs are checked by an independent recipe
-interpreter. Fifteen portability groups include 53 native behavioral tests,
+interpreter. Sixteen portability groups include 53 native behavioral tests,
 twelve cross-target compile-negative checks, an adapter mutation detected through
 five API paths and the deployment check. Existing JavaScript evidence covers
 45 Gleam tests, 144 Node tests and 109 selected official-suite cases.
 
 Outstanding qualification: Linux, the supported OTP version range, and deployment
-formats beyond the tested Gleam shipment. Native execution of the complete
-selected official corpus and broader native operator mutation coverage would
-strengthen evidence; current generated gates do not claim those checks. Publishing
+formats beyond the tested Gleam shipment. All 109 selected official cases now pass on both targets against their unchanged
+expected results; 357 unsupported groups remain explicitly excluded. Broader native
+operator mutation coverage would strengthen evidence. Linux CI has been prepared
+for OTP 28 and 29, but no hosted pass is recorded yet. Publishing
 account access, repository visibility and external release availability must be
 checked when publication is requested. No tag, push or publication is included.

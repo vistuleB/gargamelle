@@ -19,6 +19,9 @@
 - Fix native integer/float decoding in optional HTML rendering.
 - Extend cross-target compile-negative, process-lifetime, generated-oracle,
   mutation and deployment verification without adding JavaScript runtime dependencies.
+- Run all 109 selected official schema cases through the actual library on both
+  targets. Prepare Ubuntu 24.04 qualification CI for OTP 28 and 29; hosted
+  results are still pending.
 
 Linux, other OTP versions and broader Erlang support remain unqualified. This
 entry describes the candidate, not a published release.

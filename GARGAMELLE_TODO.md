@@ -59,7 +59,7 @@ All core externals now have native implementations. Native fixtures use the real
 regex helper, without regex test adapters. Current validation: 45 JavaScript
 Gleam tests, 144 Node tests, 17,788 generated pairs and 109 official schema cases;
 53 native tests, twelve cross-target compile-negative checks and 3,636 independent
-cases across 36 schemas. All fifteen portability groups pass.
+cases across 36 schemas. All sixteen portability groups pass.
 
 Fresh consumers of the extracted 0.2.0 archive pass on both targets using pinned
 dependency sources offline. Native setup requires an explicit C build. Generated
@@ -94,8 +94,15 @@ No release tag, push or publication is included. The recommendation remains to
 finish native platform qualification before claiming broad Erlang support; a
 JavaScript release with a native preview is a separate support-scope decision.
 
-Next: verify Linux and OTP version bounds, extend native official-suite and
-operator mutation coverage, and check other release tooling. Measure representative application workloads
+The 27 selected official schema groups now run through the actual typed library
+on both targets: all 109 unchanged cases pass (38 accepted, 71 rejected), with
+original and emitted schemas checked by Ajv and Hyperjump. The official provenance
+and all 357 excluded groups remain unchanged. Native qualification CI is prepared
+for Ubuntu 24.04 x86_64 with OTP 28 and 29; no hosted pass is recorded yet.
+See `docs/native-ci.md` for scope, version policy and evidence review.
+
+Next: run the prepared Linux/OTP CI, extend native operator mutation coverage,
+and check other release tooling. Measure representative application workloads
 before optimizing further. Windows is unverified and the helper currently uses
 POSIX APIs. Complete Erlang support remains gated on these checks.
 Do not publish or move `v0.1.0` for this work.
@@ -224,7 +231,7 @@ JSON admission/canonical serialization. The admission/canonical/string helpers
 are deliberately not attached to the public API while surrogate compatibility
 is unresolved.
 
-`npm run verify:erlang-primitives` runs fifteen independent portability test groups,
+`npm run verify:erlang-primitives` runs sixteen independent portability test groups,
 including the isolated immutable-plan and production integration experiments. The current library graph
 group passes with the new construction-plan contract. The earlier captured-
 placeholder failures are recorded historically below.

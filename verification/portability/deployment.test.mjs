@@ -40,6 +40,6 @@ test('native shipment runs without checkout or build tools after explicit helper
     writeFileSync(join(root,'reports/native-deployment-evidence.json'),JSON.stringify({status:'passed',generatedAt:new Date().toISOString(),source:before,
       platform:process.platform,architecture:process.arch,otp:run('erl',['-noshell','-eval','io:format("~s", [erlang:system_info(otp_release)]), halt().'],unrelated).stdout.trim(),
       scope:'Local Gleam Erlang shipment; source checkouts and dependency sources removed; explicit helper installation; launch from unrelated working directory; missing helper fails operationally; not a Linux/Windows or all-release-tooling claim'},null,2)+'\n');
-    t.diagnostic('macOS shipment: explicit installed helper, no source/build fallback, Unicode/recursive/rendering consumer passed');
+    t.diagnostic(`${process.platform} ${process.arch} shipment: explicit installed helper, no source/build fallback, Unicode/recursive/rendering consumer passed`);
   } finally {rmSync(directory,{recursive:true,force:true});}
 });

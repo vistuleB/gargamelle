@@ -31,12 +31,14 @@ try {
   console.log('Checking native evidence…');
   const native=run('npm',['run','verify:erlang-primitives'],root,'release-native.log');
   const count=name=>Number(native.match(new RegExp(`^[#ℹ] ${name} (\\d+)$`,'m'))?.[1]);
-  assert.equal(count('tests'),15);assert.equal(count('pass'),15);
+  assert.equal(count('tests'),16);assert.equal(count('pass'),16);
   for(const name of ['fail','cancelled','skipped','todo'])assert.equal(count(name),0);
   const js=JSON.parse(readFileSync(join(root,'reports/evidence.json')));
   const generated=JSON.parse(readFileSync(join(root,'reports/native-generated-evidence.json')));
   assert.equal(js.coverage.corpusSha256,generated.corpusSha256);
   assert.equal(generated.source.digest,before.digest);
+  const official=JSON.parse(readFileSync(join(root,'reports/native-official-evidence.json')));
+  assert.equal(official.status,'passed');assert.equal(official.source.digest,before.digest);assert.equal(official.cases,109);
   run('gleam',['docs','build'],root,'release-docs.log');
   run('gleam',['export','hex-tarball'],root,'release-export.log');
 
@@ -73,10 +75,10 @@ try {
   assert.equal(fingerprint().digest,before.digest,'Source changed during release preparation');
   const report={status:'prepared',version,generatedAt:new Date().toISOString(),source:before,
     platform:process.platform,architecture:process.arch,commands,logs,
-    versions:{node:process.version,gleam:run('gleam',['--version']).trim(),otp:run('erl',['-noshell','-eval','io:format("~s", [erlang:system_info(otp_release)]), halt().']).trim()},
+    versions:{node:process.version,gleam:run('gleam',['--version']).trim(),otp:run('erl',['-noshell','-eval','io:format("~s", [erlang:system_info(otp_release)]), halt().']).trim(),beam:run('erl',['-noshell','-eval','io:format("~s", [erlang:system_info(system_version)]), halt().']).trim()},
     archive:{path:`build/gargamelle-${version}.tar`,sha256:sha256(readFileSync(archive)),contentsSha256:sha256(readFileSync(contents)),members:entries},
-    counts:{javascript:js.counts,nativeGroups:15,nativeGeneratedPairs:generated.pairs,nativeDecodedOutputs:generated.coverage.decoded},
-    support:{javascript:'Node 24',nativeEvidence:'macOS arm64 / OTP 29 / explicit C helper installation',unqualified:['Linux','Other OTP versions','Other deployment tooling'],unsupported:['Windows native helper','Browsers/Bun/Deno']},
+    counts:{javascript:js.counts,nativeGroups:16,nativeOfficialCases:official.cases,nativeGeneratedPairs:generated.pairs,nativeDecodedOutputs:generated.coverage.decoded},
+    support:{javascript:'Node 24',nativeEvidence:`${process.platform} ${process.arch} / OTP ${official.otp} / explicit C helper installation`,unqualified:['Platforms and OTP versions outside this recorded run','Other deployment tooling'],unsupported:['Windows native helper','Browsers/Bun/Deno']},
     reviewRequired:['V08 preservation argument','Declared Erlang support scope and remaining platform qualification'],
     scope:'Prepared local candidate; not publication approval or broad Erlang support qualification'};
   writeFileSync(reportPath,JSON.stringify(report,null,2)+'\n');
