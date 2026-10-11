@@ -1,7 +1,7 @@
 # Verification and development
 
 This guide describes the verification harness and its evidence. The intended
-public semantics are specified separately in the [technical contract](https://github.com/vistuleB/gargamelle/blob/main/docs/contract.md).
+public semantics are specified separately in the [technical contract](contract.html).
 
 ## Setup and checks
 
@@ -10,13 +10,13 @@ manifests and resolved lockfiles. Run `npm ci` and `gleam deps download` on firs
 setup, then `npm test` for the available tests. After dependencies are fetched,
 tests must run offline.
 
-Run `npm run verify` for the complete Node candidate evidence run. It checks
+Run `npm run verify` for the complete Node verification run. It checks
 formatting, runs Gleam and Node tests, enforces generated coverage thresholds, and
 writes `reports/evidence.json` with source hashes, dependency versions, logs,
 conformance selection and per-row evidence. After fetching dependencies, this
 command runs offline. `npm run check:release` accepts only a successful report
-whose source fingerprint and logs are unchanged. It does not approve publication
-or claim a mathematical proof.
+whose source fingerprint and logs are unchanged. These checks provide test
+evidence, not a mathematical proof.
 
 The harness currently retains a known Ajv 8.20.0 discrepancy for a declared
 `__proto__` property in a closed record. Its characterization test passing means
@@ -32,11 +32,12 @@ does not change schemas, decoder behavior or Ajv options. See
 
 Verification covers generated inputs, mutations, runtime behavior, typed outputs,
 compile-negative cases, independent validators, selected official JSON Schema
-cases and cloze payload compatibility. The generated suite includes 10,000
+cases. The generated suite includes 10,000
 seeded pairs, all 345 generic parent/child combinations and fourteen depth-50 chains.
-Thirty-one actual compiled-library mutations must fail behavioral assertions,
-including five numeric, three recursion, and three tuple, and three key-constraint, and three membership, and three conditional, and three exclusion mutants. The three
-new revision-3 mutations run the full foundation, typed-value and hardening suites.
+Thirty-one compiled JavaScript library mutations must fail behavioral assertions.
+They cover numeric constraints, recursion, tuples, key constraints, membership,
+conditionals and exclusion. The suite also runs foundation, typed-value and
+hardening checks.
 Twenty forbidden Gleam programs must fail compilation after a positive baseline.
 
 The official suite is pinned to commit
@@ -44,16 +45,14 @@ The official suite is pinned to commit
 hashes and licence. `verification/official/selection.json` identifies 27 selected
 groups and 357 exclusions with reasons. No unsupported schema is strengthened to
 make it fit our constructors. Optional suite collections and full-dialect
-conformance are not claimed. Existing cloze schemas are frozen from checkpoint `ceb244a` for independent compatibility comparisons; safe-integer limits and the provider's UTF-16 length difference
-are explicitly exercised.
+conformance are not claimed. Safe-integer limits and Unicode string lengths have
+dedicated checks.
 
-See [PRESERVATION.md](https://github.com/vistuleB/gargamelle/blob/main/PRESERVATION.md) for constructor reasoning and
-[generated notes](https://github.com/vistuleB/gargamelle/blob/main/verification/generated-notes.md) for failure retention,
+See [PRESERVATION.md](https://github.com/vistuleB/gargamelle/blob/v0.2.0/PRESERVATION.md) for constructor reasoning and
+[generated notes](https://github.com/vistuleB/gargamelle/blob/v0.2.0/verification/generated-notes.md) for failure retention,
 shrinking, and implementation findings. `reports/evidence.json` is the current
 verification result; it is generated locally and excluded from source control.
-The original contract document's unverified status records its specification-time
-state, not the current candidate report. Browser support, broader native platform qualification and production adoption
-remain unverified.
+Browser support and native runtimes outside the tested matrix remain unverified.
 
 ## Output and evidence details
 
@@ -66,12 +65,9 @@ Coverage records visits and outcomes by definition-node path, and requires both
 acceptance and rejection for every constructor at nested positions. This is a
 bounded corpus, not exhaustive path coverage for every generated definition.
 
-Reports distinguish automated evidence from V08's preservation argument, which
-remains `review-required`. File existence is not proof of that argument. A report
-always identifies a hashed working-tree snapshot; Git commit fields are null when the checkout has no Git history. `sourceCommit` is null when the
-relevant source is uncommitted, with `baseCommit` retained for context. After a
-checkpoint commit, regenerate evidence to identify the containing commit.
-
+Reports identify the tested source snapshot by file hashes and record dependency
+versions and logs. A report becomes stale when that source changes. Preservation
+arguments require separate review; automated tests do not prove them.
 
 ## Native Erlang verification
 
@@ -101,7 +97,7 @@ ECMAScript conformance. The source retains detailed investigation and measuremen
 reports in `docs/erlang-portability.md`, `docs/native-oracle-evidence.md` and
 `docs/regex-workload-measurements.md`.
 
-## Release candidate preparation
+## Archive checks
 
 Run `npm run prepare:release` to regenerate both target gates, documentation and
 an exported Hex archive, then inspect the archive and run fresh consumers on both
@@ -110,6 +106,5 @@ support boundaries. It does not tag, push or publish. The separate
 `npm run check:release` remains a JavaScript evidence check; it is not a whole
 Erlang release qualification.
 
-Linux/OTP qualification CI is prepared in `.github/workflows/native-qualification.yml`;
-see `docs/native-ci.md` for the evidence policy. A workflow definition is not a
-hosted test result or a supported-version declaration.
+The Linux CI workflow in `.github/workflows/native-qualification.yml` runs the
+same checks on Ubuntu 24.04 with OTP 28 and 29.

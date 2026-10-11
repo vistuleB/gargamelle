@@ -1,13 +1,9 @@
 # Migrating to 0.2.0
 
-Version 0.2.0 was released on 2026-10-11.
-The published 0.1.0 package is unchanged. JavaScript remains the supported target
-on the verified Node reference. Native tests and a Gleam deployment
-shipment pass on macOS arm64/OTP 29 and Ubuntu 24.04 x86_64 with OTP 28.5.0.7
-and 29.1.1. Native regex uses Unicode 16; parity with Node 24.21.0/Unicode 17 is
-not claimed.
-The native implementation requires an explicit build; see
-[Native Erlang setup](native-erlang.html).
+Version 0.2.0 restricts strings and keys to Unicode scalar values and changes
+recursive construction to distinguish unfinished plans from runnable definitions.
+It also adds a native Erlang implementation; see
+[Native Erlang setup](native-erlang.html) for installation and supported runtimes.
 
 ## Strings and keys
 

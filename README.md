@@ -9,12 +9,6 @@ implementation rather than a fork: no glon source code was copied. Glon inspired
 the combined typed-decoder/schema approach, and issues found during that
 investigation informed Gargamelle's regression tests.
 
-Version 0.2.0 is released. JSON strings and object keys must contain only
-Unicode scalar values; unpaired surrogates fail admission. The published 0.1.0
-release retains its original JavaScript string domain.
-Recursive builders now use construction plans; only completed definitions can
-be decoded or emitted. See the [0.2.0 migration guide](https://hexdocs.pm/gargamelle/0.2.0/migration-0.2.html).
-
 The [technical contract](https://hexdocs.pm/gargamelle/0.2.0/contract.html)
 specifies schema/decoder equivalence, decoded-value semantics, canonical emission,
 and the assumptions and limits of those guarantees.
@@ -91,8 +85,7 @@ probing callbacks with fabricated values. Validation and emission never execute
 conversion callbacks. Decoding validates the original input before conversion;
 auxiliary conditions, membership, exclusions and key constraints inspect that
 input without running their converters. Semantic application checks belong after
-structural decoding. New constructors must preserve both acceptance equivalence
-and the specified decoded-value behavior.
+structural decoding.
 
 The input domain is finite JSON trees after JavaScript parsing, with finite
 binary64 numbers and Unicode scalar strings and keys. Parsing may round literals
@@ -108,7 +101,7 @@ encoder or decode/encode inversion guarantee. Defaults, projection and maps can
 lose information, and some output values may be unreachable.
 
 The [technical contract](https://hexdocs.pm/gargamelle/0.2.0/contract.html)
-specifies the complete intended semantics. [Preservation arguments](PRESERVATION.md)
+specifies the complete intended semantics. [Preservation arguments](https://github.com/vistuleB/gargamelle/blob/v0.2.0/PRESERVATION.md)
 and differential tests support these invariants; they are not a machine-checked
 proof or a claim of full JSON Schema dialect support.
 
@@ -155,14 +148,11 @@ The safe-integer and trusted-callback limitations are part of the contract.
 
 ## Further documentation
 
-The links below describe the published 0.2.0 release. The published 0.1.0 documentation remains available
-at [HexDocs](https://hexdocs.pm/gargamelle/0.1.0/).
-
 - [Technical contract](https://hexdocs.pm/gargamelle/0.2.0/contract.html): complete intended acceptance, output, emission and error semantics.
 - [Advanced definitions](https://hexdocs.pm/gargamelle/0.2.0/advanced.html): numeric constraints, recursion, tuples, key constraints, membership, conditionals, exclusion and HTML documentation.
 - [Verification and development](https://hexdocs.pm/gargamelle/0.2.0/verification-guide.html): setup commands, independent validators, generated coverage, retained discrepancies and release evidence.
 - [Preservation arguments](https://github.com/vistuleB/gargamelle/blob/v0.2.0/PRESERVATION.md): reasoning about how constructors preserve the contract.
-- [Release checklist](https://github.com/vistuleB/gargamelle/blob/v0.2.0/docs/releasing.md): packaging and publication checks.
+- [Migrating to 0.2.0](https://hexdocs.pm/gargamelle/0.2.0/migration-0.2.html): string requirements and changes to recursive construction.
 
 ## Verification
 
