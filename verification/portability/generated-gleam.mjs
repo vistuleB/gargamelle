@@ -46,7 +46,7 @@ export function compileRecipes(rows) {
       case 'dictionary':expression=mapped(bounds(a,`s.dictionary(${build(a.child)})`),'json.object');break;
       case 'property_names':expression=mapped(expect(`s.property_names(s.dictionary(${build(a.child)}), ${auxiliary(a.keys,'String')})`),'json.object');break;
       case 'contains':expression=mapped(expect(`s.contains(s.array(${build(a.child)}), ${auxiliary(a.matching)}, ${a.minimum}, ${option(a.maximum)})`),'fn(xs) { json.array(xs, fn(x) { x }) }');break;
-      case 'record':expression=`s.finish(${record(a.fields)}, s.${a.open?'Open':'Closed'})`;break;
+      case 'record':expression=`s.finish(${record(a.fields)}, s.${a.open?'Open':'Strict'})`;break;
       case 'tuple':{
         const constructor=a.children.reduceRight((body,_,i)=>`fn(v${i}) { ${body} }`,`json.array([${a.children.map((_,i)=>'v'+i).join(',')}], fn(x) { x })`);
         let tuple=`s.tuple(${constructor})`;for(const c of a.children)tuple=`s.element(${tuple}, ${build(c)})`;
@@ -59,7 +59,7 @@ export function compileRecipes(rows) {
       case 'map':expression=mapped(build(a.child),'fn(x) { json.object([#("mapped", x)]) }');break;
       case 'description':case 'title':expression=`s.${a.kind}(${build(a.child)}, ${quote(a.value??a.kind)})`;break;
       case 'tagged':expression=expect(`s.tagged(${quote(a.tag)}, [${a.branches.map(b=>{
-        let v=`s.variant(${quote(b.tag)}, ${record(b.fields)}, s.${b.open?'Open':'Closed'})`;
+        let v=`s.variant(${quote(b.tag)}, ${record(b.fields)}, s.${b.open?'Open':'Strict'})`;
         if(b.description!=null)v=`s.variant_description(${v}, ${quote(b.description)})`;
         return `s.variant_map(${v}, fn(payload) { json.object([#("tag", json.string(${quote(b.tag)})), #("payload", payload)]) })`;
       }).join(',')}])`);break;

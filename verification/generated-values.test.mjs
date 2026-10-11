@@ -60,7 +60,7 @@ test('callback instrumentation sees only actual decoded values, no discovery/def
  const child=s.map(s.text(),x=>{calls.push(['map',x]);return x.toUpperCase();});
  let record=s.record(x=>{calls.push(['record',x]);return x;});
  record=unwrap(s.defaulted(record,'a',child,unwrap(s.parse('"fallback"'))));
- const d=s.finish(record,s.RecordPolicy$Closed$const);
+ const d=s.finish(record,s.RecordPolicy$Strict$const);
  assert.deepEqual(calls,[]);s.schema_string(d);s.validate(d,unwrap(s.parse('{}')));assert.deepEqual(calls,[]);
  const result=s.decode(d,unwrap(s.parse('{}')));assert.ok(result instanceof Ok);assert.equal(result[0],'FALLBACK');assert.deepEqual(calls,[['map','fallback'],['record','FALLBACK']]);
  calls=[];const overlap=unwrap(s.one_of(toList([child,child])));assert.equal(s.decode(overlap,unwrap(s.parse('"x"'))) instanceof Ok,false);assert.deepEqual(calls,[]);
@@ -75,8 +75,8 @@ test('construction failure matrix rejects invalid sizes, bounds, defaults, enums
  for(const values of [[],['a','a']])assert.equal(s.string_enum(toList(values)) instanceof Ok,false);
  for(const union of [s.any_of,s.one_of])assert.equal(union(toList([])) instanceof Ok,false);
  assert.equal(s.tagged('kind',toList([])) instanceof Ok,false);
- assert.equal(s.tagged('kind',toList([s.variant('a',s.record(null),s.RecordPolicy$Closed$const),s.variant('a',s.record(null),s.RecordPolicy$Closed$const)])) instanceof Ok,false);
- let r=unwrap(s.required(s.record(x=>x),'kind',s.text()));assert.equal(s.tagged('kind',toList([s.variant('a',r,s.RecordPolicy$Closed$const)])) instanceof Ok,false);
+ assert.equal(s.tagged('kind',toList([s.variant('a',s.record(null),s.RecordPolicy$Strict$const),s.variant('a',s.record(null),s.RecordPolicy$Strict$const)])) instanceof Ok,false);
+ let r=unwrap(s.required(s.record(x=>x),'kind',s.text()));assert.equal(s.tagged('kind',toList([s.variant('a',r,s.RecordPolicy$Strict$const)])) instanceof Ok,false);
  r=unwrap(s.required(s.record(x=>y=>[x,y]),'x',s.text()));assert.equal(s.required(r,'x',s.text()) instanceof Ok,false);assert.equal(s.optional(r,'x',s.text()) instanceof Ok,false);
  assert.equal(s.defaulted(s.record(x=>x),'x',s.text(),unwrap(s.parse('null'))) instanceof Ok,false);
 });

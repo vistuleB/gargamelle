@@ -16,3 +16,7 @@ Only the maintainer publishes, using `gleam publish` for this new version. There
 is no replacement deadline. Exact commits, fingerprints and archive checksums
 belong in `reports/release-handoff-0.3.0.json`. No existing tags or application
 dependencies are changed. Current runtime qualification limits remain unchanged.
+
+`Strict` replaces the preferred `Closed` record policy constructor. `Closed`
+remains deprecated with unchanged behavior; `Open` is unchanged. The renderer
+uses the existing “strict fields” badge for both strict constructors.

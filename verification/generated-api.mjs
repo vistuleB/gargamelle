@@ -39,12 +39,12 @@ export function build(a) {
     }
     case 'property_names': d=s.map(unwrap(s.property_names(s.dictionary(build(a.child)),build(a.keys))),xs=>Object.fromEntries(xs));break;
     case 'dictionary': d=s.dictionary(build(a.child)); if(a.min!=null||a.max!=null)d=unwrap(s.bounds(d,option(a.min),option(a.max))); d=s.map(d,x=>Object.fromEntries(x)); break;
-    case 'record': d=s.finish(objectRecord(a.fields),a.open?s.RecordPolicy$Open$const:s.RecordPolicy$Closed$const); break;
+    case 'record': d=s.finish(objectRecord(a.fields),a.open?s.RecordPolicy$Open$const:s.RecordPolicy$Strict$const); break;
     case 'nullable': d=s.map(s.nullable(build(a.child)),presence); break;
     case 'any': d=unwrap(s.any_of(toList(a.children.map(build)))); break;
     case 'one': d=unwrap(s.one_of(toList(a.children.map(build)))); break;
     case 'tagged': d=unwrap(s.tagged(a.tag,toList(a.branches.map(b=>{
-      let v=s.variant(b.tag,objectRecord(b.fields),b.open?s.RecordPolicy$Open$const:s.RecordPolicy$Closed$const);
+      let v=s.variant(b.tag,objectRecord(b.fields),b.open?s.RecordPolicy$Open$const:s.RecordPolicy$Strict$const);
       if(b.description!=null)v=s.variant_description(v,b.description);
       return s.variant_map(v,payload=>({tag:b.tag,payload}));
     })))); break;

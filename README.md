@@ -87,7 +87,7 @@ pub fn user_definition() {
     s.record(fn(name) { fn(active) { User(name, active) } })
     |> s.required("name", s.text())
   let assert Ok(fields) = s.required(fields, "active", s.boolean())
-  s.finish(fields, s.Closed)
+  s.finish(fields, s.Strict)
 }
 
 pub fn read_user(source: String) {
@@ -97,7 +97,7 @@ pub fn read_user(source: String) {
 ```
 
 For input `{"name":"Ada","active":true}`, `read_user` returns
-`Ok(User("Ada", True))`. `s.Closed` rejects undeclared fields.
+`Ok(User("Ada", True))`. `s.Strict` rejects undeclared fields.
 `s.schema_string(user_definition())` generates the record’s schema.
 
 ## Design and contract

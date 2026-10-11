@@ -2,6 +2,9 @@
 
 ## 0.3.0 — Unreleased
 
+- Rename the preferred strict record policy from `Closed` to `Strict`. Retain
+  `Closed` as a deprecated constructor with identical behavior.
+
 - Rename `Value` to `Json`, `Policy` to `RecordPolicy`, and `value_text` to
   `to_string`. Retain the old names as deprecated aliases.
 

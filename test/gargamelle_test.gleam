@@ -23,7 +23,7 @@ pub fn record_test() {
   let assert Ok(r) =
     s.record(fn(a) { fn(b) { #(a, b) } }) |> s.required("a", s.text())
   let assert Ok(r) = s.optional(r, "b", s.nullable(s.text()))
-  let d = s.finish(r, s.Closed)
+  let d = s.finish(r, s.Strict)
   let assert Ok(v) = s.parse("{\"a\":\"x\",\"b\":null}")
   s.decode(d, v) |> should.equal(Ok(#("x", Some(None))))
   let assert Ok(v) = s.parse("{\"a\":\"x\",\"b\":false}")
@@ -38,7 +38,7 @@ pub fn overlap_test() {
 
 pub fn hostile_test() {
   let assert Ok(r) = s.record(fn(x) { x }) |> s.required("__proto__", s.text())
-  let d = s.finish(r, s.Closed)
+  let d = s.finish(r, s.Strict)
   let assert Ok(v) = s.parse("{\"__proto__\":\"x\"}")
   s.decode(d, v) |> should.equal(Ok("x"))
   s.schema_string(d)
@@ -54,7 +54,7 @@ pub fn defaults_do_not_call_callbacks_test() {
     })
   let assert Ok(v) = s.parse("\"default\"")
   let assert Ok(r) = s.record(fn(x) { x }) |> s.defaulted("a", child, v)
-  let d = s.finish(r, s.Closed)
+  let d = s.finish(r, s.Strict)
   let assert Ok(input) = s.parse("{}")
   s.validate(d, input) |> should.equal(Ok(Nil))
   s.schema_string(d) |> should.not_equal("")
@@ -69,7 +69,7 @@ pub fn callbacks_inspecting_values_test() {
       }
     })
     |> s.required("x", s.text())
-  let d = s.finish(r, s.Closed)
+  let d = s.finish(r, s.Strict)
   s.schema_string(d) |> should.not_equal("")
   let assert Ok(v) = s.parse("{\"x\":\"expected\"}")
   s.decode(d, v) |> should.equal(Ok("passed"))
@@ -111,7 +111,7 @@ pub fn unicode_and_intersections_test() {
 
 pub fn tagged_diagnostics_test() {
   let assert Ok(r) = s.record(fn(x) { x }) |> s.required("a/b~", s.text())
-  let assert Ok(d) = s.tagged("kind", [s.variant("x", r, s.Closed)])
+  let assert Ok(d) = s.tagged("kind", [s.variant("x", r, s.Strict)])
   let assert Ok(v) = s.parse("{}")
   s.decode(d, v)
   |> should.equal(
@@ -132,17 +132,17 @@ pub fn tagged_diagnostics_test() {
   |> should.equal(Error([s.DataError("string_type", "/a~1b~0", None, [], [])]))
   let assert Ok(v) = s.parse("{\"kind\":\"x\",\"a/b~\":\"payload\"}")
   s.decode(d, v) |> should.equal(Ok("payload"))
-  s.tagged("kind", [s.variant("x", r, s.Closed), s.variant("x", r, s.Closed)])
+  s.tagged("kind", [s.variant("x", r, s.Strict), s.variant("x", r, s.Strict)])
   |> should.be_error
   let assert Ok(r) = s.record(fn(x) { x }) |> s.required("kind", s.text())
-  s.tagged("kind", [s.variant("x", r, s.Closed)]) |> should.be_error
+  s.tagged("kind", [s.variant("x", r, s.Strict)]) |> should.be_error
 }
 
 pub fn nullable_error_path_test() {
   let assert Ok(r) =
     s.record(fn(x) { x }) |> s.required("x", s.nullable(s.text()))
   let assert Ok(v) = s.parse("{\"x\":false}")
-  s.decode(s.finish(r, s.Closed), v)
+  s.decode(s.finish(r, s.Strict), v)
   |> should.equal(Error([s.DataError("string_type", "/x", None, [], [])]))
 }
 
@@ -161,7 +161,7 @@ pub fn default_presence_test() {
   let assert Ok(default) = s.parse("\"fallback\"")
   let assert Ok(r) =
     s.record(fn(x) { x }) |> s.defaulted("x", s.text(), default)
-  let d = s.finish(r, s.Closed)
+  let d = s.finish(r, s.Strict)
   let assert Ok(v) = s.parse("{}")
   s.decode(d, v) |> should.equal(Ok("fallback"))
   let assert Ok(v) = s.parse("{\"x\":null}")

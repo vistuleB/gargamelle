@@ -44,7 +44,7 @@ function mutual(){return unwrap(s.recursive_pair('alpha','beta',(a,b)=>{
  let ar=unwrap(s.required(s.record(x=>({children:[...x]})),'children',s.array(b)));
  let br=unwrap(s.required(s.record(x=>next=>({name:x,next:next instanceof Some?next[0]:null})),'name',s.text()));
  br=unwrap(s.optional(br,'next',a));
- return new Ok([s.finish(ar,s.RecordPolicy$Closed$const),s.finish(br,s.RecordPolicy$Closed$const)]);
+ return new Ok([s.finish(ar,s.RecordPolicy$Strict$const),s.finish(br,s.RecordPolicy$Strict$const)]);
 }));}
 
 test('mutual recursion resolves either root, retains field paths, and composes with defaults and names',async()=>{
@@ -59,7 +59,7 @@ test('mutual recursion resolves either root, retains field paths, and composes w
  const errors=[...s.decode(a,unwrap(s.parse('{"children":[{"name":"x","next":{"children":[{"name":false}]}}]}')))[0]];
  assert.equal(errors[0].path,'/children/0/next/children/0/name');assert.equal(errors[0].category,'string_type');
  const r=unwrap(s.defaulted(s.record(x=>x),'root',a,unwrap(s.parse(JSON.stringify(valid)))));
- assert.deepEqual(evaluate(s.finish(r,s.RecordPolicy$Closed$const),{}).value,decoded);
+ assert.deepEqual(evaluate(s.finish(r,s.RecordPolicy$Strict$const),{}).value,decoded);
  const named=unwrap(s.named('wrapper',s.array(a)));assert.equal(evaluate(named,[valid]).accepted,true);
 });
 

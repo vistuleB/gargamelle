@@ -51,5 +51,5 @@ test('tuple recursive edges descend and collection checks every position',async(
  assert.throws(()=>evaluate(escaped,[]),/not finalized|unfinalized/);assert.throws(()=>s.schema_string(escaped),/not finalized|unfinalized/);
  const conflict=tuple([unwrap(s.named('same',s.text())),unwrap(s.named('same',s.number()))]);assert.throws(()=>s.schema_string(conflict),/conflict/i);
  const defaults=unwrap(s.defaulted(s.record(x=>x),'entry',tuple([s.text(),s.number()]),unwrap(s.parse('["x",0.5]'))));
- assert.deepEqual(evaluate(s.finish(defaults,s.RecordPolicy$Closed$const),{}).value,['x',0.5]);
+ assert.deepEqual(evaluate(s.finish(defaults,s.RecordPolicy$Strict$const),{}).value,['x',0.5]);
 });

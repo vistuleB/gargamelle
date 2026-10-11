@@ -9,7 +9,7 @@ pub fn nested_definition_test() {
     s.record(fn(name) { fn(tags) { #(name, tags) } })
     |> s.required("name", s.text() |> s.description("Name <not markup>"))
   let assert Ok(r) = s.optional(r, "tags", s.array(s.nullable(s.text())))
-  let html = docs.render(s.finish(r, s.Closed), "person")
+  let html = docs.render(s.finish(r, s.Strict), "person")
   string.contains(html, "<details class=\"node\" open>") |> should.be_true
   string.contains(html, "Name &lt;not markup&gt;") |> should.be_true
   string.contains(html, "each item") |> should.be_true
@@ -38,7 +38,7 @@ pub fn defaults_and_annotations_test() {
   let assert Ok(r) =
     s.record(fn(x) { x })
     |> s.defaulted("value", s.nullable(s.text()), default)
-  let html = docs.render(s.finish(r, s.Closed) |> s.title("<Example>"), "a\"b")
+  let html = docs.render(s.finish(r, s.Strict) |> s.title("<Example>"), "a\"b")
   string.contains(html, "default: null") |> should.be_true
   string.contains(html, "&lt;Example&gt;") |> should.be_true
   string.contains(html, "id=\"a&quot;b\"") |> should.be_true
@@ -61,7 +61,7 @@ pub fn alias_validation_test() {
 pub fn arbitrary_tag_test() {
   let assert Ok(r) = s.record(fn(text) { text }) |> s.required("text", s.text())
   let assert Ok(definition) =
-    s.tagged("mode", [s.variant("custom", r, s.Closed)])
+    s.tagged("mode", [s.variant("custom", r, s.Strict)])
   let html = docs.render(definition, "tagged")
   string.contains(html, "mode = &quot;custom&quot;") |> should.be_true
 }

@@ -32,7 +32,7 @@ fn provider(patterned) {
     )
   let assert Ok(record) =
     s.required(record, "title", field(patterned, "^[\\p{L}\\p{N} .'-]+$"))
-  s.array(s.finish(record, s.Closed))
+  s.array(s.finish(record, s.Strict))
 }
 
 fn samples(run) {

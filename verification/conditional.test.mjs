@@ -6,7 +6,7 @@ import {compileSupplementary} from './supplementary-oracle.mjs';
 import * as docs from '../build/dev/javascript/gargamelle/gargamelle/documentation.mjs';
 const record=(fields,open=true)=>{
  const curry=(i,values)=>i===fields.length?Object.fromEntries(fields.map(([name],j)=>[name,values[j]])):value=>curry(i+1,[...values,value]);
- let r=s.record(curry(0,[]));for(const [name,def] of fields)r=unwrap(s.required(r,name,def));return s.finish(r,open?s.RecordPolicy$Open$const:s.RecordPolicy$Closed$const);
+ let r=s.record(curry(0,[]));for(const [name,def] of fields)r=unwrap(s.required(r,name,def));return s.finish(r,open?s.RecordPolicy$Open$const:s.RecordPolicy$Strict$const);
 };
 async function compare(d,cases){const schema=emitted(d),checks=[compileOracle(schema),await compileSupplementary(schema)];for(const [v,accepted,output] of cases){const actual=evaluate(d,v);assert.equal(actual.accepted,accepted,JSON.stringify(v));for(const check of checks)assert.equal(check(v).accepted,accepted);if(accepted&&output!==undefined)assert.deepEqual(actual.value,output);}}
 

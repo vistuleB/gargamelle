@@ -63,8 +63,8 @@ pub fn tree_definition() {
       s.required(s.record(Branch), "children", s.array(self)),
     )
     s.tagged("kind", [
-      s.variant("leaf", leaf, s.Closed),
-      s.variant("branch", branch, s.Closed),
+      s.variant("leaf", leaf, s.Strict),
+      s.variant("branch", branch, s.Strict),
     ])
   })
 }
@@ -155,9 +155,9 @@ pub fn preferences_definition() {
   let assert Ok(fields) = s.required(fields, "metadata", s.dictionary(s.text()))
   let assert Ok(fields) = s.required(fields, "name", s.text())
   let assert Ok(fields) =
-    s.required(fields, "settings", s.finish(settings, s.Closed))
+    s.required(fields, "settings", s.finish(settings, s.Strict))
   let assert Ok(fields) = s.required(fields, "tags", s.array(s.text()))
-  s.finish(fields, s.Closed)
+  s.finish(fields, s.Strict)
 }
 
 pub fn main() {

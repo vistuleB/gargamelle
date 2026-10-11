@@ -25,7 +25,7 @@ fn person_record() {
 }
 
 pub fn typed_record_test() {
-  let d = s.finish(person_record(), s.Closed)
+  let d = s.finish(person_record(), s.Strict)
   let assert Ok(v) = s.parse("{\"name\":\"Ada\",\"nickname\":null}")
   s.decode(d, v) |> should.equal(Ok(Person("Ada", Some(None), 42)))
   let assert Ok(v) = s.parse("{\"age\":20,\"name\":\"Ada\"}")
@@ -34,10 +34,10 @@ pub fn typed_record_test() {
 
 pub fn typed_variant_test() {
   let person =
-    s.variant("person", person_record(), s.Closed)
+    s.variant("person", person_record(), s.Strict)
     |> s.variant_map(Named)
     |> s.variant_description("A person")
-  let empty = s.variant("empty", s.record(Empty), s.Closed)
+  let empty = s.variant("empty", s.record(Empty), s.Strict)
   let assert Ok(d) = s.tagged("kind", [person, empty])
   let assert Ok(v) = s.parse("{\"kind\":\"person\",\"name\":\"Ada\"}")
   s.decode(d, v) |> should.equal(Ok(Named(Person("Ada", None, 42))))
@@ -57,7 +57,7 @@ pub fn annotated_two_fields_regression_test() {
   let assert Ok(r) =
     s.record(fn(a) { fn(b) { #(a, b) } }) |> s.required("a", s.text())
   let assert Ok(r) = s.required(r, "b", s.description(s.text(), "second"))
-  let d = s.description(s.finish(r, s.Closed), "outer")
+  let d = s.description(s.finish(r, s.Strict), "outer")
   let assert Ok(v) = s.parse("{\"a\":\"one\",\"b\":\"two\"}")
   s.decode(d, v) |> should.equal(Ok(#("one", "two")))
   let assert Ok(v) = s.parse("{\"a\":\"one\"}")

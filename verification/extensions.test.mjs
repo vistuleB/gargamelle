@@ -24,7 +24,7 @@ test('conflicting named definitions fail emission, including conflicts hidden be
 
 test('unique array values use JSON equality, not object identity or property order',async()=>{
  let record=s.record(x=>y=>[x,y]);record=unwrap(s.required(record,'x',s.safe_integer()));record=unwrap(s.optional(record,'y',s.text()));
- const d=unwrap(s.unique_items(s.array(s.finish(record,s.RecordPolicy$Closed$const))));
+ const d=unwrap(s.unique_items(s.array(s.finish(record,s.RecordPolicy$Strict$const))));
  await compare(d,[[],[{x:1},{x:2}],[{x:1},{x:1}],[{x:1,y:'a'},{y:'a',x:1}],null,[{x:1},{x:1,y:'a'}]]);
  assert.equal(evaluate(d,[{x:1},{x:1}]).accepted,false);
  const ints=unwrap(s.unique_items(unwrap(s.bounds(s.array(s.safe_integer()),new Some(1),new Some(3)))));

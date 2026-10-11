@@ -98,7 +98,7 @@ pub fn recursive_default_evidence_and_atomic_callback_suppression_test() {
       default,
     )
   let assert Ok(fields) = s.required(fields, "a/~", s.text())
-  let definition = s.finish(fields, s.Closed)
+  let definition = s.finish(fields, s.Strict)
   let assert Ok(input) = s.parse("{\"a/~\":false,\"extra\":true}")
   let assert Error(errors) = s.decode(definition, input)
   list.map(errors, fn(error) { #(error.category, error.path) })
@@ -125,7 +125,7 @@ pub fn construction_resolution_names_and_guards_test() {
   s.recursive("unresolved_default", fn(self) {
     s.defaulted(s.record(fn(value) { value }), "children", s.array(self), empty)
     |> result.map(fn(fields) {
-      s.map(s.finish(fields, s.Closed), fn(_) { "unused" })
+      s.map(s.finish(fields, s.Strict), fn(_) { "unused" })
     })
   })
   |> should.be_error

@@ -54,11 +54,14 @@ pub type DataError {
   )
 }
 
-/// Treatment of undeclared record keys. `Closed` rejects them; `Open` accepts
+/// Treatment of undeclared record keys. `Strict` rejects them; `Open` accepts
 /// them but omits them from the constructed output.
 pub type RecordPolicy {
-  Closed
+  Strict
   Open
+  /// Legacy constructor with the same extra-key behavior as `Strict`.
+  @deprecated("Use Strict instead.")
+  Closed
 }
 
 /// Alias for `RecordPolicy`.
@@ -1638,7 +1641,7 @@ fn inspect(
         })
       let extras = case policy {
         Open -> []
-        Closed ->
+        _ ->
           list.flat_map(xs, fn(x) {
             case
               list.any(fs, fn(f) {

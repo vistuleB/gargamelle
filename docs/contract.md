@@ -143,7 +143,7 @@ and both numeric zero signs are equivalent. Decoded list order is unchanged.
 
 Fields are static declarations keyed by wire name. A curried constructor consumes
 actual decoded field values. Duplicate wire names fail construction. A record
-explicitly chooses `Closed` (reject extras) or `Open` (accept extras and project
+explicitly chooses `Strict` (reject extras) or `Open` (accept extras and project
 them away from output). Empty records still require objects. Dictionaries retain
 all keys and decode their values to a Gleam list of key/value pairs; key order has
 no semantic meaning. Keys including `__proto__`, `constructor`, `toString`, empty

@@ -10,7 +10,7 @@ const original=readFileSync(join(root,'build/dev/javascript/gargamelle/gargamell
 const variants=[
  ['first-match-one-of','return union(defs, true);','return union(defs, false);',"assert.equal(accepted('overlap','\"x\"'),false)"],
  ['null-as-missing','return new Some(x);','return x instanceof JNull ? Option$None$const : new Some(x);',"assert.equal(accepted('optional','{\"a\":null}'),false)"],
- ['disabled-extra-key','if (policy instanceof Closed) {','if (false) {',"assert.equal(accepted('closed_record','{\"a\":\"x\",\"extra\":true}'),false)"],
+ ['disabled-extra-key','if (policy instanceof Open) {','if (true) {',"assert.equal(accepted('closed_record','{\"a\":\"x\",\"extra\":true}'),false)"],
  ['off-by-one-bound','_block = n >= x;','_block = n > x;',"assert.equal(accepted('bounded_string','\"x\"'),true)"],
  ['dropped-field','let properties = $list.map(\n        fs,','let properties = $list.map(\n        $List$Empty$const,',"assert.equal(Object.hasOwn(JSON.parse(f.fixture_schema('closed_record')).properties,'a'),true)"],
 ];

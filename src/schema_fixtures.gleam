@@ -103,30 +103,30 @@ pub fn definition(name: String) -> s.Definition(String) {
       let assert Ok(r) = s.optional(r, "b", s.text())
       s.finish(r, case name {
         "open_record" -> s.Open
-        _ -> s.Closed
+        _ -> s.Strict
       })
     }
     "optional" -> {
       let assert Ok(r) = s.record(show_option) |> s.optional("a", s.text())
-      s.finish(r, s.Closed)
+      s.finish(r, s.Strict)
     }
     "defaulted" -> {
       let assert Ok(v) = s.parse("\"fallback\"")
       let assert Ok(r) = s.record(fn(x) { x }) |> s.defaulted("a", s.text(), v)
-      s.finish(r, s.Closed)
+      s.finish(r, s.Strict)
     }
     "hostile" -> {
       let assert Ok(r) =
         s.record(fn(x) { x }) |> s.required("__proto__", s.text())
-      s.finish(r, s.Closed)
+      s.finish(r, s.Strict)
     }
     "integer_keys" -> {
       let assert Ok(r) =
         s.record(fn(x) { fn(y) { x <> y } }) |> s.required("10", s.text())
       let assert Ok(r) = s.required(r, "2", s.text())
-      s.finish(r, s.Closed)
+      s.finish(r, s.Strict)
     }
-    "empty_record" -> s.finish(s.record("empty"), s.Closed)
+    "empty_record" -> s.finish(s.record("empty"), s.Strict)
     "array" -> {
       let assert Ok(d) = s.bounds(s.array(s.text()), Some(1), Some(3))
       s.map(d, fn(xs) { list.fold(xs, "", fn(a, b) { a <> "[" <> b <> "]" }) })
@@ -143,8 +143,8 @@ pub fn definition(name: String) -> s.Definition(String) {
       let b = s.record("b")
       let assert Ok(d) =
         s.tagged("kind", [
-          s.variant("a", a, s.Closed),
-          s.variant("b", b, s.Closed),
+          s.variant("a", a, s.Strict),
+          s.variant("b", b, s.Strict),
         ])
       d
     }

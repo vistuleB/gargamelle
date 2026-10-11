@@ -40,7 +40,7 @@ pub fn process_handoff_test() {
   let assert Ok(fields) =
     s.defaulted(s.record(fn(v) { v }), "tree", definition, default)
   let assert Ok(missing) = s.parse("{}")
-  s.decode(s.finish(fields, s.Closed), missing) |> should.equal(Ok(Tree([])))
+  s.decode(s.finish(fields, s.Strict), missing) |> should.equal(Ok(Tree([])))
 }
 
 pub type First {

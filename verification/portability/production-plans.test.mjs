@@ -60,7 +60,7 @@ test('main library preserves baseline behavior with immutable recursive plans',(
     // Adapt only API names in copied callers; preserve the frozen baseline.
     const callers=['schema_fixtures.gleam','integration_probe.gleam','gargamelle/documentation.gleam'];
     const originals=callers.map(name=>[name,readFileSync(join(directory,'src',name),'utf8')]);
-    for(const [name,source] of originals)writeFileSync(join(directory,'src',name),source.replaceAll('schema_string','emit_text').replaceAll('schema_json','emit_json').replaceAll('gargamelle.Json','gargamelle.Value').replaceAll('gargamelle.to_string','gargamelle.value_text'));
+    for(const [name,source] of originals)writeFileSync(join(directory,'src',name),source.replaceAll('schema_string','emit_text').replaceAll('schema_json','emit_json').replaceAll('gargamelle.Json','gargamelle.Value').replaceAll('gargamelle.to_string','gargamelle.value_text').replaceAll('s.Strict','s.Closed'));
     assert.deepEqual(probe('javascript'),integrated,'schema bytes, decoded outputs or full DataError structures changed');
     for(const [name,source] of originals)writeFileSync(join(directory,'src',name),source);
     writeFileSync(join(directory,'src/gargamelle.gleam'),integratedSource);

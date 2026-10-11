@@ -15,7 +15,7 @@ pub fn admitted_object_order_preserves_duplicate_positions_and_index_keys_test()
   let assert Ok(pairs) = s.decode(s.dictionary(s.text()), input)
   list.map(pairs, fn(pair) { pair.0 }) |> should.equal(expected)
   let assert Error(errors) =
-    s.validate(s.finish(s.record(Nil), s.Closed), input)
+    s.validate(s.finish(s.record(Nil), s.Strict), input)
   list.map(errors, fn(error) { error.path })
   |> should.equal(list.map(expected, fn(key) { "/" <> key }))
   let assert Ok(input) =

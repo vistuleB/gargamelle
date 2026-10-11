@@ -15,7 +15,7 @@ pub fn typed_coordinate_record_test() {
     |> s.required("x", s.number())
   let assert Ok(r) = s.required(r, "y", s.number())
   let assert Ok(value) = s.parse("{\"x\":1.25,\"y\":-0.5}")
-  s.decode(s.finish(r, s.Closed), value) |> should.equal(Ok(#(1.25, -0.5)))
+  s.decode(s.finish(r, s.Strict), value) |> should.equal(Ok(#(1.25, -0.5)))
 }
 
 pub fn typed_number_bounds_test() {

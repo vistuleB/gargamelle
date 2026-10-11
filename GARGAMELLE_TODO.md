@@ -600,3 +600,7 @@ The reusable loopback harness retains fingerprints and full results. Its two
 explicit Unicode-table differences are bounded exceptions, not a browser/native
 regex equivalence claim. Browser CI, mobile/older engines and realistic
 large-contract performance measurements remain open.
+
+`Strict` replaces the preferred `Closed` record policy constructor. `Closed`
+remains deprecated with unchanged behavior; `Open` is unchanged. The renderer
+uses the existing “strict fields” badge for both strict constructors.

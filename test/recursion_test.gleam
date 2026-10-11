@@ -19,8 +19,8 @@ fn tree_definition() -> Result(s.Definition(Tree), s.ConstructionError) {
       s.array(self),
     ))
     s.tagged("kind", [
-      s.variant("leaf", leaf, s.Closed),
-      s.variant("branch", branch, s.Closed),
+      s.variant("leaf", leaf, s.Strict),
+      s.variant("branch", branch, s.Strict),
     ])
   })
 }
@@ -59,7 +59,7 @@ pub fn distinct_mutually_recursive_types_test() {
         s.text(),
       ))
       use rb <- result.try(s.optional(rb, "next", a))
-      Ok(#(s.finish(ra, s.Closed), s.finish(rb, s.Closed)))
+      Ok(#(s.finish(ra, s.Strict), s.finish(rb, s.Strict)))
     })
   let assert Ok(value) =
     s.parse("{\"children\":[{\"name\":\"x\",\"next\":{\"children\":[]}}]}")
