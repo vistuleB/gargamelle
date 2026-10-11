@@ -1622,7 +1622,7 @@ fn inspect(
         })
       let extras = case policy {
         Open -> []
-        _ ->
+        Strict ->
           list.flat_map(xs, fn(x) {
             case
               list.any(fs, fn(f) {

@@ -2,7 +2,7 @@
 
 Use these names in new code:
 
-| Previous name | Preferred name | Purpose |
+| Previous name | New name | Purpose |
 | --- | --- | --- |
 | `Value` | `Json` | Gargamelle’s opaque JSON representation |
 | `Policy` | `RecordPolicy` | Treatment of undeclared record keys |

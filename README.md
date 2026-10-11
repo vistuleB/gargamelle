@@ -50,13 +50,17 @@ for tested runtimes and deployment instructions.
 ```gleam
 import gargamelle
 
+pub fn names_definition() {
+  gargamelle.array(gargamelle.text())
+}
+
 pub fn read_names(source: String) {
   let assert Ok(value) = gargamelle.parse(source)
-  gargamelle.decode(gargamelle.array(gargamelle.text()), value)
+  gargamelle.decode(names_definition(), value)
 }
 
 pub fn names_schema() {
-  gargamelle.schema_string(gargamelle.array(gargamelle.text()))
+  gargamelle.schema_string(names_definition())
 }
 ```
 
