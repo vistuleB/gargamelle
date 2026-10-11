@@ -26,11 +26,6 @@ pub opaque type Json {
   JObject(List(#(String, Json)))
 }
 
-/// Alias for `Json`.
-@deprecated("Use Json instead.")
-pub type Value =
-  Json
-
 /// JSON syntax, nonfinite-number or non-scalar-string admission failure.
 pub type AdmissionError {
   AdmissionError(String)
@@ -59,15 +54,7 @@ pub type DataError {
 pub type RecordPolicy {
   Strict
   Open
-  /// Deprecated: use `Strict`. This constructor retains the same extra-key behavior.
-  @deprecated("Use Strict instead.")
-  Closed
 }
-
-/// Alias for `RecordPolicy`.
-@deprecated("Use RecordPolicy instead.")
-pub type Policy =
-  RecordPolicy
 
 /// A finite numeric endpoint. Inclusive endpoints accept equality.
 pub type NumberBound {
@@ -280,12 +267,6 @@ fn parse_runtime(
 /// Serialize an admitted value as canonical JSON text. Negative zero becomes `0`.
 pub fn to_string(value: Json) -> String {
   canonical(json.to_string(json_value(value)))
-}
-
-/// Alias for `to_string`.
-@deprecated("Use to_string instead.")
-pub fn value_text(value: Json) -> String {
-  to_string(value)
 }
 
 fn json_value(v: Json) -> json.Json {
@@ -1744,18 +1725,6 @@ pub fn schema_json(def: Definition(a)) -> Json {
 /// Return a canonical JSON Schema 2020-12 string, including finite local references.
 pub fn schema_string(def: Definition(a)) -> String {
   to_string(schema_json(def))
-}
-
-/// Alias for `schema_json`.
-@deprecated("Use schema_json instead.")
-pub fn emit_json(def: Definition(a)) -> Json {
-  schema_json(def)
-}
-
-/// Alias for `schema_string`.
-@deprecated("Use schema_string instead.")
-pub fn emit_text(def: Definition(a)) -> String {
-  schema_string(def)
 }
 
 fn put(v: Json, k: String, x: Json) -> Json {

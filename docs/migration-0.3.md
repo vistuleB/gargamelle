@@ -16,15 +16,13 @@ Use these names in new code:
 Decoded output still has the definition’s output type. The string functions
 return strings; they do not print output.
 
-`Strict` rejects undeclared keys; `Open` accepts them and omits
-them from decoded output. HTML documentation labels rejection of undeclared
-keys **strict fields**. The deprecated `Closed` constructor applies the same
-rule as `Strict`, but they are distinct constructor values. Update exhaustive
-policy matches to handle `Strict` as well as `Closed` and `Open`.
+`Strict` rejects undeclared keys; `Open` accepts them and omits them from
+decoded output. HTML documentation labels rejection of undeclared keys
+**strict fields**. Replace `Closed` with `Strict` in constructor calls and
+pattern matches.
 
-The previous type and function names remain deprecated aliases. Old names
-produce compiler warnings; existing constructor and function calls still work.
-Inferred types need no annotation changes. Schema bytes, validation, decoding
-and JSON serialization are unchanged.
+The previous names have been removed. Update explicit type annotations and
+function calls using the table above. Inferred types need no annotation changes.
+Schema bytes, validation, decoding and JSON serialization are unchanged.
 
 See the [API reference](gargamelle.html#Json) for the complete contracts.

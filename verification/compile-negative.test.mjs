@@ -7,6 +7,12 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 const root=fileURLToPath(new URL('../',import.meta.url));
 const cases=[
+ ['removed_value_type','pub fn main(value: s.Value) { value }','Unknown module type'],
+ ['removed_policy_type','pub fn main(policy: s.Policy) { policy }','Unknown module type'],
+ ['removed_closed','pub fn main() { s.Closed }','Unknown module value'],
+ ['removed_value_text','pub fn main() { s.value_text(Nil) }','Unknown module value'],
+ ['removed_emit_json','pub fn main() { s.emit_json(s.text()) }','Unknown module value'],
+ ['removed_emit_text','pub fn main() { s.emit_text(s.text()) }','Unknown module value'],
  ['foreign_json_type','import gleam/json\npub fn main() -> s.Json { json.string("not admitted") }','Type mismatch'],
  ['opaque_json_constructor','pub fn main() { s.Json("unadmitted") }','Unknown module value'],
  ['exclusion_output_type','pub fn main() -> s.Definition(String) { s.exclude(s.number(),s.text()) }','Type mismatch'],
@@ -36,7 +42,7 @@ const cases=[
  ['optional_is_option','pub fn main() { s.optional(s.record(fn(x: String){x}),"x",s.text()) }','Type mismatch'],
  ['no_predicate_escape','pub fn main() { s.predicate(s.text(),fn(_){False}) }','Unknown module value'],
 ];
-test('compile-time boundary: positive baseline and twenty-six forbidden API programs',()=>{
+test(`compile-time boundary: positive baseline and ${cases.length} forbidden API programs`,()=>{
  const dir=mkdtempSync(join(tmpdir(),'schema-contract-negative-'));
  try{
  mkdirSync(join(dir,'src'));

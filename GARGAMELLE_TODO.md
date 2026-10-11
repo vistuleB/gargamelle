@@ -1,9 +1,8 @@
 # Gargamelle handoff and next work
 
 0.3.0 preparation is tracked in `docs/release-0.3.0.md`. It introduces
-`schema_json` and `schema_string`, retaining `emit_json` and `emit_text` as
-deprecated aliases. `Json`, `RecordPolicy` and `to_string` replace `Value`,
-`Policy` and `value_text`, also with deprecated aliases. Core semantics are unchanged.
+`schema_json` and `schema_string`, replacing `emit_json` and `emit_text`. `Json`, `RecordPolicy` and `to_string` replace `Value`,
+`Policy` and `value_text`. Previous API names are removed. Core semantics are unchanged.
 The preceding 0.2.2 replacement handoff is retained in ignored reports.
 The maintainer publishes.
 
@@ -601,6 +600,5 @@ explicit Unicode-table differences are bounded exceptions, not a browser/native
 regex equivalence claim. Browser CI, mobile/older engines and realistic
 large-contract performance measurements remain open.
 
-`Strict` replaces the preferred `Closed` record policy constructor. `Closed`
-remains deprecated with unchanged behavior; `Open` is unchanged. The renderer
-uses the existing “strict fields” badge for both strict constructors.
+`Strict` replaces `Closed`, which is removed. `Open` is unchanged. The renderer
+uses the existing “strict fields” badge. No compatibility API is retained.

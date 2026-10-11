@@ -108,6 +108,12 @@ pub fn forbidden() {
       }
     }
     for (const [name, source, message] of [
+      ['removed-value-type', 'import gargamelle as s\npub fn main(value: s.Value) { value }', /Unknown module type/],
+      ['removed-policy-type', 'import gargamelle as s\npub fn main(policy: s.Policy) { policy }', /Unknown module type/],
+      ['removed-closed', 'import gargamelle as s\npub fn main() { s.Closed }', /Unknown module value/],
+      ['removed-value-text', 'import gargamelle as s\npub fn main() { s.value_text(Nil) }', /Unknown module value/],
+      ['removed-emit-json', 'import gargamelle as s\npub fn main() { s.emit_json(s.text()) }', /Unknown module value/],
+      ['removed-emit-text', 'import gargamelle as s\npub fn main() { s.emit_text(s.text()) }', /Unknown module value/],
       ['foreign-json', 'import gargamelle as s\nimport gleam/json\npub fn main() -> s.Json { json.string("not admitted") }', /Type mismatch/],
       ['opaque-json', 'import gargamelle as s\npub fn main() { s.Json("unadmitted") }', /Unknown module value/],
     ]) {
@@ -118,7 +124,7 @@ pub fn forbidden() {
         assert.match(result.stderr, message);
       }
     }
-    t.diagnostic('16 compile-negative checks passed on the integrated API');
+    t.diagnostic('28 compile-negative checks passed on the integrated API');
     t.diagnostic(`${integrated.length} schemas, ${integrated.reduce((sum,row)=>sum+row.cases.length,0)} independent cases; exact historical JavaScript and native comparison`);
     t.diagnostic('45 main-source tests and eight native process/graph tests passed');
   } finally {rmSync(directory,{recursive:true,force:true});}

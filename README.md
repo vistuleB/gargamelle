@@ -177,7 +177,7 @@ APIs may change before 1.0.
 
 - [Technical contract](https://hexdocs.pm/gargamelle/0.3.0/contract.html): complete intended acceptance, output, emission and error semantics.
 - [Advanced definitions](https://hexdocs.pm/gargamelle/0.3.0/advanced.html): numeric constraints, recursion, tuples, key constraints, membership, conditionals, exclusion and HTML documentation.
-- [Migrating to 0.3.0](https://hexdocs.pm/gargamelle/0.3.0/migration-0.3.html): API names and compatibility aliases.
+- [Migrating to 0.3.0](https://hexdocs.pm/gargamelle/0.3.0/migration-0.3.html): required API renames.
 - [Migrating to 0.2.0](https://hexdocs.pm/gargamelle/0.3.0/migration-0.2.html): string requirements and changes to recursive construction.
 
 ## Verification

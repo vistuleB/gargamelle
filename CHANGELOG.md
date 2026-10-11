@@ -2,15 +2,12 @@
 
 ## 0.3.0 — Unreleased
 
-- Rename the preferred strict record policy from `Closed` to `Strict`. Retain
-  `Closed` as a deprecated constructor with identical behavior.
-
-- Rename `Value` to `Json`, `Policy` to `RecordPolicy`, and `value_text` to
-  `to_string`. Retain the old names as deprecated aliases.
-
-- Rename the preferred schema functions to `schema_json` and `schema_string`.
-  Keep `emit_json` and `emit_text` as deprecated aliases. Update examples and
-  documentation; schema bytes, validation and decoding behavior are unchanged.
+- Rename `Value` to `Json`, `Policy` to `RecordPolicy`, `Closed` to `Strict`,
+  and `value_text` to `to_string`.
+- Rename `emit_json` to `schema_json` and `emit_text` to `schema_string`.
+- Remove the previous API names. Update type annotations, constructor calls,
+  pattern matches and function calls as described in the migration guide.
+  Schema bytes, validation, decoding and serialization behavior are unchanged.
 
 ## 0.2.2 — 2026-10-11
 

@@ -27,53 +27,24 @@ fn user_definition() {
   s.finish(fields, s.Strict)
 }
 
-pub fn old_json(value: s.Value) -> s.Json {
-  value
-}
-
-pub fn new_json(value: s.Json) -> s.Value {
-  value
-}
-
-pub fn old_policy(policy: s.Policy) -> s.RecordPolicy {
-  policy
-}
-
-pub fn new_policy(policy: s.RecordPolicy) -> s.Policy {
-  policy
-}
-
 pub fn strict_policy(policy: s.RecordPolicy) -> Bool {
   case policy {
     s.Open -> False
-    s.Strict | s.Closed -> True
+    s.Strict -> True
   }
 }
 
 pub fn main() {
-  let assert Ok(json) = s.parse("{\"name\":\"Ada\",\"active\":true}")
-  let json: s.Json = old_json(new_json(json))
-  let assert True = s.value_text(json) == s.to_string(json)
-  let policy: s.RecordPolicy = old_policy(new_policy(s.Closed))
-  let assert True = policy == s.Closed
-  let assert False = s.Strict == s.Closed
-  let assert True = strict_policy(s.Strict) && strict_policy(s.Closed)
+  let assert True = strict_policy(s.Strict)
   let assert False = strict_policy(s.Open)
-  let legacy = s.finish(s.record(Nil), s.Closed)
   let strict = s.finish(s.record(Nil), s.Strict)
-  let assert True = s.schema_string(legacy) == s.schema_string(strict)
   let assert Ok(empty) = s.parse("{}")
   let assert Ok(extra) = s.parse("{\"extra\":true}")
-  let assert True = s.decode(legacy, empty) == s.decode(strict, empty)
+  let json: s.Json = empty
+  let assert Ok(Nil) = s.decode(strict, json)
   let assert Error(_) = s.validate(strict, extra)
-  let assert True = s.validate(legacy, extra) == s.validate(strict, extra)
   let assert True =
-    documentation.render(legacy, "record")
-    == documentation.render(strict, "record")
-  let assert True =
-    s.emit_text(user_definition()) == s.schema_string(user_definition())
-  let assert True =
-    s.to_string(s.emit_json(user_definition()))
+    s.to_string(s.schema_json(user_definition()))
     == s.schema_string(user_definition())
   let assert Ok(["Ada", "Grace"]) = read_names("[\"Ada\",\"Grace\"]")
   let assert "{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"items\":{\"type\":\"string\"},\"type\":\"array\"}" =
