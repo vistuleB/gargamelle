@@ -1,6 +1,6 @@
 # Gargamelle handoff and next work
 
-0.3.0 preparation is tracked in `docs/release-0.3.0.md`. It introduces
+0.3.0 is published; its README replacement preparation is tracked in `docs/release-0.3.0.md`. It introduces
 `schema_json` and `schema_string`, replacing `emit_json` and `emit_text`. `Json`, `RecordPolicy` and `to_string` replace `Value`,
 `Policy` and `value_text`. Previous API names are removed. Core semantics are unchanged.
 The preceding 0.2.2 replacement handoff is retained in ignored reports.

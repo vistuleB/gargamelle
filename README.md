@@ -55,8 +55,8 @@ pub fn names_definition() {
 }
 
 pub fn read_names(source: String) {
-  let assert Ok(value) = gargamelle.parse(source)
-  gargamelle.decode(names_definition(), value)
+  let assert Ok(json) = gargamelle.parse(source)
+  gargamelle.decode(names_definition(), json)
 }
 
 pub fn names_schema() {
@@ -95,8 +95,8 @@ pub fn user_definition() {
 }
 
 pub fn read_user(source: String) {
-  let assert Ok(value) = s.parse(source)
-  s.decode(user_definition(), value)
+  let assert Ok(json) = s.parse(source)
+  s.decode(user_definition(), json)
 }
 ```
 

@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.3.0 — Unreleased
+## 0.3.0 — 2026-10-11
 
 - Shorten the HTML record-policy badge to `STRICT`, using the same typography
   and color as `REQUIRED` and `OPTIONAL`.
