@@ -1,8 +1,9 @@
 # Migrating to 0.2.0
 
-Version 0.2.0 is in development. These changes are in the main source;
+Version 0.2.0 is an unreleased candidate. These changes are in the main source;
 the published 0.1.0 package is unchanged. JavaScript remains the supported target
-while native platform, deployment and performance verification remain open.
+while broader native platform qualification remains open. Native tests and a
+Gleam deployment shipment pass on macOS arm64 with OTP 29.
 The native implementation requires an explicit build; see
 [Native Erlang setup](native-erlang.html).
 

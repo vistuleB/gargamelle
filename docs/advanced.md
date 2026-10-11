@@ -1,7 +1,7 @@
 # Advanced definitions and documentation
 
 These examples extend the core record and array workflows. Acceptance and output
-semantics are specified in the [technical contract](https://hexdocs.pm/gargamelle/0.1.0/contract.html).
+semantics are specified in the [technical contract](https://hexdocs.pm/gargamelle/0.2.0/contract.html).
 
 ## Fractional numbers
 
@@ -127,16 +127,16 @@ refer to existing definitions and may not chain. They only compress presentation
 the caller must explain any omitted distinctions. No domain-specific aliases are
 built into Gargamelle.
 
-The supplied [stylesheet](https://github.com/vistuleB/gargamelle/blob/v0.1.0/documentation/reference.css)
-and [script](https://github.com/vistuleB/gargamelle/blob/v0.1.0/documentation/reference.js)
+The supplied [stylesheet](https://github.com/vistuleB/gargamelle/blob/v0.2.0/documentation/reference.css)
+and [script](https://github.com/vistuleB/gargamelle/blob/v0.2.0/documentation/reference.js)
 are separate assets in the source repository; they are not included in the Hex
 package. Download the release-tagged files into the directory where you will
 save your HTML page (repository access is required):
 
 ```sh
 mkdir -p public
-curl -fL https://raw.githubusercontent.com/vistuleB/gargamelle/v0.1.0/documentation/reference.css -o public/reference.css
-curl -fL https://raw.githubusercontent.com/vistuleB/gargamelle/v0.1.0/documentation/reference.js -o public/reference.js
+curl -fL https://raw.githubusercontent.com/vistuleB/gargamelle/v0.2.0/documentation/reference.css -o public/reference.css
+curl -fL https://raw.githubusercontent.com/vistuleB/gargamelle/v0.2.0/documentation/reference.js -o public/reference.js
 ```
 
 Save this complete page as `public/index.html`, replacing the marked comment with
@@ -166,7 +166,7 @@ string as HTML rather than escaping it:
 </html>
 ```
 
-Open `public/index.html` in a browser. See the [rendered sample](https://hexdocs.pm/gargamelle/0.1.0/renderer-sample.html)
+Open `public/index.html` in a browser. See the [rendered sample](https://hexdocs.pm/gargamelle/0.2.0/renderer-sample.html)
 for the article produced by this definition.
 
 Native `<details>` folding needs no JavaScript. The optional script implements

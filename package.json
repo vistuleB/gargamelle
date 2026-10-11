@@ -10,6 +10,7 @@
     "pretest": "node verification/check-node.mjs",
     "preverify": "node verification/check-node.mjs",
     "precheck:release": "node verification/check-node.mjs",
+    "prepare:release": "node verification/prepare-release.mjs",
     "verify:erlang-primitives": "node --test verification/portability/*.test.mjs"
   },
   "devDependencies": {

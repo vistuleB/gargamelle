@@ -1,6 +1,6 @@
 # Gargamelle handoff and next work
 
-Recorded 2026-10-10; updated through scoped native regex transport after `af9acc5`.
+Recorded 2026-10-10; updated through 0.2.0 release candidate preparation.
 This is a handoff and prioritized candidate list, not a commitment to implement
 all JSON Schema features. Verify external state before acting on it.
 
@@ -14,8 +14,8 @@ all JSON Schema features. Verify external state before acting on it.
   Scalar admission and native regex research were committed as `eaae20a`.
   The previous code/evidence checkpoint is `ef8841b`.
 - Documentation cleanup is complete: onboarding precedes the contract, the intro
-  credits glon's influence and independent implementation, the comparison is
-  concise, limitations are explicit, app notes are removed, and the renderer
+  credits glon's influence and independent implementation, the comparison section
+  is removed, limitations are explicit, app notes are removed, and the renderer
   recipe includes asset downloads, a complete HTML shell and a rendered sample.
   A HexDocs license page fixes the README license link.
 - The files are in `gargamelle/`, but Git metadata remains in `concord/.git`.
@@ -85,6 +85,15 @@ regex mutation is detected through five API paths. A macOS Gleam shipment works
 after the helper is explicitly installed and all source checkouts are removed.
 See `docs/native-oracle-evidence.md` for scope and reproduction.
 
+Release preparation now has a single offline command, `npm run prepare:release`.
+It checks both target gates, docs, archive contents and fresh extracted-archive
+consumers, and records hashes and logs in `reports/release-preparation.json`.
+`CHANGELOG.md`, the migration guide and `docs/release-0.2.md` describe the candidate
+and audit findings. Versioned links target 0.2.0 and become available on publication.
+No release tag, push or publication is included. The recommendation remains to
+finish native platform qualification before claiming broad Erlang support; a
+JavaScript release with a native preview is a separate support-scope decision.
+
 Next: verify Linux and OTP version bounds, extend native official-suite and
 operator mutation coverage, and check other release tooling. Measure representative application workloads
 before optimizing further. Windows is unverified and the helper currently uses
@@ -93,7 +102,7 @@ Do not publish or move `v0.1.0` for this work.
 
 ## Read these first
 
-1. `README.md`: concise overview, contract, installation, examples and glon comparison.
+1. `README.md`: overview, contract, installation, examples and lineage.
 2. `docs/contract.md`: complete intended 0.2.0 development semantics, without
    implementation history or verification procedures. This is the public contract.
 3. `PRESERVATION.md`: constructor-by-constructor design arguments, not formal proofs.

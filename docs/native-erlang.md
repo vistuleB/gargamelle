@@ -1,8 +1,9 @@
 # Native Erlang setup
 
 The 0.2.0 source has native Erlang implementations for all core operations.
-JavaScript remains the supported target while native platform, deployment and
-performance verification are completed. The published 0.1.0 package is unchanged.
+JavaScript remains the supported target while broader native platform
+qualification is completed. The macOS implementation and Gleam shipment have
+passed the retained gates; this does not qualify Linux or other OTP versions. The published 0.1.0 package is unchanged.
 The current native setup is tested on macOS with OTP 29 and Gleam 1.18.1.
 
 ## Build the regex helper

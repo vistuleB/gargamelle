@@ -1,15 +1,18 @@
 # Preparing and publishing Gargamelle
 
-The working tree is developing 0.2.0. Version 0.1.0 was published separately and
-its tag must remain unchanged. Complete Erlang verification before a 0.2.0 support
-claim or publication.
+The working tree contains the unreleased 0.2.0 candidate. Version 0.1.0 was
+published separately and its tag must remain unchanged. Candidate preparation does
+not tag, push, publish or change repository visibility. The release audit is in
+[0.2.0 candidate review](release-0.2.md). Broad Erlang qualification remains open;
+a preparation pass must not be presented as completing those platform checks.
 
 The package was renamed from Concord to Gargamelle because Hex’s `concord`
 name is owned by an unrelated Elixir package. The maintainer checked Gargamelle’s
-availability. The repository remains private; no visibility change is included.
+availability. Repository visibility must be checked before publication; no visibility change is included.
 
 MIT was selected for Gargamelle’s own code. The exported tarball includes the license,
-README, package metadata, Gleam source and JavaScript runtime. A clean consumer
+README, package metadata, Gleam source, JavaScript runtime, native Erlang modules
+and vendored regex C sources with their upstream MIT license and provenance. A clean consumer
 built and ran against the extracted archive with record decoding, array decoding,
 validation, schema emission and checked documentation examples. It resolved only
 `gleam_stdlib` and `gleam_json`; no sibling app or npm harness was required.
@@ -18,36 +21,54 @@ install the Gleam package; they do not need the npm verification dependencies.
 
 ## Release checks
 
-1. Confirm the license choice and include its text in `LICENSE` and its SPDX
-   identifier in `gleam.toml`. Retain the separate JSON Schema test-suite license
-   in `verification/official/LICENSE` when distributing those fixtures.
-2. Keep `gleam.toml`, `package.json` and the root package-lock version aligned.
-   Review the changelog, README, public API docs and supported runtime statement.
-3. Run `npm ci` and `gleam deps download` when setting up the repository, then
-   `npm run verify` and `npm run check:release`. The latter checks current evidence;
-   it does not replace review of the preservation argument in `PRESERVATION.md`.
-4. Run `gleam docs build` and inspect the generated API pages. Only `gargamelle` and
-   `gargamelle/documentation` are public; `schema_fixtures` is internal test support.
-5. Run `gleam export hex-tarball`. Inspect the archive for metadata, Gleam source,
-   `runtime.mjs`, README and license; exclude credentials and build artifacts.
-   Extract its contents and build/run a new JavaScript consumer using that extracted
-   package as a path dependency. It must work without the app checkout or npm tools.
-6. Verify that the Hex name is available and that the publishing account can own it.
-   Package names are global. Repository visibility and source links should be
-   reviewed before publishing; this preparation does not change visibility.
-7. Commit the reviewed candidate and tag its version. Regenerate evidence after a
-   commit if the report needs to identify that exact commit.
-8. When publication is explicitly requested, run `gleam publish`. This uploads the
-   package and generated documentation. Verify the Hex release, then test a new
-   consumer pinned to the published version and update the README’s availability statement.
+1. Keep `gleam.toml`, `package.json` and the root package-lock version aligned.
+   Review the changelog, migration guide, README, API docs and declared runtime
+   support. Preserve `LICENSE` and `priv/regex-src/LICENSE.quickjs`; verify the
+   vendor provenance hashes. The optional retained official-suite fixtures have
+   their own license in `verification/official/LICENSE`.
+2. Install pinned dependencies with `npm ci` and `gleam deps download` on first
+   setup. Run `npm run prepare:release` with Node 24, Gleam 1.18.1, OTP 29,
+   `make` and a C compiler. It runs JavaScript evidence, fifteen native groups,
+   docs generation, archive inspection and fresh extracted-archive consumers on
+   both targets. The native deployment group tests a shipment without source
+   checkouts. All checks run offline once dependencies are available.
+3. Inspect `reports/release-preparation.json` and its logs. The report fingerprints
+   the source and records the archive hash, members, tested versions and support
+   boundaries. It must match the candidate after the final edit. The separate
+   `npm run check:release` checks JavaScript evidence only. Neither command
+   replaces review of `PRESERVATION.md` or qualifies untested native platforms.
+4. Resolve the outstanding native platform qualification or explicitly agree on
+   a narrower release support statement. Linux, other OTP versions and other
+   deployment tooling have no retained pass yet. Windows uses unsupported POSIX
+   helper code. Do not infer broad Erlang support from macOS evidence.
+5. Inspect the generated documentation under `build/dev/docs/gargamelle`. Only
+   `gargamelle` and `gargamelle/documentation` are public API modules. Versioned
+   0.2.0 links become available only after publication; keep the README's candidate
+   and published-version statements accurate during preparation.
+6. Commit the reviewed candidate. Check publishing-account access, repository
+   visibility and release availability before publication. These are external
+   publication checks and are not performed by the offline preparation command.
+7. When publication is explicitly requested, tag the reviewed candidate `v0.2.0`
+   and run `gleam publish`. Verify the Hex release and documentation, then test a
+   new consumer pinned to the published version. Push only when authorized. Update
+   the candidate status in the README and record the published archive/commit.
+
+```sh
+npm run prepare:release
+```
+
+The generated archive is `build/gargamelle-0.2.0.tar`. Generated native executables
+are excluded; consumers build for their destination and install the helper as
+specified in [Native Erlang setup](native-erlang.md).
 
 ## Support and compatibility
 
 The supported compilation target is JavaScript. The full verification harness
-uses Node 24 and Gleam 1.18.1 or later. Browser, Erlang, Bun and Deno support is not
-claimed. No npm runtime dependency is required by the library.
+uses Node 24 and Gleam 1.18.1. Native Erlang evidence covers macOS arm64 with
+OTP 29; broader native support remains unqualified. Browser, Bun, Deno and Windows
+native-helper support are not claimed. No npm runtime dependency is required by the library.
 
-Dependency versions remain exact for this first candidate because those versions
+Dependency versions remain exact for this candidate because those versions
 are verified. Wider version ranges should follow compatibility checks rather than
 being advertised without evidence. A consuming package may encounter resolver
 conflicts when requiring a different version of the same Gleam dependency.

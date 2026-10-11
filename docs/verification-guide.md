@@ -52,7 +52,8 @@ See [PRESERVATION.md](https://github.com/vistuleB/gargamelle/blob/main/PRESERVAT
 shrinking, and implementation findings. `reports/evidence.json` is the current
 verification result; it is generated locally and excluded from source control.
 The original contract document's unverified status records its specification-time
-state, not the current candidate report. Browser/Erlang support and broader production adoption remain unverified.
+state, not the current candidate report. Browser support, broader native platform qualification and production adoption
+remain unverified.
 
 ## Output and evidence details
 
@@ -72,22 +73,33 @@ relevant source is uncommitted, with `baseCommit` retained for context. After a
 checkpoint commit, regenerate evidence to identify the containing commit.
 
 
-## Erlang portability primitives
+## Native Erlang verification
 
-With Erlang/OTP 29 installed, run `npm run verify:erlang-primitives` for the
-experimental native numeric, admission, serialization, and reference-cell checks.
-These compare Erlang operations directly with Node and retain native-regex
-counterexamples. They are separate from the JavaScript verification gate and do
-not establish support for a complete Erlang backend. The admission experiments
-cover the authorized 0.2.0 scalar domain, including rejection of unpaired
-surrogates after syntax and duplicate-key resolution.
+With Erlang/OTP 29, `make` and a C compiler installed, run
+`npm run verify:erlang-primitives`. The command runs fifteen groups covering the
+actual native library, numeric and scalar admission checks, immutable recursion,
+process transfer and exit, native regex behavior and operational failures.
+Historical prototypes and regex counterexamples remain as regression evidence.
+The production fixtures use the vendored regex helper, not a JavaScript adapter.
 
-The same command runs an isolated Erlang build of the actual library and all
-shared Gleam tests, plus typed recursion, process-transfer, composition, conflict
-and exception-cleanup tests. Admission uses the production native parser. The
-fixture attaches native regex adapters only to its temporary source copy.
-Those adapters do not establish ECMAScript regex parity. Admission, canonical
-emission, numeric primitives, scalar strings and graph operations use production
-externals. The unsupported-target gate remains on regex. See
-[the portability investigation](erlang-portability.md) for the
-opt-in standalone QuickJS engine corpus and its source/archive hashes.
+The typed generated gate runs 886 definitions and 17,788 cases through both
+compiled targets. Ajv and Hyperjump check emitted schemas; an independent recipe
+interpreter checks 6,459 accepted outputs. Full diagnostic structures are compared
+across targets. The deployment gate removes source checkouts and tests an exported
+Gleam shipment with an explicitly installed helper. See
+[Native Erlang setup](native-erlang.html) for installation.
+
+Current native evidence covers macOS arm64, OTP 29 and Gleam 1.18.1. It does not
+establish Linux, Windows, other OTP versions, every deployment tool or exhaustive
+ECMAScript conformance. The source retains detailed investigation and measurement
+reports in `docs/erlang-portability.md`, `docs/native-oracle-evidence.md` and
+`docs/regex-workload-measurements.md`.
+
+## Release candidate preparation
+
+Run `npm run prepare:release` to regenerate both target gates, documentation and
+an exported Hex archive, then inspect the archive and run fresh consumers on both
+targets. It writes `reports/release-preparation.json`, including archive hashes and
+support boundaries. It does not tag, push or publish. The separate
+`npm run check:release` remains a JavaScript evidence check; it is not a whole
+Erlang release qualification.

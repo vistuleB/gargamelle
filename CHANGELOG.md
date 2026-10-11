@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.2.0 — unreleased
+
+- Restrict JSON strings, object keys and schema text to Unicode scalar values.
+  Reject unpaired surrogates after syntax parsing and duplicate-key resolution.
+  Valid pairs and ordinary Gleam `String` outputs are preserved.
+- Replace runnable recursive builder references with typed construction plans.
+  Only completed definitions can be decoded, validated, emitted or rendered.
+  Existing definitions inside recursive builders need `lift`; annotated generic
+  helpers and unfinished record, tuple and variant builders gain a recursion
+  parameter. See the 0.2.0 migration guide.
+- Add native Erlang implementations for all core operations, including immutable
+  recursion, binary64 parsing/formatting, canonical JSON and ECMAScript Unicode
+  regex matching through a vendored C helper. Native use requires explicit helper
+  compilation and installation; current evidence is macOS arm64 with OTP 29.
+- Reuse the native regex helper within each validation walk and close it before
+  conversion callbacks. Native resource failures remain operational exceptions.
+- Fix native integer/float decoding in optional HTML rendering.
+- Extend cross-target compile-negative, process-lifetime, generated-oracle,
+  mutation and deployment verification without adding JavaScript runtime dependencies.
+
+Linux, other OTP versions and broader Erlang support remain unqualified. This
+entry describes the candidate, not a published release.
+
 ## 0.1.0 — 2026-10-10
 
 - Rename the package and public modules from Concord to Gargamelle.
