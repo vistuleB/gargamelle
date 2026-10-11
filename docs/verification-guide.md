@@ -52,7 +52,9 @@ See [PRESERVATION.md](preservation.html) for constructor reasoning and
 [generated notes](generated-notes.html) for failure retention,
 shrinking, and implementation findings. `reports/evidence.json` is the current
 verification result; it is generated locally and excluded from source control.
-Browser support and native runtimes outside the tested matrix remain unverified.
+Browser checks cover Chrome 155, Firefox 157 and Safari 27; see
+[Browser compatibility](browser-support.html). Other browsers and native runtimes
+outside the tested matrix remain unverified.
 
 ## Output and evidence details
 

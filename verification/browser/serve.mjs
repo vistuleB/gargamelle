@@ -23,6 +23,9 @@ for(const path of ['verification/generated-api.mjs','verification/recipe-model.m
  mkdirSync(join(workspace,path,'..'),{recursive:true});cpSync(join(root,path),join(workspace,path));
 }
 mkdirSync(join(workspace,'assets'));for(const name of ['reference.css','reference.js'])cpSync(join(root,'documentation',name),join(workspace,'assets',name));
+// Frozen local HexDocs preview for the release editorial review.
+const renderedDocs=join(root,'build/dev/docs/gargamelle');
+if(existsSync(renderedDocs))cpSync(renderedDocs,join(workspace,'docs'),{recursive:true});
 const runner=join(workspace,'build/dev/javascript/gargamelle/gargamelle_test.mjs');
 let runnerSource=readFileSync(runner,'utf8');
 assert.equal(runnerSource.split('import * as $gleeunit from "../gleeunit/gleeunit.mjs";').length,2);
@@ -91,7 +94,8 @@ const server=createServer(async(req,res)=>{
   const name=path==='/'?'verification/browser/index.html':decodeURIComponent(path.slice(1));
   if(!allowed.has(name)||!existsSync(resolve(workspace,name))){res.writeHead(404);res.end('Not found');return;}
   const file=readFileSync(join(workspace,name));
-  res.writeHead(200,{'content-type':name.endsWith('.mjs')||name.endsWith('.js')?'text/javascript':name.endsWith('.json')?'application/json':name.endsWith('.css')?'text/css':'text/html','cache-control':'no-store'});res.end(file);
+  const type=name.endsWith('.mjs')||name.endsWith('.js')?'text/javascript':name.endsWith('.json')?'application/json':name.endsWith('.css')?'text/css':name.endsWith('.woff2')?'font/woff2':name.endsWith('.woff')?'font/woff':name.endsWith('.svg')?'image/svg+xml':name.endsWith('.png')?'image/png':'text/html';
+  res.writeHead(200,{'content-type':type,'cache-control':'no-store'});res.end(file);
  }catch(error){res.writeHead(400,{'content-type':'application/json'});res.end(JSON.stringify({error:String(error)}));}
 });
 server.listen(0,'127.0.0.1',()=>{

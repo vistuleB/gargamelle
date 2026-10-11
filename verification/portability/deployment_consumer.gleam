@@ -10,7 +10,31 @@ pub type Tree {
   Branch(List(Tree))
 }
 
+pub type User {
+  User(name: String, active: Bool)
+}
+
+fn read_names(source: String) {
+  let assert Ok(value) = s.parse(source)
+  s.decode(s.array(s.text()), value)
+}
+
+fn user_definition() {
+  let assert Ok(fields) =
+    s.record(fn(name) { fn(active) { User(name, active) } })
+    |> s.required("name", s.text())
+  let assert Ok(fields) = s.required(fields, "active", s.boolean())
+  s.finish(fields, s.Closed)
+}
+
 pub fn main() {
+  let assert Ok(["Ada", "Grace"]) = read_names("[\"Ada\",\"Grace\"]")
+  let assert "{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"items\":{\"type\":\"string\"},\"type\":\"array\"}" =
+    s.emit_text(s.array(s.text()))
+  let assert Ok(user) = s.parse("{\"name\":\"Ada\",\"active\":true}")
+  let assert Ok(User("Ada", True)) = s.decode(user_definition(), user)
+  let html = documentation.render(user_definition(), "user")
+  let assert True = string.contains(html, "strict fields</span>")
   let assert Ok(leaf) = s.pattern(s.text(), "^\\p{L}+$")
   let leaf = s.map(leaf, Leaf)
   let assert Ok(tree) =

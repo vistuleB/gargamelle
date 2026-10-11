@@ -1,8 +1,8 @@
 name = "gargamelle"
-version = "0.2.0"
+version = "0.2.1"
 licences = ["MIT"]
 description = "Typed JSON decoding and JSON Schema 2020-12 generation from one Gleam definition"
-repository = { type = "custom", url = "https://repo.hex.pm/tarballs/gargamelle-0.2.0.tar" }
+repository = { type = "custom", url = "https://repo.hex.pm/tarballs/gargamelle-0.2.1.tar" }
 internal_modules = ["schema_fixtures"]
 target = "javascript"
 gleam = ">= 1.18.1"
@@ -18,6 +18,11 @@ gleeunit = "== 1.11.0"
 title = "Technical contract"
 path = "contract.html"
 source = "./docs/contract.md"
+
+[[documentation.pages]]
+title = "Browser compatibility"
+path = "browser-support.html"
+source = "./docs/browser-support.md"
 
 [[documentation.pages]]
 title = "Advanced definitions"

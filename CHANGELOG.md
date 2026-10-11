@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.2.1 — 2026-10-11
 
 - Align unfolding and plain labels in HTML documentation, including record fields
   and union alternatives. Preserve native disclosure behavior with a fixed
@@ -9,6 +9,11 @@
   uniform, and end nested guides before the next horizontal divider.
 - Show `STRICT FIELDS` as a heading badge and label dictionaries as `dictionary`.
   Keep longer constraints below the heading and define the badge in the guide.
+
+- Add Hex package and HexDocs badges, accessible documentation/evidence links,
+  clearer target setup and a browser compatibility guide.
+- Verify Chrome 155, Firefox 157 and Safari 27, and extend native mutation checks.
+  Core admission, decoding, schema and recursion semantics are unchanged.
 
 ## 0.2.0 — 2026-10-11
 

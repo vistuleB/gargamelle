@@ -1,5 +1,9 @@
 # Gargamelle handoff and next work
 
+0.2.1 preparation is tracked in `docs/release-0.2.1.md`. Core semantics remain
+those of 0.2.0; this patch contains renderer/docs improvements and verification.
+Final results and archive hashes are in ignored reports. The maintainer publishes.
+
 Recorded 2026-10-10; updated through 0.2.0 release candidate preparation.
 This is a handoff and prioritized candidate list, not a commitment to implement
 all JSON Schema features. Verify external state before acting on it.

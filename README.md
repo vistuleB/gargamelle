@@ -1,10 +1,13 @@
 # Gargamelle
 
+[![Package Version](https://img.shields.io/hexpm/v/gargamelle)](https://hex.pm/packages/gargamelle)
+[![Hex Docs](https://img.shields.io/badge/hex-docs-ffaff3)](https://hexdocs.pm/gargamelle/)
+
 Gargamelle builds a typed JSON decoder and a JSON Schema 2020-12 document from a single Gleam definition. It can also generate formatted, navigable HTML documentation with checked examples.
 
-The [technical contract](https://hexdocs.pm/gargamelle/0.2.0/contract.html) defines how schema validation and decoding agree, what decoding produces, and the assumptions and limits of those guarantees.
+The [technical contract](https://hexdocs.pm/gargamelle/0.2.1/contract.html) defines how schema validation and decoding agree, what decoding produces, and the assumptions and limits of those guarantees.
 
-Gargamelle began as an investigation into improving [glon](https://hexdocs.pm/glon/), which inspired its combined decoder/schema approach. It became an independent implementation; no glon source code was copied. Issues found during the investigation informed Gargamelle’s regression tests.
+Gargamelle grew from an attempt to use [glon](https://hexdocs.pm/glon/) for a project into an independent implementation. No glon source code was copied.
 
 Developed with Codex Astra.
 
@@ -12,7 +15,7 @@ Developed with Codex Astra.
 
 Requires Gleam 1.18.1 or later.
 
-For Erlang, follow [Native Erlang setup](https://hexdocs.pm/gargamelle/0.2.0/native-erlang.html)
+For Erlang, follow [Native Erlang setup](https://hexdocs.pm/gargamelle/0.2.1/native-erlang.html)
 for target selection and helper installation.
 
 ### JavaScript
@@ -20,7 +23,7 @@ for target selection and helper installation.
 Install Gargamelle:
 
 ```sh
-gleam add gargamelle@0.2.0
+gleam add gargamelle@0.2.1
 ```
 
 Set `target = "javascript"` in your project’s `gleam.toml`:
@@ -52,7 +55,7 @@ For input `["Ada", "Grace"]`, `read_names` returns `Ok(["Ada", "Grace"])`.
 Handle admission errors separately from validation errors in application code;
 these assertions only keep the introductory example short. `validate` checks
 acceptance without invoking converters. `decode` validates before constructing
-output. See the typed record example below, the [recursive examples](https://hexdocs.pm/gargamelle/0.2.0/advanced.html), and the [API reference](https://hexdocs.pm/gargamelle/0.2.0/gargamelle.html).
+output. See the typed record example below, the [recursive examples](https://hexdocs.pm/gargamelle/0.2.1/advanced.html), and the [API reference](https://hexdocs.pm/gargamelle/0.2.1/gargamelle.html).
 
 ## Typed records
 
@@ -105,7 +108,7 @@ auxiliary conditions, membership, exclusions and key constraints inspect that
 input without running their converters. Semantic application checks belong after
 structural decoding.
 
-The input domain is finite JSON trees after JavaScript parsing, with finite
+The input domain is finite JSON trees after parsing, with finite
 binary64 numbers and Unicode scalar strings and keys. Parsing may round literals
 and collapse duplicate object keys. Domain checks apply to the final parsed tree.
 The equivalence assumes pure, total callbacks, sufficient runtime resources, and
@@ -118,22 +121,24 @@ as a JSON value. This is a schema serialization round trip; there is no typed
 encoder or decode/encode inversion guarantee. Defaults, projection and maps can
 lose information, and some output values may be unreachable.
 
-The [technical contract](https://hexdocs.pm/gargamelle/0.2.0/contract.html)
-specifies the complete intended semantics. [Preservation arguments](https://hexdocs.pm/gargamelle/0.2.0/preservation.html)
+The [technical contract](https://hexdocs.pm/gargamelle/0.2.1/contract.html)
+specifies the complete intended semantics. [Preservation arguments](https://hexdocs.pm/gargamelle/0.2.1/preservation.html)
 and differential tests support these invariants; they are not a machine-checked
 proof or a claim of full JSON Schema dialect support.
 
 ## Limitations
 
-JavaScript is tested on Node 24. The native Erlang implementation is tested on
+JavaScript is tested on Node 24.10.0, Chrome 155, Firefox 157 and Safari 27;
+see [Browser compatibility](https://hexdocs.pm/gargamelle/0.2.1/browser-support.html).
+The native Erlang implementation is tested on
 macOS arm64 with OTP 29 and Ubuntu 24.04 x86_64 with OTP 28.5.0.7 and 29.1.1,
-and requires a C helper; see [Native Erlang setup](https://hexdocs.pm/gargamelle/0.2.0/native-erlang.html).
+and requires a C helper; see [Native Erlang setup](https://hexdocs.pm/gargamelle/0.2.1/native-erlang.html).
 APIs may change before 1.0.
 
 - Native verification covers the runtime matrix above and Gleam shipment
   deployment. Other platforms, OTP releases and deployment tools are unverified.
-  The regex helper uses POSIX APIs; Windows is not supported. Browsers, Bun and
-  Deno are unverified.
+  The regex helper uses POSIX APIs; Windows is not supported. Older and mobile
+  browsers, Bun and Deno are unverified.
 - Native regex Unicode properties use Unicode 16 tables; JavaScript uses its
   host tables. Regex parity is verified against Node 24.10.0, not Node 24.21.0
   with Unicode 17.
@@ -150,11 +155,11 @@ APIs may change before 1.0.
 
 ## Further documentation
 
-- [Technical contract](https://hexdocs.pm/gargamelle/0.2.0/contract.html): complete intended acceptance, output, emission and error semantics.
-- [Advanced definitions](https://hexdocs.pm/gargamelle/0.2.0/advanced.html): numeric constraints, recursion, tuples, key constraints, membership, conditionals, exclusion and HTML documentation.
-- [Verification and development](https://hexdocs.pm/gargamelle/0.2.0/verification-guide.html): setup commands, independent validators, generated coverage, retained discrepancies and release evidence.
-- [Preservation arguments](https://hexdocs.pm/gargamelle/0.2.0/preservation.html): reasoning about how constructors preserve the contract.
-- [Migrating to 0.2.0](https://hexdocs.pm/gargamelle/0.2.0/migration-0.2.html): string requirements and changes to recursive construction.
+- [Technical contract](https://hexdocs.pm/gargamelle/0.2.1/contract.html): complete intended acceptance, output, emission and error semantics.
+- [Advanced definitions](https://hexdocs.pm/gargamelle/0.2.1/advanced.html): numeric constraints, recursion, tuples, key constraints, membership, conditionals, exclusion and HTML documentation.
+- [Verification and development](https://hexdocs.pm/gargamelle/0.2.1/verification-guide.html): setup commands, independent validators, generated coverage, retained discrepancies and release evidence.
+- [Preservation arguments](https://hexdocs.pm/gargamelle/0.2.1/preservation.html): reasoning about how constructors preserve the contract.
+- [Migrating to 0.2.0](https://hexdocs.pm/gargamelle/0.2.1/migration-0.2.html): string requirements and changes to recursive construction.
 
 ## Verification
 
@@ -163,9 +168,9 @@ compositions, independent JSON Schema validators, selected official suite cases
 and deliberate implementation mutations. These provide evidence for the contract,
 not a formal proof or full-dialect conformance. See the verification guide for
 commands, coverage and known validator discrepancies. The package source is
-available in the [Hex archive](https://repo.hex.pm/tarballs/gargamelle-0.2.0.tar).
+available in the [Hex archive](https://repo.hex.pm/tarballs/gargamelle-0.2.1.tar).
 
 ## License
 
-Gargamelle is distributed under the [MIT License](https://hexdocs.pm/gargamelle/0.2.0/license.html). The retained JSON Schema
-test-suite fixtures carry their own [license](https://hexdocs.pm/gargamelle/0.2.0/test-suite-license.html).
+Gargamelle is distributed under the [MIT License](https://hexdocs.pm/gargamelle/0.2.1/license.html). The retained JSON Schema
+test-suite fixtures carry their own [license](https://hexdocs.pm/gargamelle/0.2.1/test-suite-license.html).

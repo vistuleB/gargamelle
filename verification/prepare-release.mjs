@@ -22,7 +22,7 @@ let directory;
 writeFileSync(reportPath,JSON.stringify({status:'running',source:before.digest})+'\n');
 try {
   const version=readFileSync(join(root,'gleam.toml'),'utf8').match(/^version = "([^"]+)"$/m)[1];
-  assert.equal(version,'0.2.0');
+  assert.equal(version,'0.2.1');
   const pkg=JSON.parse(readFileSync(join(root,'package.json'))),lock=JSON.parse(readFileSync(join(root,'package-lock.json')));
   assert.equal(pkg.version,version);assert.equal(lock.version,version);assert.equal(lock.packages[''].version,version);
   assert.equal(pkg.private,true);
@@ -106,7 +106,7 @@ try {
     versions:{node:process.version,unicode:process.versions.unicode,gleam:run('gleam',['--version']).trim(),otp:run('erl',['-noshell','-eval','io:format("~s", [erlang:system_info(otp_release)]), halt().']).trim(),beam:run('erl',['-noshell','-eval','io:format("~s", [erlang:system_info(system_version)]), halt().']).trim()},
     archive:{path:`build/gargamelle-${version}.tar`,sha256:sha256(readFileSync(archive)),contentsSha256:sha256(readFileSync(contents)),members:entries},
     counts:{javascript:js.counts,nativeGroups:17,nativeOperatorMutants:mutations.mutants.length,nativeOfficialCases:official.cases,nativeGeneratedPairs:generated.pairs,nativeDecodedOutputs:generated.coverage.decoded},
-    support:{javascript:process.version,nativeEvidence:`${process.platform} ${process.arch} / OTP ${official.otp} / explicit C helper installation`,unqualified:['Platforms and OTP versions outside this recorded run','Other deployment tooling'],unsupported:['Windows native helper','Browsers/Bun/Deno']},
+    support:{javascript:process.version,nativeEvidence:`${process.platform} ${process.arch} / OTP ${official.otp} / explicit C helper installation`,unqualified:['Platforms and OTP versions outside this recorded run','Other deployment tooling'],unsupported:['Windows native helper'],browserEvidence:'Separate manual browser gate; see docs/browser-support.md',unverifiedJavaScriptHosts:['Bun','Deno','Older and mobile browsers']},
     reviewRequired:['V08 preservation argument','Declared Erlang support scope and remaining platform qualification'],
     scope:'Prepared local candidate; not publication approval or broad Erlang support qualification'};
   writeFileSync(reportPath,JSON.stringify(report,null,2)+'\n');

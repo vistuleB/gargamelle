@@ -1,6 +1,6 @@
 # Constructor preservation arguments
 
-Contract: [Gargamelle 0.2.0 technical contract](contract.html).
+Contract: [Gargamelle 0.2.1 technical contract](contract.html).
 These are implementation design arguments, not formal proofs or passed release gates.
 
 The opaque `Definition(a)` pairs a closed `Node` tree with a conversion function.

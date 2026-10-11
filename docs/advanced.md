@@ -1,7 +1,7 @@
 # Advanced definitions and documentation
 
 These examples extend the core record and array workflows. Acceptance and output
-semantics are specified in the [technical contract](https://hexdocs.pm/gargamelle/0.2.0/contract.html).
+semantics are specified in the [technical contract](https://hexdocs.pm/gargamelle/0.2.1/contract.html).
 
 ## Fractional numbers
 
@@ -164,7 +164,7 @@ string as HTML rather than escaping it:
 </html>
 ```
 
-Open `public/index.html` in a browser. See the [rendered sample](https://hexdocs.pm/gargamelle/0.2.0/renderer-sample.html)
+Open `public/index.html` in a browser. See the [rendered sample](https://hexdocs.pm/gargamelle/0.2.1/renderer-sample.html)
 for the article produced by this definition.
 
 Native `<details>` folding needs no JavaScript. The optional script implements

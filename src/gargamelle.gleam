@@ -4,7 +4,7 @@
 //// invokes user converters; decoding invokes them only after structural success.
 //// Converters are trusted application code: exceptions are operational failures.
 //// JavaScript and Erlang targets are supported on the
-//// [tested runtimes](https://hexdocs.pm/gargamelle/0.2.0/native-erlang.html).
+//// [tested runtimes](https://hexdocs.pm/gargamelle/0.2.1/native-erlang.html).
 //// The Erlang target requires a separately compiled C regex helper.
 
 import gleam/json
