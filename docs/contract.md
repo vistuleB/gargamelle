@@ -1,6 +1,6 @@
 # Gargamelle technical contract
 
-This document specifies the intended public semantics of Gargamelle 0.2.1.
+This document specifies the intended public semantics of Gargamelle 0.2.2.
 “Must” denotes a requirement, not a claim that the implementation has been
 formally proved. Verification results and implementation history are separate.
 

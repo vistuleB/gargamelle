@@ -44,3 +44,12 @@ Unicode drift remains explicit. Other platforms, OTP releases and deployment
 tooling remain outside the recorded native matrix. Browser CI and realistic
 large-contract performance measurements remain separate work; this patch makes
 no new performance claim.
+
+## Superseded preparation
+
+The documentation replacement candidate was not published. Hex metadata fetched
+on 2026-10-11 still matches the original archive checksum above. Subsequent
+README edits invalidate the replacement evidence. A separate 0.2.1 checkout was
+built for optional maintainer-only documentation publication; its path is recorded
+in `reports/docs-publish-0.2.1-path.txt`. The source package cleanup is carried
+forward into 0.2.2. Do not use the old replacement handoff as release approval.
