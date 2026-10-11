@@ -4,21 +4,14 @@
 
 JavaScript is tested on Node 24.10.0 and the desktop versions listed in
 [Browser compatibility](browser-support.html). Erlang implements all core operations.
-The retained native gates pass on macOS arm64 with OTP 29 and Ubuntu 24.04
-x86_64 with OTP 28.5.0.7 and 29.1.1. Both Linux jobs include a deployed Gleam
-shipment. Other platforms, OTP releases and deployment tools remain unverified.
-The verified compiler is Gleam 1.18.1.
+The tested native runtimes are macOS arm64 with OTP 29 and Ubuntu 24.04
+x86_64 with OTP 28.5.0.7 and 29.1.1, using Gleam 1.18.1. Deployment is tested
+with Gleam shipments. Other platforms, OTP releases and deployment tools remain
+unverified. The helper uses POSIX APIs; Windows is not supported.
 
 ## Build the regex helper
 
 Erlang uses a standalone C regex executable. Install `make` and a C compiler.
-From a source checkout, run:
-
-```sh
-make -C priv/regex-src
-gleam test --target erlang
-```
-
 For a downloaded dependency in a Gleam application, run from the application root:
 
 ```sh
@@ -32,9 +25,7 @@ source directory instead. Gleam does not automatically run this Makefile.
 The build creates `build/native/gargamelle_regex_port` inside the dependency.
 JavaScript builds do not require it. No JavaScript runtime is needed on Erlang.
 
-The Hex archive contains the C sources, license and provenance record. Generated
-executables stay outside `priv` to keep host binaries out of source exports.
-Rebuild for each deployment operating system and architecture.
+Rebuild the helper for each deployment operating system and architecture.
 
 ## Release deployment
 
@@ -56,31 +47,16 @@ sh build/erlang-shipment/entrypoint.sh run
 ```
 
 For a path dependency, copy the helper from that dependency's `build/native`
-directory. This shipment has been tested on the native runtime matrix above after removing
-all source and build checkouts. The retained deployment test also verifies that
-omitting the helper raises an operational error.
+directory.
 
 A missing helper or a native crash raises an operational error. Execution budget,
 stack, packet and timeout limits also raise operational errors, including within
 conditional and exclusion checks. They do not become pattern syntax errors or
 ordinary validation rejection.
 
-## Compatibility and remaining verification
+## Regex compatibility
 
-The engine combines QuickJS 2026-06-04 regex code with Unicode 16 tables from
-2025-09-13 and two recorded local patches. The Unicode version matches the tested
-Node 24.10.0 reference. JavaScript uses its host's Unicode tables. Node 24.21.0
-uses Unicode 17 and differs on newly assigned characters, so regex parity with
-that runtime is not claimed. Changing the Node reference or native tables needs
-a separate compatibility review. `priv/regex-src/PROVENANCE.json` records the sources,
-hashes and patches, and `LICENSE.quickjs` preserves the upstream MIT license.
-
-Each native validation walk lazily starts one helper and reuses it until the walk
-finishes. The helper closes before conversion callbacks run. Standalone pattern
-checks still start a helper per call. A synthetic decode of 64 records with four
-patterned fields measured about 10.5 ms on the tested machine, versus 887 ms with
-the original helper-per-call transport. This is an observation, not a timing
-guarantee; representative application workloads still need measurements. Other
-platforms, OTP releases and tooling beyond the tested Gleam shipment remain
-unverified; the current helper uses POSIX APIs. The differential corpus provides
-bounded evidence rather than complete ECMAScript conformance.
+The native regex engine uses Unicode 16 tables and is tested against Node
+24.10.0. JavaScript uses its host's Unicode tables, so Unicode property patterns
+can match differently on hosts with newer tables, including Node 24.21.0.
+See [Browser compatibility](browser-support.html) for a concrete example.

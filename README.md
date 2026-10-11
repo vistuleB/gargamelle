@@ -122,9 +122,7 @@ encoder or decode/encode inversion guarantee. Defaults, projection and maps can
 lose information, and some output values may be unreachable.
 
 The [technical contract](https://hexdocs.pm/gargamelle/0.2.1/contract.html)
-specifies the complete intended semantics. [Preservation arguments](https://hexdocs.pm/gargamelle/0.2.1/preservation.html)
-and differential tests support these invariants; they are not a machine-checked
-proof or a claim of full JSON Schema dialect support.
+specifies the complete intended semantics.
 
 ## Limitations
 
@@ -157,8 +155,6 @@ APIs may change before 1.0.
 
 - [Technical contract](https://hexdocs.pm/gargamelle/0.2.1/contract.html): complete intended acceptance, output, emission and error semantics.
 - [Advanced definitions](https://hexdocs.pm/gargamelle/0.2.1/advanced.html): numeric constraints, recursion, tuples, key constraints, membership, conditionals, exclusion and HTML documentation.
-- [Verification and development](https://hexdocs.pm/gargamelle/0.2.1/verification-guide.html): setup commands, independent validators, generated coverage, retained discrepancies and release evidence.
-- [Preservation arguments](https://hexdocs.pm/gargamelle/0.2.1/preservation.html): reasoning about how constructors preserve the contract.
 - [Migrating to 0.2.0](https://hexdocs.pm/gargamelle/0.2.1/migration-0.2.html): string requirements and changes to recursive construction.
 
 ## Verification
@@ -166,11 +162,10 @@ APIs may change before 1.0.
 The library is checked with typed-output and rejection fixtures, generated
 compositions, independent JSON Schema validators, selected official suite cases
 and deliberate implementation mutations. These provide evidence for the contract,
-not a formal proof or full-dialect conformance. See the verification guide for
-commands, coverage and known validator discrepancies. The package source is
+not a formal proof or full-dialect conformance. The package source is
 available in the [Hex archive](https://repo.hex.pm/tarballs/gargamelle-0.2.1.tar).
 
 ## License
 
-Gargamelle is distributed under the [MIT License](https://hexdocs.pm/gargamelle/0.2.1/license.html). The retained JSON Schema
-test-suite fixtures carry their own [license](https://hexdocs.pm/gargamelle/0.2.1/test-suite-license.html).
+Gargamelle is distributed under the MIT License. See [Licenses](https://hexdocs.pm/gargamelle/0.2.1/license.html)
+for the library, native regex engine and retained JSON Schema test-suite notices.

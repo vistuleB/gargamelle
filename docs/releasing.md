@@ -58,6 +58,9 @@ not a substitute for tests and not a sequence of isolated wording fixes.
 - [ ] Remove internal development commentary from reader-facing pages. Keep
   migration differences in the migration guide and release history in the
   changelog. Do not fix an internal note merely by changing its tense.
+- [ ] Review the configured HexDocs sidebar for reader value. Contributor test
+  instructions, release gates, harness findings and implementation review notes
+  belong in the source tree, not as public guide pages.
 - [ ] Follow source, evidence, license and asset links without repository
   authentication. Public claims must have accessible supporting material. Use
   packaged HexDocs pages or the public Hex source archive when the repository is

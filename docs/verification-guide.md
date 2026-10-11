@@ -1,7 +1,7 @@
 # Verification and development
 
 This guide describes the verification harness and its evidence. The intended
-public semantics are specified separately in the [technical contract](contract.html).
+public semantics are specified separately in the [technical contract](contract.md).
 
 ## Setup and checks
 
@@ -48,12 +48,12 @@ make it fit our constructors. Optional suite collections and full-dialect
 conformance are not claimed. Safe-integer limits and Unicode string lengths have
 dedicated checks.
 
-See [PRESERVATION.md](preservation.html) for constructor reasoning and
-[generated notes](generated-notes.html) for failure retention,
+See [PRESERVATION.md](../PRESERVATION.md) for constructor reasoning and
+[generated notes](../verification/generated-notes.md) for failure retention,
 shrinking, and implementation findings. `reports/evidence.json` is the current
 verification result; it is generated locally and excluded from source control.
 Browser checks cover Chrome 155, Firefox 157 and Safari 27; see
-[Browser compatibility](browser-support.html). Other browsers and native runtimes
+[Browser compatibility](browser-support.md). Other browsers and native runtimes
 outside the tested matrix remain unverified.
 
 ## Output and evidence details
@@ -85,7 +85,7 @@ compiled targets. Ajv and Hyperjump check emitted schemas; an independent recipe
 interpreter checks 6,459 accepted outputs. Full diagnostic structures are compared
 across targets. The deployment gate removes source checkouts and tests an exported
 Gleam shipment with an explicitly installed helper. See
-[Native Erlang setup](native-erlang.html) for installation.
+[Native Erlang setup](native-erlang.md) for installation.
 
 All 109 selected official schema cases also run through both typed targets,
 with the original validity expectations unchanged and both original and emitted

@@ -2,6 +2,12 @@
 
 ## 0.2.1 — 2026-10-11
 
+- Keep HexDocs focused on usage, contracts and compatibility. Retain contributor
+  verification and implementation notes in the source tree, shorten runtime
+  guides, and consolidate library and third-party license notices.
+- Replace the unstyled HexDocs renderer sample with an embedded screenshot in
+  the HTML documentation guide. Retain the local HTML recipe and reference assets.
+
 - Align unfolding and plain labels in HTML documentation, including record fields
   and union alternatives. Preserve native disclosure behavior with a fixed
   chevron space; update the copyable stylesheet.

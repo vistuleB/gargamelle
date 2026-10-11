@@ -1,6 +1,6 @@
 # Constructor preservation arguments
 
-Contract: [Gargamelle 0.2.1 technical contract](contract.html).
+Contract: [Gargamelle 0.2.1 technical contract](docs/contract.md).
 These are implementation design arguments, not formal proofs or passed release gates.
 
 The opaque `Definition(a)` pairs a closed `Node` tree with a conversion function.
@@ -152,8 +152,8 @@ conversion. There is no generic FFI cast or forged typed provider value.
 
 Typed-output and rejection tests, generated compositions, independent schema
 validators, compile-negative fixtures and isolated implementation mutations
-exercise the contract. The [verification guide](verification-guide.html) describes
-coverage and limitations; [generated notes](generated-notes.html) describe retained
+exercise the contract. The [verification guide](docs/verification-guide.md) describes
+coverage and limitations; [generated notes](verification/generated-notes.md) describe retained
 findings. Operational failures are not validation rejection.
 
 These arguments are not formal proofs. Independent review and counterexamples may

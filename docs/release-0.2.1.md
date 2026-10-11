@@ -1,6 +1,16 @@
-# 0.2.1 release preparation
+# 0.2.1 publication and replacement record
 
-This is a new patch release following 0.2.0. Only the maintainer publishes.
+The maintainer published 0.2.1 on 2026-10-11 at 19:19:49 UTC
+(3:19:49 PM EDT), from commit `5015a8981bf2937c0897250642c394b69b1e51a6`.
+Hex reports archive SHA-256
+`8ced43de361f030540093f1a4df4384975881ef8ced1e8eda3ff997b29155234`,
+matching the original prepared archive. Original metadata, archive and evidence
+are retained under `reports/published-0.2.1/`.
+
+This replacement cleans up public documentation: contributor verification and
+implementation notes stay in the source tree, runtime guides are shorter, license
+notices are consolidated, and the renderer guide includes a static screenshot
+instead of an unstyled sample page. Only the maintainer publishes.
 The release scope is documentation, HTML renderer presentation and additional
 verification. Admission, decoding, schema emission, recursion construction and
 native helper semantics remain unchanged. No application dependency is changed.
@@ -15,12 +25,17 @@ native helper semantics remain unchanged. No application dependency is changed.
   Download their artifacts and inspect the preparation reports before handoff.
 - Rendered README, API overview, changed guides and the standalone renderer page
   must be inspected. README examples are exercised by fresh archive consumers.
-- Commit and push the reviewed source. Give the maintainer `gleam publish` only
+- Commit and push the reviewed source. Give the maintainer `gleam publish --replace` only
   after the checks pass; do not run it or move existing release tags.
 
-Public URLs for 0.2.1 are checked against locally generated destinations before
-publication. They cannot be verified as live until the maintainer publishes.
-Afterward, compare the actual archive and versioned HexDocs with this source.
+Hex permits replacement within one hour of initial publication: the deadline
+is 2026-10-11 at 20:19:49 UTC (4:19:49 PM EDT). See
+https://hex.pm/docs/publish. Replacement has not been performed by the agent.
+
+The replacement pages are checked against locally generated destinations.
+After the maintainer replaces the release, compare the actual archive and
+versioned HexDocs with this source. Final source fingerprints, commit IDs and
+archive checksums belong in `reports/release-handoff-0.2.1.json`.
 
 ## Boundaries
 
