@@ -72,6 +72,8 @@ const server=createServer(async(req,res)=>{
  try{
   const path=new URL(req.url,'http://127.0.0.1').pathname;
   if(req.method==='POST'&&path==='/result'){
+   // Decode UTF-8 across chunk boundaries, including supplementary characters.
+   req.setEncoding('utf8');
    let body='';for await(const chunk of req){body+=chunk;if(body.length>20*1024*1024)throw new Error('Result too large');}
    const report=JSON.parse(body),differences=[];
    let failure;
