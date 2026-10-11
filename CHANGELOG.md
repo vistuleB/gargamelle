@@ -2,6 +2,9 @@
 
 ## 0.3.0 — Unreleased
 
+- Shorten the HTML record-policy badge to `STRICT`, using the same typography
+  and color as `REQUIRED` and `OPTIONAL`.
+
 - Rename `Value` to `Json`, `Policy` to `RecordPolicy`, `Closed` to `Strict`,
   and `value_text` to `to_string`.
 - Rename `emit_json` to `schema_json` and `emit_text` to `schema_string`.

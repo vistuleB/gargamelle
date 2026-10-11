@@ -16,12 +16,12 @@ pub fn nested_definition_test() {
   string.contains(html, "any matching alternative") |> should.be_true
   string.contains(html, "optional") |> should.be_true
   string.contains(html, "class=\"badge policy\"") |> should.be_true
-  string.contains(html, "strict fields</span></summary>") |> should.be_true
+  string.contains(html, "strict</span></summary>") |> should.be_true
   string.contains(html, "unknown fields rejected") |> should.be_false
   let html = docs.render(s.dictionary(s.text()), "dictionary")
   string.contains(html, "class=\"type\">dictionary</span>") |> should.be_true
   string.contains(html, "each map value") |> should.be_true
-  string.contains(html, "strict fields") |> should.be_false
+  string.contains(html, "strict") |> should.be_false
   string.contains(html, "values validated by map contract") |> should.be_false
 }
 

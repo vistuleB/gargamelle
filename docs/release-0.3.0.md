@@ -18,4 +18,4 @@ belong in `reports/release-handoff-0.3.0.json`. No existing tags or application
 dependencies are changed. Current runtime qualification limits remain unchanged.
 
 `Strict` replaces `Closed`, which is removed. `Open` is unchanged. The renderer
-uses the existing “strict fields” badge. No compatibility API is retained.
+uses the existing “STRICT” badge. No compatibility API is retained.

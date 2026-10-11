@@ -349,7 +349,7 @@ fn node(
     }
     <> case text(get(s, "type")), get(s, "additionalProperties") {
       "object", Boolean(False) ->
-        " <span class=\"badge policy\" title=\"Only the listed fields are allowed.\">strict fields</span>"
+        " <span class=\"badge policy\" title=\"Only the listed fields are allowed.\">strict</span>"
       _, _ -> ""
     }
   let reference = text(get(s, "$ref"))

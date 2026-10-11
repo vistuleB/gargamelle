@@ -601,4 +601,4 @@ regex equivalence claim. Browser CI, mobile/older engines and realistic
 large-contract performance measurements remain open.
 
 `Strict` replaces `Closed`, which is removed. `Open` is unchanged. The renderer
-uses the existing “strict fields” badge. No compatibility API is retained.
+uses the existing “STRICT” badge. No compatibility API is retained.

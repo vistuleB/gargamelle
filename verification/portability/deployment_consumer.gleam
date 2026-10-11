@@ -52,7 +52,7 @@ pub fn main() {
   let assert Ok(user) = s.parse("{\"name\":\"Ada\",\"active\":true}")
   let assert Ok(User("Ada", True)) = s.decode(user_definition(), user)
   let html = documentation.render(user_definition(), "user")
-  let assert True = string.contains(html, "strict fields</span>")
+  let assert True = string.contains(html, "strict</span>")
   let assert Ok(leaf) = s.pattern(s.text(), "^\\p{L}+$")
   let leaf = s.map(leaf, Leaf)
   let assert Ok(tree) =

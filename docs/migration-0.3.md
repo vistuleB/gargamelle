@@ -18,7 +18,7 @@ return strings; they do not print output.
 
 `Strict` rejects undeclared keys; `Open` accepts them and omits them from
 decoded output. HTML documentation labels rejection of undeclared keys
-**strict fields**. Replace `Closed` with `Strict` in constructor calls and
+**strict**. Replace `Closed` with `Strict` in constructor calls and
 pattern matches.
 
 The previous names have been removed. Update explicit type annotations and
