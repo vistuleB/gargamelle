@@ -10,6 +10,13 @@ Developed with Codex Astra.
 
 ## Getting started
 
+Requires Gleam 1.18.1 or later.
+
+For Erlang, follow [Native Erlang setup](https://hexdocs.pm/gargamelle/0.2.0/native-erlang.html)
+for target selection and helper installation.
+
+### JavaScript
+
 Install Gargamelle:
 
 ```sh
@@ -46,6 +53,27 @@ Handle admission errors separately from validation errors in application code;
 these assertions only keep the introductory example short. `validate` checks
 acceptance without invoking converters. `decode` validates before constructing
 output. See the typed record example below, the [recursive examples](https://hexdocs.pm/gargamelle/0.2.0/advanced.html), and the [API reference](https://hexdocs.pm/gargamelle/0.2.0/gargamelle.html).
+
+## Typed records
+
+```gleam
+import gargamelle as s
+
+pub type User { User(name: String, active: Bool) }
+
+pub fn user_definition() {
+  let assert Ok(fields) =
+    s.record(fn(name) { fn(active) { User(name, active) } })
+    |> s.required("name", s.text())
+  let assert Ok(fields) = s.required(fields, "active", s.boolean())
+  s.finish(fields, s.Closed)
+}
+```
+
+`s.emit_text(definition)` emits canonical schema text. `s.parse(text)` admits JSON;
+`s.decode(definition, value)` validates before running constructor/mapping functions.
+Admission errors, data errors and operational exceptions remain distinct.
+The safe-integer and trusted-callback limitations are part of the contract.
 
 ## Design and contract
 
@@ -91,30 +119,9 @@ encoder or decode/encode inversion guarantee. Defaults, projection and maps can
 lose information, and some output values may be unreachable.
 
 The [technical contract](https://hexdocs.pm/gargamelle/0.2.0/contract.html)
-specifies the complete intended semantics. [Preservation arguments](https://github.com/vistuleB/gargamelle/blob/v0.2.0/PRESERVATION.md)
+specifies the complete intended semantics. [Preservation arguments](https://hexdocs.pm/gargamelle/0.2.0/preservation.html)
 and differential tests support these invariants; they are not a machine-checked
 proof or a claim of full JSON Schema dialect support.
-
-## Typed records
-
-```gleam
-import gargamelle as s
-
-pub type User { User(name: String, active: Bool) }
-
-pub fn user_definition() {
-  let assert Ok(fields) =
-    s.record(fn(name) { fn(active) { User(name, active) } })
-    |> s.required("name", s.text())
-  let assert Ok(fields) = s.required(fields, "active", s.boolean())
-  s.finish(fields, s.Closed)
-}
-```
-
-`s.emit_text(definition)` emits canonical schema text. `s.parse(text)` admits JSON;
-`s.decode(definition, value)` validates before running constructor/mapping functions.
-Admission errors, data errors and operational exceptions remain distinct.
-The safe-integer and trusted-callback limitations are part of the contract.
 
 ## Limitations
 
@@ -146,7 +153,7 @@ APIs may change before 1.0.
 - [Technical contract](https://hexdocs.pm/gargamelle/0.2.0/contract.html): complete intended acceptance, output, emission and error semantics.
 - [Advanced definitions](https://hexdocs.pm/gargamelle/0.2.0/advanced.html): numeric constraints, recursion, tuples, key constraints, membership, conditionals, exclusion and HTML documentation.
 - [Verification and development](https://hexdocs.pm/gargamelle/0.2.0/verification-guide.html): setup commands, independent validators, generated coverage, retained discrepancies and release evidence.
-- [Preservation arguments](https://github.com/vistuleB/gargamelle/blob/v0.2.0/PRESERVATION.md): reasoning about how constructors preserve the contract.
+- [Preservation arguments](https://hexdocs.pm/gargamelle/0.2.0/preservation.html): reasoning about how constructors preserve the contract.
 - [Migrating to 0.2.0](https://hexdocs.pm/gargamelle/0.2.0/migration-0.2.html): string requirements and changes to recursive construction.
 
 ## Verification
@@ -155,9 +162,10 @@ The library is checked with typed-output and rejection fixtures, generated
 compositions, independent JSON Schema validators, selected official suite cases
 and deliberate implementation mutations. These provide evidence for the contract,
 not a formal proof or full-dialect conformance. See the verification guide for
-commands, coverage and known validator discrepancies.
+commands, coverage and known validator discrepancies. The package source is
+available in the [Hex archive](https://repo.hex.pm/tarballs/gargamelle-0.2.0.tar).
 
 ## License
 
 Gargamelle is distributed under the [MIT License](https://hexdocs.pm/gargamelle/0.2.0/license.html). The retained JSON Schema
-test-suite fixtures carry their own [license](https://github.com/vistuleB/gargamelle/blob/v0.2.0/verification/official/LICENSE).
+test-suite fixtures carry their own [license](https://hexdocs.pm/gargamelle/0.2.0/test-suite-license.html).

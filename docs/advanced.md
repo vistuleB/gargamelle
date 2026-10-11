@@ -127,17 +127,9 @@ refer to existing definitions and may not chain. They only compress presentation
 the caller must explain any omitted distinctions. No domain-specific aliases are
 built into Gargamelle.
 
-The supplied [stylesheet](https://github.com/vistuleB/gargamelle/blob/v0.2.0/documentation/reference.css)
-and [script](https://github.com/vistuleB/gargamelle/blob/v0.2.0/documentation/reference.js)
-are separate assets in the source repository; they are not included in the Hex
-package. Download the release-tagged files into the directory where you will
-save your HTML page (repository access is required):
-
-```sh
-mkdir -p public
-curl -fL https://raw.githubusercontent.com/vistuleB/gargamelle/v0.2.0/documentation/reference.css -o public/reference.css
-curl -fL https://raw.githubusercontent.com/vistuleB/gargamelle/v0.2.0/documentation/reference.js -o public/reference.js
-```
+Copy the stylesheet and script from [Renderer assets](renderer-assets.html) into
+`public/reference.css` and `public/reference.js`. These optional assets provide
+styling and expand/collapse controls; they do not require repository access.
 
 Save this complete page as `public/index.html`, replacing the marked comment with
 the string returned by `documentation.render` in the example above. Insert that

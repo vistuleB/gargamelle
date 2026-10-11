@@ -1,6 +1,8 @@
 # Native Erlang setup
 
-The 0.2.0 source has native Erlang implementations for all core operations.
+## Tested runtimes
+
+JavaScript is tested on Node 24.10.0. Erlang implements all core operations.
 The retained native gates pass on macOS arm64 with OTP 29 and Ubuntu 24.04
 x86_64 with OTP 28.5.0.7 and 29.1.1. Both Linux jobs include a deployed Gleam
 shipment. Other platforms, OTP releases and deployment tools remain unverified.

@@ -48,8 +48,8 @@ make it fit our constructors. Optional suite collections and full-dialect
 conformance are not claimed. Safe-integer limits and Unicode string lengths have
 dedicated checks.
 
-See [PRESERVATION.md](https://github.com/vistuleB/gargamelle/blob/v0.2.0/PRESERVATION.md) for constructor reasoning and
-[generated notes](https://github.com/vistuleB/gargamelle/blob/v0.2.0/verification/generated-notes.md) for failure retention,
+See [PRESERVATION.md](preservation.html) for constructor reasoning and
+[generated notes](generated-notes.html) for failure retention,
 shrinking, and implementation findings. `reports/evidence.json` is the current
 verification result; it is generated locally and excluded from source control.
 Browser support and native runtimes outside the tested matrix remain unverified.
@@ -102,7 +102,8 @@ reports in `docs/erlang-portability.md`, `docs/native-oracle-evidence.md` and
 Run `npm run prepare:release` to regenerate both target gates, documentation and
 an exported Hex archive, then inspect the archive and run fresh consumers on both
 targets. It writes `reports/release-preparation.json`, including archive hashes and
-support boundaries. It does not tag, push or publish. The separate
+support boundaries. The packaged README must match the source, and all configured
+HexDocs pages and their local links must be present. It does not tag, push or publish. The separate
 `npm run check:release` remains a JavaScript evidence check; it is not a whole
 Erlang release qualification.
 

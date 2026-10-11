@@ -3,7 +3,9 @@
 //// Parse JSON with `parse`, then call `validate` or `decode`. Validation never
 //// invokes user converters; decoding invokes them only after structural success.
 //// Converters are trusted application code: exceptions are operational failures.
-//// JavaScript is the supported target; Node 24 is the verified runtime.
+//// JavaScript and Erlang targets are supported on the
+//// [tested runtimes](https://hexdocs.pm/gargamelle/0.2.0/native-erlang.html).
+//// The Erlang target requires a separately compiled C regex helper.
 
 import gleam/json
 import gleam/list

@@ -2,7 +2,7 @@ name = "gargamelle"
 version = "0.2.0"
 licences = ["MIT"]
 description = "Typed JSON decoding and JSON Schema 2020-12 generation from one Gleam definition"
-repository = { type = "github", user = "vistuleB", repo = "gargamelle" }
+repository = { type = "custom", url = "https://repo.hex.pm/tarballs/gargamelle-0.2.0.tar" }
 internal_modules = ["schema_fixtures"]
 target = "javascript"
 gleam = ">= 1.18.1"
@@ -48,3 +48,23 @@ source = "./docs/license.md"
 title = "Renderer sample"
 path = "renderer-sample.html"
 source = "./docs/renderer-sample.md"
+
+[[documentation.pages]]
+title = "Preservation arguments"
+path = "preservation.html"
+source = "./PRESERVATION.md"
+
+[[documentation.pages]]
+title = "Generated verification notes"
+path = "generated-notes.html"
+source = "./verification/generated-notes.md"
+
+[[documentation.pages]]
+title = "Renderer assets"
+path = "renderer-assets.html"
+source = "./docs/renderer-assets.md"
+
+[[documentation.pages]]
+title = "JSON Schema test-suite license"
+path = "test-suite-license.html"
+source = "./docs/test-suite-license.md"

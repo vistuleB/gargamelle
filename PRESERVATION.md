@@ -1,6 +1,6 @@
 # Constructor preservation arguments
 
-Contract: revision 3 of `docs/verification.md`.
+Contract: [Gargamelle 0.2.0 technical contract](contract.html).
 These are implementation design arguments, not formal proofs or passed release gates.
 
 The opaque `Definition(a)` pairs a closed `Node` tree with a conversion function.
@@ -148,26 +148,16 @@ The number Int/Float runtime helpers are identity functions because both Gleam
 numeric types use JavaScript numbers; they are confined to checked primitive
 conversion. There is no generic FFI cast or forged typed provider value.
 
-## Current evidence and remaining work
+## Verification
 
-`gleam test` currently runs 34 tests, including concrete typed records/custom
-variants, dictionaries/arrays, glon regressions, optional/null states, callback
-suppression, hostile keys, Unicode, tags, constraints, constants and defaults.
-`schema_fixtures` supplies 25 authored independent-oracle fixtures.
+Typed-output and rejection tests, generated compositions, independent schema
+validators, compile-negative fixtures and isolated implementation mutations
+exercise the contract. The [verification guide](verification-guide.html) describes
+coverage and limitations; [generated notes](generated-notes.html) describe retained
+findings. Operational failures are not validation rejection.
 
-`verification/generated*.test.mjs` adds 10,000 seeded definition/input pairs,
-all 345 generic parent/child combinations, nonempty depth-50 chains, independently
-specified output/error fixtures, admission/operational tests, callback counters,
-and actual isolated mutations for all five required defect classes. Twenty
-compile-negative programs establish the public opaque/static API boundary.
-Generated coverage and retained findings are documented in
-`verification/generated-notes.md`; operational failures are not rejections.
-
-The parent verification harness owns the official cases, cloze compatibility,
-oracle discrepancy resolution, fingerprinted report and overall release gate.
-These preservation arguments do not independently claim V01–V13 completion or
-browser support. Independent review and counterexamples may expose implementation
-errors despite the reasoning and tests.
+These arguments are not formal proofs. Independent review and counterexamples may
+expose implementation errors despite the reasoning and tests.
 
 ## Exact-length tuples and shared recursion guards
 

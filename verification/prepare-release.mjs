@@ -4,6 +4,7 @@ import {spawnSync} from 'node:child_process';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {root,fingerprint,sha256} from './evidence.mjs';
+import {checkPackageReadme} from './package-documentation.mjs';
 
 // Local preparation only: no registry lookup, tag, push or publication.
 const reports=join(root,'reports');mkdirSync(reports,{recursive:true});
@@ -58,6 +59,7 @@ try {
   }
   for(const path of ['gleam.toml','README.md','LICENSE','src/gargamelle.gleam','src/runtime.mjs','src/gargamelle_runtime.erl','src/gargamelle_regex.erl','priv/regex-src/Makefile','priv/regex-src/PROVENANCE.json','priv/regex-src/LICENSE.quickjs'])assert.ok(entries.includes(path),`Missing archive member: ${path}`);
   run('tar',['-xzf',contents,'-C',library]);
+  checkPackageReadme(readFileSync(join(root,'README.md')),readFileSync(join(library,'README.md')));
   // Consumers use only the extracted package and pinned dependency source copies.
   for(const name of ['gleam_stdlib','gleam_json'])cpSync(join(root,'build/packages',name),join(directory,'vendor',name),{recursive:true});
   writeFileSync(join(consumer,'gleam.toml'),`name = "release_consumer"\nversion = "0.1.0"\n[dependencies]\ngargamelle = { path = "../library" }\ngleam_stdlib = { path = "../vendor/gleam_stdlib" }\ngleam_json = { path = "../vendor/gleam_json" }\n`);
@@ -74,6 +76,30 @@ try {
   assert.equal(existsSync(join(library,'node_modules')),false);
   const modules=readdirSync(join(root,'build/dev/docs/gargamelle')).filter(name=>name.endsWith('.html'));
   assert.ok(modules.includes('gargamelle.html'));assert.ok(!modules.includes('schema_fixtures.html'));
+  const config=readFileSync(join(root,'gleam.toml'),'utf8');
+  const docs=join(root,'build/dev/docs/gargamelle');
+  const pages=[...config.matchAll(/^path = "([^"]+\.html)"$/gm)].map(match=>match[1]);
+  for(const page of ['index.html','gargamelle.html',...pages]){
+    const html=readFileSync(join(docs,page),'utf8');
+    assert.ok(!html.includes('https://github.com/vistuleB/gargamelle'),`Private source link in ${page}`);
+    for(const [,rawHref] of html.replace(/<pre\b[^>]*>[\s\S]*?<\/pre>/g,'').matchAll(/href="([^"]+)"/g)){
+      const prefix=`https://hexdocs.pm/gargamelle/${version}/`;
+      const href=rawHref.startsWith(prefix)?rawHref.slice(prefix.length)||'index.html':rawHref;
+      if(/^(?:https?:|mailto:|data:)/.test(href))continue;
+      const url=new URL(href,'https://docs.invalid/'+page);
+      const target=join(docs,decodeURIComponent(url.pathname.slice(1)));
+      assert.ok(existsSync(target),`Broken local link in ${page}: ${href}`);
+      if(url.hash&&target.endsWith('.html')){
+        const anchor=decodeURIComponent(url.hash.slice(1));
+        const targetHtml=readFileSync(target,'utf8');
+        assert.ok(targetHtml.includes(`id="${anchor}"`),`Broken anchor in ${page}: ${href}`);
+      }
+    }
+  }
+  const assets=readFileSync(join(root,'docs/renderer-assets.md'),'utf8');
+  for(const [name,language] of [['reference.css','css'],['reference.js','javascript']]){
+    assert.ok(assets.includes('```'+language+'\n'+readFileSync(join(root,'documentation',name),'utf8').trimEnd()+'\n```'),`Stale renderer asset: ${name}`);
+  }
   assert.equal(fingerprint().digest,before.digest,'Source changed during release preparation');
   const report={status:'prepared',version,generatedAt:new Date().toISOString(),source:before,
     platform:process.platform,architecture:process.arch,commands,logs,

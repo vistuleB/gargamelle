@@ -572,3 +572,19 @@ inclusive minimum, code-point counting and integer conversion. Schemas stay
 unchanged; assertion failures must come from acceptance or decoded outputs, not
 compilation or runtime crashes. A restored baseline is checked after each mutant.
 This is bounded evidence, not complete native mutation coverage.
+
+## Public documentation cleanup — 2026-10-11
+
+The 0.2.0 archive fetched during the audit already contains the corrected README;
+the stale-archive finding was outdated. A further documentation-only replacement
+is being prepared: typed records precede the contract, setup names both targets
+and the compiler minimum, and API prose names the tested runtime matrix.
+Preservation arguments, generated notes, renderer assets and the test-suite license
+are configured HexDocs pages. Public source metadata points to the Hex archive
+rather than generating inaccessible GitHub links. Repository visibility is unchanged.
+
+Release preparation now compares packaged README bytes with the source, rejects
+obsolete unpublished-installation wording, and checks configured pages, local
+links/anchors and renderer asset freshness. A retained negative test exercises
+stale archive content and stale installation wording. Only the maintainer publishes.
+Browser verification remains the next task after this cleanup.
