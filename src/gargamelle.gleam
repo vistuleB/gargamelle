@@ -59,7 +59,7 @@ pub type DataError {
 pub type RecordPolicy {
   Strict
   Open
-  /// Legacy constructor with the same extra-key behavior as `Strict`.
+  /// Deprecated: use `Strict`. This constructor retains the same extra-key behavior.
   @deprecated("Use Strict instead.")
   Closed
 }

@@ -16,7 +16,7 @@ Use these names in new code:
 Decoded output still has the definition’s output type. The string functions
 return strings; they do not print output.
 
-`RecordPolicy.Strict` rejects undeclared keys; `Open` accepts them and omits
+`Strict` rejects undeclared keys; `Open` accepts them and omits
 them from decoded output. HTML documentation labels rejection of undeclared
 keys **strict fields**. The deprecated `Closed` constructor applies the same
 rule as `Strict`, but they are distinct constructor values. Update exhaustive
