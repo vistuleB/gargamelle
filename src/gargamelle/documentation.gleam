@@ -105,6 +105,11 @@ fn shape(s: Value) -> String {
         _, _, _ ->
           case text(get(s, "type")) {
             "" -> "value"
+            "object" ->
+              case get(s, "additionalProperties") {
+                Object(_) -> "dictionary"
+                _ -> "object"
+              }
             other -> other
           }
       }
@@ -170,10 +175,9 @@ fn constraints(s: Value) {
     case text(get(s, "type")) {
       "object" ->
         case get(s, "additionalProperties") {
-          Boolean(False) -> "unknown fields rejected"
-          Object(_) -> "values validated by map contract"
-          _ ->
-            "unknown fields permitted by schema; codec projects undeclared fields away"
+          Boolean(False) -> ""
+          Object(_) -> ""
+          _ -> "extra fields allowed; decoded output omits undeclared fields"
         }
       _ -> ""
     },
@@ -342,6 +346,11 @@ fn node(
     <> case status {
       "" -> ""
       _ -> " <span class=\"badge\">" <> status <> "</span>"
+    }
+    <> case text(get(s, "type")), get(s, "additionalProperties") {
+      "object", Boolean(False) ->
+        " <span class=\"badge policy\" title=\"Only the listed fields are allowed.\">strict fields</span>"
+      _, _ -> ""
     }
   let reference = text(get(s, "$ref"))
   let link = case string.starts_with(reference, "#/$defs/") {

@@ -100,6 +100,12 @@ not validation rejections.
 
 ## Optional HTML documentation
 
+Headings show the type and, for record fields, `REQUIRED` or `OPTIONAL`.
+The `STRICT FIELDS` badge means that only the listed fields are allowed.
+Dictionaries use the type label `dictionary`, with their value contract beneath.
+Bounds, patterns, uniqueness, defaults and extra-field projection rules appear
+below the heading when applicable.
+
 `gargamelle/documentation` renders annotated definitions as collapsible HTML
 fragments. It is independent of the decoding module: applications that only
 validate data need not import or ship it.

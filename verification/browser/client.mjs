@@ -70,7 +70,12 @@ try{
     {name:'name',child:{kind:'string'}},
     {name:'tags',child:{kind:'array',child:{kind:'string'}}},
     {name:'enabled',child:{kind:'boolean'}},
-    {name:'settings',child:{kind:'record',fields:[{name:'label',child:{kind:'string'}}]}},
+    {name:'metadata',child:{kind:'dictionary',child:{kind:'string'}}},
+    {name:'settings',child:{kind:'record',fields:[
+      {name:'label',child:{kind:'string'}},
+      {name:'notifications',child:{kind:'boolean'}},
+      {name:'theme',child:{kind:'string'}},
+    ]}},
   ]});
   renderer.insertAdjacentHTML('afterbegin',docs.render(record,'record-alignment'));
   renderer.querySelector('details').open=true;
@@ -84,6 +89,14 @@ try{
   rendererCheck('record labels align with open children',aligned(recordChildren));
   [...recordChildren.children].filter(e=>e.tagName==='DETAILS').forEach(e=>{e.open=false;});
   rendererCheck('record labels align with closed children',aligned(recordChildren));
+  const heights=[...recordChildren.children].map(e=>e.getBoundingClientRect().height);
+  rendererCheck('record rows have uniform height including last',Math.max(...heights)-Math.min(...heights)<0.5);
+  const nested=[...recordChildren.children].find(e=>e.querySelector('summary > code')?.textContent==='settings');nested.open=true;
+  const nestedChildren=nested.querySelector('.children');
+  rendererCheck('last nested row ends at next divider with guide inset',
+    Math.abs(nestedChildren.lastElementChild.getBoundingClientRect().bottom-nested.getBoundingClientRect().bottom)<0.5
+    && parseFloat(getComputedStyle(nestedChildren,'::before').bottom)===10);
+  nested.open=true;
   const alternatives=target.querySelector('details > .node-body > .children');
   [...alternatives.children].filter(e=>e.tagName==='DETAILS').forEach(e=>{e.open=true;});
   rendererCheck('alternative labels align with open children',aligned(alternatives));

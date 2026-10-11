@@ -5,6 +5,10 @@
 - Align unfolding and plain labels in HTML documentation, including record fields
   and union alternatives. Preserve native disclosure behavior with a fixed
   chevron space; update the copyable stylesheet.
+- Position chevrons relative to the label baseline, make record row spacing
+  uniform, and end nested guides before the next horizontal divider.
+- Show `STRICT FIELDS` as a heading badge and label dictionaries as `dictionary`.
+  Keep longer constraints below the heading and define the badge in the guide.
 
 ## 0.2.0 — 2026-10-11
 

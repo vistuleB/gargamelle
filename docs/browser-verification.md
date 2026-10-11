@@ -22,10 +22,11 @@ constructors. They supplement the 45 typed Gleam tests rather than replacing the
 Generated outputs are compared after JSON normalization; this comparison alone
 does not distinguish signed zero or prove arbitrary closure semantics.
 
-Seventeen DOM checks cover escaped descriptions and examples, unique IDs, recursive
+Nineteen DOM checks cover escaped descriptions and examples, unique IDs, recursive
 reference targets, folding controls, native disclosure toggling, hash navigation,
 print-event expansion/restoration, suppression of example conversion callbacks,
-and aligned record/alternative labels with children open and closed.
+aligned record/alternative labels with children open and closed, uniform record
+row heights, and clearance between the final nested guide and the next divider.
 Safari's rendered page and actual print preview were also inspected: recursive
 content expanded and fitted on one page. The preview was cancelled. The automated
 print checks dispatch lifecycle events; they do not compare paginated output.
@@ -76,3 +77,7 @@ the original CSS in Safari. The CSS now reserves the same 18-pixel label offset
 for both row types and draws its chevron inside that space. Native `details` and
 `summary` continue to provide disclosure behavior and keyboard interaction.
 The copyable HexDocs asset is updated together with the canonical stylesheet.
+Chevrons use the label font's baseline and x-height, with their centres two-thirds
+of an x-height above the baseline. Plain and folding headings have equal padding;
+expanded containers add no second bottom padding after their final child. Guides
+are drawn independently of row height and stop 10 pixels before the next divider.

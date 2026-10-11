@@ -76,7 +76,7 @@ const server=createServer(async(req,res)=>{
     assert.equal(report.source,before.digest);assert.equal(report.status,'passed');
     assert.deepEqual(report.typed,typed.flatMap(m=>m.tests.map(t=>m.path+':'+t)));
     assert.deepEqual(report.generated,rows.map((r,index)=>({index,schema:r.schema,cases:r.expected})));
-    assert.equal(report.regex.length,expectedRegex.length);assert.equal(report.renderer.length,17);
+    assert.equal(report.regex.length,expectedRegex.length);assert.equal(report.renderer.length,19);
     for(const [index,entry] of report.regex.entries())if(JSON.stringify(entry)!==JSON.stringify(expectedRegex[index]))differences.push({index,...regexCases[index],node:expectedRegex[index],browser:entry});
     assert.ok(differences.every(knownUnicodeDifference),'Unclassified browser/Node regex difference');
    }catch(error){failure=String(error);}
