@@ -5,7 +5,7 @@
 
 Gargamelle builds a matching pair of a typed JSON decoder and a JSON Schema 2020-12 document from a single Gleam definition. It can also generate HTML documentation for the schema.
 
-The [technical contract](https://hexdocs.pm/gargamelle/0.2.2/contract.html) defines how schema validation and decoding agree.
+See the [technical contract](https://hexdocs.pm/gargamelle/0.2.2/contract.html).
 
 Inspired by [glon](https://hexdocs.pm/glon/).
 
@@ -86,12 +86,16 @@ pub fn user_definition() {
   let assert Ok(fields) = s.required(fields, "active", s.boolean())
   s.finish(fields, s.Closed)
 }
+
+pub fn read_user(source: String) {
+  let assert Ok(value) = s.parse(source)
+  s.decode(user_definition(), value)
+}
 ```
 
-`s.emit_text(definition)` emits canonical schema text. `s.parse(text)` admits JSON;
-`s.decode(definition, value)` validates before running constructor/mapping functions.
-Admission errors, data errors and operational exceptions remain distinct.
-The safe-integer and trusted-callback limitations are part of the contract.
+For input `{"name":"Ada","active":true}`, `read_user` returns
+`Ok(User("Ada", True))`. `s.Closed` rejects undeclared fields.
+`s.emit_text(user_definition())` generates the record’s schema.
 
 ## Design and contract
 

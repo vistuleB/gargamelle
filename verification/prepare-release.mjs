@@ -65,11 +65,38 @@ try {
   writeFileSync(join(consumer,'gleam.toml'),`name = "release_consumer"\nversion = "0.1.0"\n[dependencies]\ngargamelle = { path = "../library" }\ngleam_stdlib = { path = "../vendor/gleam_stdlib" }\ngleam_json = { path = "../vendor/gleam_json" }\n`);
   const fixture=readFileSync(join(root,'verification/portability/deployment_consumer.gleam'),'utf8').replace('native deployment passed','release consumer passed');
   writeFileSync(join(consumer,'src/release_consumer.gleam'),fixture);
+  // Compile the actual public snippets rather than hand-maintained copies.
+  const readme=readFileSync(join(root,'README.md'),'utf8');
+  const snippets=[...readme.matchAll(/```gleam\n([\s\S]*?)\n```/g)].map(match=>match[1]);
+  assert.equal(snippets.length,2);
+  writeFileSync(join(consumer,'src/readme_names.gleam'),snippets[0]+`
+import gleam/io
+pub fn main() {
+  let assert Ok(["Ada", "Grace"]) = read_names("[\\\"Ada\\\",\\\"Grace\\\"]")
+  let assert "{\\\"$schema\\\":\\\"https://json-schema.org/draft/2020-12/schema\\\",\\\"items\\\":{\\\"type\\\":\\\"string\\\"},\\\"type\\\":\\\"array\\\"}" = names_schema()
+  io.println("README names passed")
+}
+`);
+  writeFileSync(join(consumer,'src/readme_user.gleam'),snippets[1]+`
+import gleam/io
+pub fn main() {
+  let assert Ok(User("Ada", True)) = read_user("{\\\"name\\\":\\\"Ada\\\",\\\"active\\\":true}")
+  io.println("README user passed")
+}
+`);
+  const advanced=readFileSync(join(root,'docs/advanced.md'),'utf8');
+  const recipe=advanced.split('## Optional HTML documentation')[1].match(/```gleam\n([\s\S]*?)\n```/)[1];
+  writeFileSync(join(consumer,'src/preferences_reference.gleam'),recipe);
+  const expectedArticle=readFileSync(join(root,'documentation/example.html'),'utf8').match(/<article[\s\S]*?<\/article>/)[0];
   console.log('Checking fresh consumers of the exported archive…');
   for(const target of ['javascript','erlang']){
     if(target==='erlang')run('make',['-C','priv/regex-src'],library,'release-consumer-helper.log');
     const output=run('gleam',['run','--target',target],consumer,`release-consumer-${target}.log`);
     assert.equal(output.trim(),'release consumer passed');
+    for(const [module,expected] of [['readme_names','README names passed'],['readme_user','README user passed'],['preferences_reference',expectedArticle]]){
+      const result=run('gleam',['run','--target',target,'--module',module],consumer,`release-${module}-${target}.log`);
+      assert.equal(result.trim(),expected,`${module} output differs on ${target}`);
+    }
   }
   const provenance=JSON.parse(readFileSync(join(library,'priv/regex-src/PROVENANCE.json')));
   for(const [name,record] of Object.entries(provenance.files))assert.equal(sha256(readFileSync(join(library,'priv/regex-src',name))),record.vendoredSha256,name);
@@ -82,6 +109,8 @@ try {
   for(const page of ['index.html','gargamelle.html',...pages]){
     const html=readFileSync(join(docs,page),'utf8');
     assert.ok(!html.includes('https://github.com/vistuleB/gargamelle'),`Private source link in ${page}`);
+    assert.match(html,/>Source archive<\/a>/,`Missing source archive label in ${page}`);
+    assert.doesNotMatch(html,/>Repository<\/a>/,`Mislabelled archive in ${page}`);
     for(const [,rawHref] of html.replace(/<pre\b[^>]*>[\s\S]*?<\/pre>/g,'').matchAll(/href="([^"]+)"/g)){
       const prefix=`https://hexdocs.pm/gargamelle/${version}/`;
       const href=rawHref.startsWith(prefix)?rawHref.slice(prefix.length)||'index.html':rawHref;

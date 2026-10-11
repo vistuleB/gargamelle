@@ -230,9 +230,7 @@ them. Reusing an unresolved foreign reference in another construction fails
 construction. Completed definitions and closures capturing them remain usable
 after transfer and creator-process exit, without reference registries or manual
 release. Conflicting composed graphs fail operationally at public validation or
-emission boundaries. Graph walks track node identity and binding scope; shared
-completed branches must not be repeatedly expanded by the recursion guard.
-Emission must remain finite even for recursive definitions.
+emission boundaries. Emission remains finite even for recursive definitions.
 
 There is no implicit decoding depth cap, input-size cap or definition-size cap
 in acceptance. Stack exhaustion, timeouts and other resource failures remain

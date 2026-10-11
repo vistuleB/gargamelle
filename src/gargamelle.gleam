@@ -135,7 +135,8 @@ type Presence {
 }
 
 /// A composable acceptance contract and typed conversion under recursion `r`.
-/// Construction plans are not executable until closed by a recursive builder.
+/// Only completed definitions, `Plan(a, Nil)`, can be validated, decoded or emitted.
+/// Recursive builder references remain construction plans after the builder returns.
 pub opaque type Plan(a, r) {
   Plan(Node, fn(r, Value, Evidence) -> a)
 }

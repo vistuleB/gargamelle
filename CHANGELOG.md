@@ -2,6 +2,10 @@
 
 ## 0.2.2 — 2026-10-11
 
+- Demonstrate typed record decoding and provide a runnable nested renderer recipe.
+  Clarify construction-plan lifetimes and safe-integer exclusion; label the public
+  archive link accurately and remove implementation commentary from public guides.
+
 - Shorten the README introduction and give JavaScript and Erlang parallel setup
   sections, with shared installation and examples.
 - Keep HexDocs focused on usage, contracts and compatibility. Retain contributor
