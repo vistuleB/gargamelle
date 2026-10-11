@@ -13,17 +13,23 @@ import gleam/option.{type Option, None, Some}
 import gleam/result
 import gleam/string
 
-// Values can enter only through the JSON parser. Runtime helpers preserve own keys.
-/// An admitted JSON value. Construct values through `parse`; arbitrary runtime
-/// objects cannot enter the validation boundary.
-pub opaque type Value {
+/// An opaque JSON value obtained through `parse` or `schema_json`.
+/// Numbers are finite binary64 values; strings and keys contain Unicode scalars.
+/// This type is distinct from `gleam/json.Json`; arbitrary runtime objects cannot
+/// enter the validation boundary.
+pub opaque type Json {
   JNull
   JBool(Bool)
   JNumber(Float)
   JString(String)
-  JArray(List(Value))
-  JObject(List(#(String, Value)))
+  JArray(List(Json))
+  JObject(List(#(String, Json)))
 }
+
+/// Alias for `Json`.
+@deprecated("Use Json instead.")
+pub type Value =
+  Json
 
 /// JSON syntax, nonfinite-number or non-scalar-string admission failure.
 pub type AdmissionError {
@@ -50,10 +56,15 @@ pub type DataError {
 
 /// Treatment of undeclared record keys. `Closed` rejects them; `Open` accepts
 /// them but omits them from the constructed output.
-pub type Policy {
+pub type RecordPolicy {
   Closed
   Open
 }
+
+/// Alias for `RecordPolicy`.
+@deprecated("Use RecordPolicy instead.")
+pub type Policy =
+  RecordPolicy
 
 /// A finite numeric endpoint. Inclusive endpoints accept equality.
 pub type NumberBound {
@@ -77,7 +88,7 @@ type Node {
   StringNode(Option(Int), Option(Int), List(String))
   IntegerNode(Int, Int)
   NumberNode(Option(NumberBound), Option(NumberBound))
-  ConstNode(Value, String)
+  ConstNode(Json, String)
   EnumNode(List(String))
   ArrayNode(Node, Option(Int), Option(Int))
   TupleNode(List(Node))
@@ -85,7 +96,7 @@ type Node {
   ConditionalNode(Node, List(Condition))
   ExcludeNode(Node, List(Node))
   DictNode(Node, Option(Int), Option(Int))
-  RecordNode(List(Field), Policy)
+  RecordNode(List(Field), RecordPolicy)
   PropertyNamesNode(Node, List(Node))
   NullableNode(Node)
   UnionNode(List(Node), Bool)
@@ -131,14 +142,14 @@ type Field {
 type Presence {
   Required
   Optional
-  Default(Value, Evidence)
+  Default(Json, Evidence)
 }
 
 /// A composable acceptance contract and typed conversion under recursion `r`.
 /// Only completed definitions, `Plan(a, Nil)`, can be validated, decoded or emitted.
 /// Recursive builder references remain construction plans after the builder returns.
 pub opaque type Plan(a, r) {
-  Plan(Node, fn(r, Value, Evidence) -> a)
+  Plan(Node, fn(r, Json, Evidence) -> a)
 }
 
 /// A completed definition, usable for validation, decoding and emission.
@@ -148,7 +159,7 @@ pub type Definition(a) =
 /// The opaque recursion environment supplied to a self-recursive plan.
 /// User code cannot construct or execute this environment.
 pub opaque type Recursive(a) {
-  Recursive(fn(Value, Evidence) -> a)
+  Recursive(fn(Json, Evidence) -> a)
 }
 
 type Evidence {
@@ -211,18 +222,18 @@ fn bare(n: Node) -> Node {
   }
 }
 
-fn definition(n: Node, convert: fn(r, Value, Evidence) -> a) -> Plan(a, r) {
+fn definition(n: Node, convert: fn(r, Json, Evidence) -> a) -> Plan(a, r) {
   Plan(identified(n), convert)
 }
 
 /// An unfinished record consuming a curried constructor one field at a time.
 pub opaque type Record(a, r) {
-  Record(List(Field), fn(r, Value, Evidence) -> a)
+  Record(List(Field), fn(r, Json, Evidence) -> a)
 }
 
 /// An unfinished exact-length tuple consuming a curried constructor by position.
 pub opaque type Tuple(a, r) {
-  Tuple(List(Node), fn(r, Value, Evidence) -> a)
+  Tuple(List(Node), fn(r, Json, Evidence) -> a)
 }
 
 /// A record branch for `tagged`, with its discriminator supplied automatically.
@@ -230,8 +241,8 @@ pub opaque type Variant(a, r) {
   Variant(
     String,
     List(Field),
-    Policy,
-    fn(r, Value, Evidence) -> a,
+    RecordPolicy,
+    fn(r, Json, Evidence) -> a,
     Option(String),
   )
 }
@@ -239,7 +250,7 @@ pub opaque type Variant(a, r) {
 /// Admit JSON text without invoking a definition or converter. Duplicate object
 /// keys use the parser’s last value; numeric values use IEEE-754 binary64.
 /// String values and object keys must contain only Unicode scalar values.
-pub fn parse(text: String) -> Result(Value, AdmissionError) {
+pub fn parse(text: String) -> Result(Json, AdmissionError) {
   parse_runtime(text, fn() { JNull }, JBool, JNumber, JString, JArray, JObject)
 }
 
@@ -255,20 +266,26 @@ fn scalar_argument(text: String) -> Result(Nil, ConstructionError) {
 @external(javascript, "./runtime.mjs", "parse")
 fn parse_runtime(
   text: String,
-  null: fn() -> Value,
-  boolean: fn(Bool) -> Value,
-  number: fn(Float) -> Value,
-  string: fn(String) -> Value,
-  array: fn(List(Value)) -> Value,
-  object: fn(List(#(String, Value))) -> Value,
-) -> Result(Value, AdmissionError)
+  null: fn() -> Json,
+  boolean: fn(Bool) -> Json,
+  number: fn(Float) -> Json,
+  string: fn(String) -> Json,
+  array: fn(List(Json)) -> Json,
+  object: fn(List(#(String, Json))) -> Json,
+) -> Result(Json, AdmissionError)
 
 /// Serialize an admitted value as canonical JSON text. Negative zero becomes `0`.
-pub fn value_text(value: Value) -> String {
+pub fn to_string(value: Json) -> String {
   canonical(json.to_string(json_value(value)))
 }
 
-fn json_value(v: Value) -> json.Json {
+/// Alias for `to_string`.
+@deprecated("Use to_string instead.")
+pub fn value_text(value: Json) -> String {
+  to_string(value)
+}
+
+fn json_value(v: Json) -> json.Json {
   case v {
     JNull -> json.null()
     JBool(b) -> json.bool(b)
@@ -799,7 +816,7 @@ pub fn recursive(
   Ok(Plan(graph, fn(_, value, evidence) { run_self(run, value, evidence) }))
 }
 
-fn run_self(run: fn(Recursive(a), Value, Evidence) -> a, value, evidence) -> a {
+fn run_self(run: fn(Recursive(a), Json, Evidence) -> a, value, evidence) -> a {
   run(
     Recursive(fn(child, receipt) { run_self(run, child, receipt) }),
     value,
@@ -878,8 +895,8 @@ pub fn recursive_pair(
 
 fn run_first(
   runners: #(
-    fn(#(Recursive(a), Recursive(b)), Value, Evidence) -> a,
-    fn(#(Recursive(a), Recursive(b)), Value, Evidence) -> b,
+    fn(#(Recursive(a), Recursive(b)), Json, Evidence) -> a,
+    fn(#(Recursive(a), Recursive(b)), Json, Evidence) -> b,
   ),
   value,
   evidence,
@@ -896,8 +913,8 @@ fn run_first(
 
 fn run_second(
   runners: #(
-    fn(#(Recursive(a), Recursive(b)), Value, Evidence) -> a,
-    fn(#(Recursive(a), Recursive(b)), Value, Evidence) -> b,
+    fn(#(Recursive(a), Recursive(b)), Json, Evidence) -> a,
+    fn(#(Recursive(a), Recursive(b)), Json, Evidence) -> b,
   ),
   value,
   evidence,
@@ -1016,7 +1033,7 @@ pub fn defaulted(
   r: Record(fn(a) -> b, r),
   name: String,
   child: Plan(a, r),
-  value: Value,
+  value: Json,
 ) -> Result(Record(b, r), ConstructionError) {
   use <- with_walk
   let Plan(n, _) = child
@@ -1068,13 +1085,17 @@ pub fn optional(
 }
 
 /// Finish a typed record with the chosen undeclared-key policy.
-pub fn finish(r: Record(a, r), policy: Policy) -> Plan(a, r) {
+pub fn finish(r: Record(a, r), policy: RecordPolicy) -> Plan(a, r) {
   let Record(fs, d) = r
   definition(RecordNode(fs, policy), d)
 }
 
 /// Finish a tagged record branch. Do not declare the discriminator as a field.
-pub fn variant(tag: String, r: Record(a, r), policy: Policy) -> Variant(a, r) {
+pub fn variant(
+  tag: String,
+  r: Record(a, r),
+  policy: RecordPolicy,
+) -> Variant(a, r) {
   let assert Ok(_) = scalar_argument(tag)
     as "String argument must contain Unicode scalar values"
   let Record(fs, d) = r
@@ -1366,7 +1387,7 @@ fn pattern_node(n: Node, p: String) -> Result(Node, ConstructionError) {
 /// failures rather than data errors.
 pub fn validate(
   def: Definition(a),
-  value: Value,
+  value: Json,
 ) -> Result(Nil, List(DataError)) {
   case inspect_definition(def, value).0 {
     [] -> Ok(Nil)
@@ -1376,7 +1397,7 @@ pub fn validate(
 
 /// Validate the entire input before running typed conversion. Invalid inputs
 /// run no converters; exceptions from trusted callbacks propagate.
-pub fn decode(def: Definition(a), value: Value) -> Result(a, List(DataError)) {
+pub fn decode(def: Definition(a), value: Json) -> Result(a, List(DataError)) {
   let inspected = inspect_definition(def, value)
   case inspected.0 {
     [] -> {
@@ -1387,7 +1408,7 @@ pub fn decode(def: Definition(a), value: Value) -> Result(a, List(DataError)) {
   }
 }
 
-fn inspect_definition(def: Definition(a), value: Value) {
+fn inspect_definition(def: Definition(a), value: Json) {
   with_walk(fn() {
     let Plan(n, _) = def
     let assert Ok(_) =
@@ -1401,7 +1422,7 @@ fn inspect_definition(def: Definition(a), value: Value) {
   })
 }
 
-fn member(v: Value, k: String) -> Option(Value) {
+fn member(v: Json, k: String) -> Option(Json) {
   case v {
     JObject(xs) ->
       case list.key_find(xs, k) {
@@ -1449,7 +1470,7 @@ fn with_errors(base: #(List(DataError), Evidence), errors: List(DataError)) {
 
 fn inspect(
   n: Node,
-  v: Value,
+  v: Json,
   p: String,
   bindings: Bindings,
 ) -> #(List(DataError), Evidence) {
@@ -1465,7 +1486,7 @@ fn inspect(
       inspect(child, v, p, bindings)
     UniqueNode(child), JArray(xs) -> {
       let base = inspect(child, v, p, bindings)
-      let values = list.map(xs, value_text)
+      let values = list.map(xs, to_string)
       with_errors(
         base,
         case list.length(list.unique(values)) == list.length(values) {
@@ -1693,7 +1714,7 @@ fn inspect(
 
 // Numeric equality must identify both zero signs on every target. OTP's exact
 // term equality distinguishes them, whereas JSON Schema equality does not.
-fn constant_equal(a: Value, b: Value) -> Bool {
+fn constant_equal(a: Json, b: Json) -> Bool {
   case a, b {
     JNumber(x), JNumber(y) -> x >=. y && x <=. y
     _, _ -> a == b
@@ -1704,9 +1725,9 @@ fn constant_equal(a: Value, b: Value) -> Bool {
 @external(javascript, "./runtime.mjs", "int_text")
 fn int_text(n: Int) -> String
 
-/// Return a JSON Schema 2020-12 document as Gargamelle’s opaque `Value`, not
+/// Return a JSON Schema 2020-12 document as Gargamelle’s opaque `Json`, not
 /// `gleam/json.Json`. Unfinished or conflicting reference graphs fail operationally.
-pub fn schema_json(def: Definition(a)) -> Value {
+pub fn schema_json(def: Definition(a)) -> Json {
   with_walk(fn() {
     let Plan(n, _) = def
     put(
@@ -1719,35 +1740,35 @@ pub fn schema_json(def: Definition(a)) -> Value {
 
 /// Return a canonical JSON Schema 2020-12 string, including finite local references.
 pub fn schema_string(def: Definition(a)) -> String {
-  value_text(schema_json(def))
+  to_string(schema_json(def))
 }
 
-/// Deprecated alias for `schema_json`.
+/// Alias for `schema_json`.
 @deprecated("Use schema_json instead.")
-pub fn emit_json(def: Definition(a)) -> Value {
+pub fn emit_json(def: Definition(a)) -> Json {
   schema_json(def)
 }
 
-/// Deprecated alias for `schema_string`.
+/// Alias for `schema_string`.
 @deprecated("Use schema_string instead.")
 pub fn emit_text(def: Definition(a)) -> String {
   schema_string(def)
 }
 
-fn put(v: Value, k: String, x: Value) -> Value {
+fn put(v: Json, k: String, x: Json) -> Json {
   let assert JObject(xs) = v
   JObject(list.append(list.filter(xs, fn(p) { p.0 != k }), [#(k, x)]))
 }
 
-fn obj(xs: List(#(String, Value))) -> Value {
+fn obj(xs: List(#(String, Json))) -> Json {
   JObject(xs)
 }
 
-fn typ(t: String) -> Value {
+fn typ(t: String) -> Json {
   obj([#("type", JString(t))])
 }
 
-fn emit_bound(v: Value, k: String, b: Option(Int)) -> Value {
+fn emit_bound(v: Json, k: String, b: Option(Int)) -> Json {
   case b {
     None -> v
     Some(x) -> put(v, k, JNumber(as_float(x)))
@@ -1848,7 +1869,7 @@ fn merge_definition(
     Ok(existing) ->
       case
         same_reference(existing, child)
-        || value_text(emit(existing)) == value_text(emit(child))
+        || to_string(emit(existing)) == to_string(emit(child))
       {
         True -> Ok(definitions)
         False ->
@@ -1971,7 +1992,7 @@ fn collect_definitions(
   definitions
 }
 
-fn emit_with_definitions(n: Node) -> Value {
+fn emit_with_definitions(n: Node) -> Json {
   case collect_definitions(n, []) {
     [] -> emit(n)
     definitions ->
@@ -1984,11 +2005,11 @@ fn emit_with_definitions(n: Node) -> Value {
 }
 
 fn emit_number_bound(
-  schema: Value,
+  schema: Json,
   bound: Option(NumberBound),
   inclusive_key: String,
   exclusive_key: String,
-) -> Value {
+) -> Json {
   case bound {
     None -> schema
     Some(Inclusive(x)) -> put(schema, inclusive_key, JNumber(x))
@@ -1996,7 +2017,7 @@ fn emit_number_bound(
   }
 }
 
-fn emit(n: Node) -> Value {
+fn emit(n: Node) -> Json {
   case n {
     IdentifiedNode(_, child) -> emit(child)
     BoundNode(_, child) -> emit(child)

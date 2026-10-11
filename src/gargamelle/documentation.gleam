@@ -477,7 +477,7 @@ pub type ExampleError {
 pub fn render_examples(
   definition: gargamelle.Definition(a),
   id: String,
-  examples: List(gargamelle.Value),
+  examples: List(gargamelle.Json),
 ) -> Result(String, List(ExampleError)) {
   let errors =
     examples
@@ -499,7 +499,7 @@ pub fn render_examples(
             examples
             |> list.map(fn(value) {
               "<pre><code>"
-              <> escape_html(gargamelle.value_text(value))
+              <> escape_html(gargamelle.to_string(value))
               <> "</code></pre>"
             })
             |> string.join("")

@@ -57,10 +57,10 @@ test('main library preserves baseline behavior with immutable recursive plans',(
     rmSync(join(directory,'test'),{recursive:true});
     cpSync(join(root,'verification/portability/integration/baseline.gleam'),join(directory,'src/gargamelle.gleam'));
     cpSync(join(root,'verification/portability/integration/baseline-runtime.mjs'),join(directory,'src/runtime.mjs'));
-    // Adapt only function names in copied callers; preserve the frozen baseline.
+    // Adapt only API names in copied callers; preserve the frozen baseline.
     const callers=['schema_fixtures.gleam','integration_probe.gleam','gargamelle/documentation.gleam'];
     const originals=callers.map(name=>[name,readFileSync(join(directory,'src',name),'utf8')]);
-    for(const [name,source] of originals)writeFileSync(join(directory,'src',name),source.replaceAll('schema_string','emit_text').replaceAll('schema_json','emit_json'));
+    for(const [name,source] of originals)writeFileSync(join(directory,'src',name),source.replaceAll('schema_string','emit_text').replaceAll('schema_json','emit_json').replaceAll('gargamelle.Json','gargamelle.Value').replaceAll('gargamelle.to_string','gargamelle.value_text'));
     assert.deepEqual(probe('javascript'),integrated,'schema bytes, decoded outputs or full DataError structures changed');
     for(const [name,source] of originals)writeFileSync(join(directory,'src',name),source);
     writeFileSync(join(directory,'src/gargamelle.gleam'),integratedSource);
@@ -107,7 +107,18 @@ pub fn forbidden() {
         assert.match(result.stderr,privateValue?(name==='private-evidence'?/Atomic/:/Recursive/):/Plan/);
       }
     }
-    t.diagnostic('12 compile-negative checks passed on the integrated API');
+    for (const [name, source, message] of [
+      ['foreign-json', 'import gargamelle as s\nimport gleam/json\npub fn main() -> s.Json { json.string("not admitted") }', /Type mismatch/],
+      ['opaque-json', 'import gargamelle as s\npub fn main() { s.Json("unadmitted") }', /Unknown module value/],
+    ]) {
+      writeFileSync(join(directory, 'src/negative.gleam'), source);
+      for (const target of ['javascript', 'erlang']) {
+        const result = run(['build', '--target', target]);
+        assert.notEqual(result.status, 0, `${name} unexpectedly compiled on ${target}`);
+        assert.match(result.stderr, message);
+      }
+    }
+    t.diagnostic('16 compile-negative checks passed on the integrated API');
     t.diagnostic(`${integrated.length} schemas, ${integrated.reduce((sum,row)=>sum+row.cases.length,0)} independent cases; exact historical JavaScript and native comparison`);
     t.diagnostic('45 main-source tests and eight native process/graph tests passed');
   } finally {rmSync(directory,{recursive:true,force:true});}

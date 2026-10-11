@@ -34,7 +34,7 @@ booleans, strings, finite IEEE-754 binary64 numbers, arrays and objects with
 string keys. Strings and object keys contain only Unicode scalar values.
 Values containing undefined, functions, bigint, NaN, infinities,
 cyclic references, accessors or arbitrary host objects are outside J. Public
-`Value` is opaque; `parse` admits JSON text into this domain.
+`Json` is opaque; `parse` admits JSON text into this domain.
 
 Parsing follows `JSON.parse` semantics, including rounding numeric literals,
 underflow and retaining the last occurrence of a duplicate object key. Numeric

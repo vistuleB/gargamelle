@@ -30,7 +30,7 @@ arithmetic. `parse` rejects numeric overflow to infinity as an admission error,
 including overflow nested in arrays/objects. Parsing may round decimal text or
 underflow it to zero. Decoding preserves the resulting number, including negative
 zero; schema comparisons treat both zero signs equally. Serializing through
-`value_text` follows JSON serialization and normalizes negative zero to `0`.
+`to_string` follows JSON serialization and normalizes negative zero to `0`.
 
 Bounds emit `minimum`/`maximum` or `exclusiveMinimum`/`exclusiveMaximum`.
 Repeated bounds intersect, with exclusivity winning at equal endpoints.

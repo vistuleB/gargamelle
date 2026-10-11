@@ -19,7 +19,7 @@ test('scalar admission checks final strings and keys after syntax and duplicate 
     '{"x":["\\udfff"],"x":null}','{"💜":1}',
   ]) {
     const admitted=unwrap(s.parse(text));
-    assert.deepEqual(JSON.parse(s.value_text(admitted)),JSON.parse(text),text);
+    assert.deepEqual(JSON.parse(s.to_string(admitted)),JSON.parse(text),text);
   }
   for(const text of ['["\\ud800",]','"\\ud800\\uXX00"','{"x":"\\ud800"}x']) {
     const result=s.parse(text);

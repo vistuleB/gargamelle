@@ -27,11 +27,32 @@ fn user_definition() {
   s.finish(fields, s.Closed)
 }
 
+pub fn old_json(value: s.Value) -> s.Json {
+  value
+}
+
+pub fn new_json(value: s.Json) -> s.Value {
+  value
+}
+
+pub fn old_policy(policy: s.Policy) -> s.RecordPolicy {
+  policy
+}
+
+pub fn new_policy(policy: s.RecordPolicy) -> s.Policy {
+  policy
+}
+
 pub fn main() {
+  let assert Ok(json) = s.parse("{\"name\":\"Ada\",\"active\":true}")
+  let json: s.Json = old_json(new_json(json))
+  let assert True = s.value_text(json) == s.to_string(json)
+  let policy: s.RecordPolicy = old_policy(new_policy(s.Closed))
+  let assert True = policy == s.Closed
   let assert True =
     s.emit_text(user_definition()) == s.schema_string(user_definition())
   let assert True =
-    s.value_text(s.emit_json(user_definition()))
+    s.to_string(s.emit_json(user_definition()))
     == s.schema_string(user_definition())
   let assert Ok(["Ada", "Grace"]) = read_names("[\"Ada\",\"Grace\"]")
   let assert "{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"items\":{\"type\":\"string\"},\"type\":\"array\"}" =

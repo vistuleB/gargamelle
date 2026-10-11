@@ -84,7 +84,7 @@ test('Float contracts preserve defaults, callbacks, nested paths, names, and doc
  let calls=[];
  const d=s.map(bounded(new Some(new s.Exclusive(0)),new Some(new s.Inclusive(1))),x=>{calls.push(x);return x*2;});
  let r=unwrap(s.defaulted(s.record(x=>x),'p',d,unwrap(s.parse('0.25'))));
- const record=s.finish(r,s.Policy$Closed$const);
+ const record=s.finish(r,s.RecordPolicy$Closed$const);
  assert.deepEqual(calls,[]);assert.equal(s.decode(record,unwrap(s.parse('{}')))[0],0.5);assert.deepEqual(calls,[0.25]);
  calls=[];assert.equal(s.decode(record,unwrap(s.parse('{"p":0}'))) instanceof Ok,false);assert.deepEqual(calls,[]);
  assert.equal(s.defaulted(s.record(x=>x),'p',d,unwrap(s.parse('0'))) instanceof Ok,false);

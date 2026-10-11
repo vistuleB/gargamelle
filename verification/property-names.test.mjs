@@ -27,7 +27,7 @@ test('repeated key constraints intersect and never execute key conversion',async
 });
 
 test('records validate all present keys including projected extras and hostile names',async()=>{
- const record=s.finish(unwrap(s.required(s.record(x=>({x})),'x',s.number())),s.Policy$Open$const);
+ const record=s.finish(unwrap(s.required(s.record(x=>({x})),'x',s.number())),s.RecordPolicy$Open$const);
  const d=unwrap(s.property_names(record,unwrap(s.string_enum(toList(['x','extra'])))));
  await compare(d,[[{x:1,extra:true},true,{x:1}],[{x:1,unexpected:true},false],[{x:1},true]]);
  const names=['__proto__','constructor','toString','','a/b','~','😀'];

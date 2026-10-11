@@ -2,6 +2,9 @@
 
 ## 0.3.0 — Unreleased
 
+- Rename `Value` to `Json`, `Policy` to `RecordPolicy`, and `value_text` to
+  `to_string`. Retain the old names as deprecated aliases.
+
 - Rename the preferred schema functions to `schema_json` and `schema_string`.
   Keep `emit_json` and `emit_text` as deprecated aliases. Update examples and
   documentation; schema bytes, validation and decoding behavior are unchanged.

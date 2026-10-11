@@ -18,7 +18,7 @@ test('membership counts structural matches and preserves nonmatching items',asyn
 });
 
 test('verbatim answers require nonblank text or a formula reference',async()=>{
- const formula=s.finish(unwrap(s.required(s.record(id=>({id})),'id',s.text())),s.Policy$Closed$const);
+ const formula=s.finish(unwrap(s.required(s.record(id=>({id})),'id',s.text())),s.RecordPolicy$Closed$const);
  const part=unwrap(s.any_of(toList([s.text(),formula])));
  const meaningful=unwrap(s.any_of(toList([unwrap(s.pattern(s.text(),'\\S')),formula])));
  const d=contains(s.map(s.array(part),xs=>[...xs]),meaningful);

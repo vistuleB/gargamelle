@@ -7,6 +7,8 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 const root=fileURLToPath(new URL('../',import.meta.url));
 const cases=[
+ ['foreign_json_type','import gleam/json\npub fn main() -> s.Json { json.string("not admitted") }','Type mismatch'],
+ ['opaque_json_constructor','pub fn main() { s.Json("unadmitted") }','Unknown module value'],
  ['exclusion_output_type','pub fn main() -> s.Definition(String) { s.exclude(s.number(),s.text()) }','Type mismatch'],
  ['conditional_output_type','pub fn main() -> s.Definition(String) { s.if_then(s.number(),s.text(),s.boolean()) }','Type mismatch'],
  ['private_condition','pub fn main() { s.Condition(Nil,Nil,gleam_option.None) }','Unknown module value'],

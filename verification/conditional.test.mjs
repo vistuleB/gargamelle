@@ -6,7 +6,7 @@ import {compileSupplementary} from './supplementary-oracle.mjs';
 import * as docs from '../build/dev/javascript/gargamelle/gargamelle/documentation.mjs';
 const record=(fields,open=true)=>{
  const curry=(i,values)=>i===fields.length?Object.fromEntries(fields.map(([name],j)=>[name,values[j]])):value=>curry(i+1,[...values,value]);
- let r=s.record(curry(0,[]));for(const [name,def] of fields)r=unwrap(s.required(r,name,def));return s.finish(r,open?s.Policy$Open$const:s.Policy$Closed$const);
+ let r=s.record(curry(0,[]));for(const [name,def] of fields)r=unwrap(s.required(r,name,def));return s.finish(r,open?s.RecordPolicy$Open$const:s.RecordPolicy$Closed$const);
 };
 async function compare(d,cases){const schema=emitted(d),checks=[compileOracle(schema),await compileSupplementary(schema)];for(const [v,accepted,output] of cases){const actual=evaluate(d,v);assert.equal(actual.accepted,accepted,JSON.stringify(v));for(const check of checks)assert.equal(check(v).accepted,accepted);if(accepted&&output!==undefined)assert.deepEqual(actual.value,output);}}
 
@@ -43,7 +43,7 @@ test('condition and both branch converters never run; validation inspects input 
  const d=s.if_then_else(s.map(s.number(),x=>{base++;return x;}),inspector(s.safe_integer()),inspector(s.number()),inspector(s.number()));
  await compare(d,[[1,true,1],[0.5,true,0.5],['bad',false]]);assert.equal(auxiliary,0);assert.equal(base,2);
  const r=unwrap(s.defaulted(s.record(x=>({enabled:x})),'enabled',s.boolean(),unwrap(s.parse('true'))));
- const defaulted=s.if_then(s.finish(r,s.Policy$Open$const),record([['enabled',s.boolean_constant(true)]]),record([['ready',s.boolean_constant(true)]]));
+ const defaulted=s.if_then(s.finish(r,s.RecordPolicy$Open$const),record([['enabled',s.boolean_constant(true)]]),record([['ready',s.boolean_constant(true)]]));
  await compare(defaulted,[[{},true,{enabled:true}],[{enabled:true},false],[{enabled:false},true,{enabled:false}],[{enabled:true,ready:true},true,{enabled:true}]]);
 });
 

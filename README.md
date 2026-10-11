@@ -67,6 +67,9 @@ For input `["Ada", "Grace"]`, `read_names` returns `Ok(["Ada", "Grace"])`.
 {"$schema":"https://json-schema.org/draft/2020-12/schema","items":{"type":"string"},"type":"array"}
 ```
 
+`parse` returns an opaque `gargamelle.Json` value. `decode` converts it to the
+definition's output type. `to_string` serializes the JSON value as canonical JSON.
+
 Handle admission errors separately from validation errors in application code;
 these assertions only keep the introductory example short. `validate` checks
 acceptance without invoking converters. `decode` validates before constructing
@@ -174,7 +177,7 @@ APIs may change before 1.0.
 
 - [Technical contract](https://hexdocs.pm/gargamelle/0.3.0/contract.html): complete intended acceptance, output, emission and error semantics.
 - [Advanced definitions](https://hexdocs.pm/gargamelle/0.3.0/advanced.html): numeric constraints, recursion, tuples, key constraints, membership, conditionals, exclusion and HTML documentation.
-- [Migrating to 0.3.0](https://hexdocs.pm/gargamelle/0.3.0/migration-0.3.html): schema function names and compatibility aliases.
+- [Migrating to 0.3.0](https://hexdocs.pm/gargamelle/0.3.0/migration-0.3.html): API names and compatibility aliases.
 - [Migrating to 0.2.0](https://hexdocs.pm/gargamelle/0.3.0/migration-0.2.html): string requirements and changes to recursive construction.
 
 ## Verification

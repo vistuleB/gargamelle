@@ -29,9 +29,9 @@ fn error_json(error: s.DataError) -> json.Json {
 
 fn entry(definition, input) {
   let assert Ok(value) = s.parse(input)
-  let before = s.value_text(value)
+  let before = s.to_string(value)
   let decoded = s.decode(definition, value)
-  let assert True = before == s.value_text(value)
+  let assert True = before == s.to_string(value)
   let errors = case decoded {
     Ok(_) -> []
     Error(errors) -> errors

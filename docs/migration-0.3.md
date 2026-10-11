@@ -1,15 +1,24 @@
 # Migrating to 0.3.0
 
-The schema functions have clearer names:
+Use these names in new code:
 
-| Previous name | Preferred name | Returns |
+| Previous name | Preferred name | Purpose |
 | --- | --- | --- |
-| `emit_json` | `schema_json` | A schema as Gargamelle’s opaque `Value` |
-| `emit_text` | `schema_string` | The schema serialized as a canonical JSON `String` |
+| `Value` | `Json` | Gargamelle’s opaque JSON representation |
+| `Policy` | `RecordPolicy` | Treatment of undeclared record keys |
+| `value_text` | `to_string` | Serialize a `Json` value as canonical JSON |
+| `emit_json` | `schema_json` | Return a schema as `Json` |
+| `emit_text` | `schema_string` | Return a schema as a canonical JSON `String` |
 
-Update calls to the preferred names. Neither function prints output.
-The schema bytes, validation and decoding behavior are unchanged.
+`parse` and `schema_json` return Gargamelle’s `Json`, which is distinct from
+`gleam/json.Json`. Its finite-number and Unicode-scalar requirements are unchanged.
+Decoded output still has the definition’s output type. `RecordPolicy` retains
+`Closed` and `Open`, with their existing behavior. The string functions return
+strings; they do not print output.
 
-The previous names remain available as deprecated aliases, so existing calls
-still compile and behave identically. For their full contracts, see the
-[API reference](gargamelle.html#schema_json).
+The previous names remain available as deprecated aliases. Explicit uses of the
+old names produce compiler warnings; existing code still compiles and behaves
+identically. Inferred types need no annotation changes. Schema bytes, validation,
+decoding and JSON serialization are unchanged.
+
+See the [API reference](gargamelle.html#Json) for the complete contracts.

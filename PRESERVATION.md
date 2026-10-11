@@ -122,7 +122,7 @@ shared-term copying and schema expansion.
 
 ## Admission, emission and trusted runtime
 
-Public `Value` is opaque. The public admission operation accepts JSON text,
+Public `Json` is opaque. The public admission operation accepts JSON text,
 parses using JavaScript `JSON.parse`, rejects non-finite parsed numbers and
 unpaired surrogates in final string values or object keys, and
 recursively invokes library-owned constructors with actual parsed values. It

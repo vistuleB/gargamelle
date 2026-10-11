@@ -2,7 +2,8 @@
 
 0.3.0 preparation is tracked in `docs/release-0.3.0.md`. It introduces
 `schema_json` and `schema_string`, retaining `emit_json` and `emit_text` as
-deprecated aliases. Core schema, validation and decoding semantics are unchanged.
+deprecated aliases. `Json`, `RecordPolicy` and `to_string` replace `Value`,
+`Policy` and `value_text`, also with deprecated aliases. Core semantics are unchanged.
 The preceding 0.2.2 replacement handoff is retained in ignored reports.
 The maintainer publishes.
 

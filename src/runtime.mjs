@@ -1,7 +1,7 @@
 import { Ok, Error, toList } from './gleam.mjs';
 import { AdmissionError } from './gargamelle.mjs';
 
-// The factories are library-owned opaque Value constructors. Every argument is
+// The factories are library-owned opaque Json constructors. Every argument is
 // an actual JSON.parse result, never a fabricated provider value.
 function convert(value, factories) {
   if (value === null) return factories[0]();

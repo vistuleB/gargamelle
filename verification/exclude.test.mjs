@@ -33,8 +33,8 @@ test('exclusion preserves output, intersects repeated constraints and suppresses
 
 test('forbidden object shapes and original input semantics compose with projection and defaults',async()=>{
  const r=unwrap(s.defaulted(s.record(x=>({enabled:x})),'enabled',s.boolean(),unwrap(s.parse('true'))));
- const banned=s.finish(unwrap(s.required(s.record(x=>x),'enabled',s.boolean_constant(true))),s.Policy$Open$const);
- const d=s.exclude(s.finish(r,s.Policy$Open$const),banned);
+ const banned=s.finish(unwrap(s.required(s.record(x=>x),'enabled',s.boolean_constant(true))),s.RecordPolicy$Open$const);
+ const d=s.exclude(s.finish(r,s.RecordPolicy$Open$const),banned);
  await compare(d,[[{},true,{enabled:true}],[{enabled:false,extra:1},true,{enabled:false}],[{enabled:true},false]]);
  const nested=s.array(d),errors=evaluate(nested,[{enabled:true}]).value;
  assert.equal([...errors][0].category,'excluded');assert.equal([...errors][0].path,'/0');

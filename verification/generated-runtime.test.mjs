@@ -10,7 +10,7 @@ import { s,Ok,unwrap } from './generated-api.mjs';
 test('JSON text admission distinguishes syntax/nonfinite from validation',()=>{
  for(const text of ['','{','undefined','NaN','[1,]','{"a":}', '1e400','-1e400','{"nested":[1e400]}']) assert.equal(s.parse(text) instanceof Ok,false,text);
  for(const text of ['null','true','-0','1.0','"\\ud83d\\udc9c"','"\\u0000"','{"x":1,"x":2}'])assert.ok(s.parse(text) instanceof Ok,text);
- assert.equal(s.value_text(unwrap(s.parse('{"x":1,"x":2}'))),'{"x":2}');
+ assert.equal(s.to_string(unwrap(s.parse('{"x":1,"x":2}'))),'{"x":2}');
  const x=unwrap(s.parse('false'));assert.equal(s.decode(s.text(),x) instanceof Ok,false);
 });
 
