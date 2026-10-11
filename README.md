@@ -1,22 +1,12 @@
 # Gargamelle
 
-Gargamelle builds a typed JSON decoder and a JSON Schema 2020-12 document from the
-same Gleam definition. Validate incoming JSON, construct application values, and
-optionally render HTML documentation with checked examples.
+Gargamelle builds a typed JSON decoder and a JSON Schema 2020-12 document from a single Gleam definition. It can also generate formatted, navigable HTML documentation with checked examples.
 
-Gargamelle began as an investigation into improving [glon](https://hexdocs.pm/glon/). It became an independent
-implementation rather than a fork: no glon source code was copied. Glon inspired
-the combined typed-decoder/schema approach, and issues found during that
-investigation informed Gargamelle's regression tests.
+The [technical contract](https://hexdocs.pm/gargamelle/0.2.0/contract.html) defines how schema validation and decoding agree, what decoding produces, and the assumptions and limits of those guarantees.
 
-The [technical contract](https://hexdocs.pm/gargamelle/0.2.0/contract.html)
-specifies schema/decoder equivalence, decoded-value semantics, canonical emission,
-and the assumptions and limits of those guarantees.
+Gargamelle began as an investigation into improving [glon](https://hexdocs.pm/glon/), which inspired its combined decoder/schema approach. It became an independent implementation; no glon source code was copied. Issues found during the investigation informed Gargamelle’s regression tests.
 
-JavaScript is tested on Node 24. The native Erlang implementation is tested on
-macOS arm64 with OTP 29 and Ubuntu 24.04 x86_64 with OTP 28.5.0.7 and 29.1.1,
-and requires a C helper; see [Native Erlang setup](https://hexdocs.pm/gargamelle/0.2.0/native-erlang.html).
-Other native platforms and OTP releases remain unverified. APIs may change before 1.0.
+Developed with Codex Astra.
 
 ## Getting started
 
@@ -127,6 +117,11 @@ Admission errors, data errors and operational exceptions remain distinct.
 The safe-integer and trusted-callback limitations are part of the contract.
 
 ## Limitations
+
+JavaScript is tested on Node 24. The native Erlang implementation is tested on
+macOS arm64 with OTP 29 and Ubuntu 24.04 x86_64 with OTP 28.5.0.7 and 29.1.1,
+and requires a C helper; see [Native Erlang setup](https://hexdocs.pm/gargamelle/0.2.0/native-erlang.html).
+APIs may change before 1.0.
 
 - Native verification covers the runtime matrix above and Gleam shipment
   deployment. Other platforms, OTP releases and deployment tools are unverified.
