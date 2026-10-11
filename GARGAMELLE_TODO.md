@@ -587,4 +587,9 @@ Release preparation now compares packaged README bytes with the source, rejects
 obsolete unpublished-installation wording, and checks configured pages, local
 links/anchors and renderer asset freshness. A retained negative test exercises
 stale archive content and stale installation wording. Only the maintainer publishes.
-Browser verification remains the next task after this cleanup.
+Browser verification is recorded in `docs/browser-verification.md`: Chrome 155,
+Firefox 157 and Safari 27 passed the typed tests, generated corpus and DOM checks.
+The reusable loopback harness retains fingerprints and full results. Its two
+explicit Unicode-table differences are bounded exceptions, not a browser/native
+regex equivalence claim. Browser CI, mobile/older engines and realistic
+large-contract performance measurements remain open.

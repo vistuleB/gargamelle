@@ -11,7 +11,8 @@
     "preverify": "node verification/check-node.mjs",
     "precheck:release": "node verification/check-node.mjs",
     "prepare:release": "node verification/prepare-release.mjs",
-    "verify:erlang-primitives": "node --test verification/portability/*.test.mjs"
+    "verify:erlang-primitives": "node --test verification/portability/*.test.mjs",
+    "verify:browser": "node verification/browser/serve.mjs"
   },
   "devDependencies": {
     "@hyperjump/json-schema": "1.18.0",
