@@ -12,7 +12,7 @@ The failure remains retained; selecting a matching reference does not establish
 parity with Unicode 17.
 
 Each job fetches the pinned dependencies, then runs `npm run prepare:release`:
-the JavaScript gate, sixteen native groups, docs generation, source archive
+the JavaScript gate, seventeen native groups, docs generation, source archive
 inspection and fresh archive consumers on both targets. The native groups include
 the 17,788 generated cases, all 109 selected official cases, process lifetime and
 operational failures, and a Gleam shipment with source checkouts removed.

@@ -9,7 +9,7 @@ implementation rather than a fork: no glon source code was copied. Glon inspired
 the combined typed-decoder/schema approach, and issues found during that
 investigation informed Gargamelle's regression tests.
 
-This checkout contains the unreleased 0.2.0 candidate. JSON strings and object keys must contain only
+Version 0.2.0 is released. JSON strings and object keys must contain only
 Unicode scalar values; unpaired surrogates fail admission. The published 0.1.0
 release retains its original JavaScript string domain.
 Recursive builders now use construction plans; only completed definitions can
@@ -26,7 +26,7 @@ Other native platforms and OTP releases remain unverified. APIs may change befor
 
 ## Getting started
 
-After 0.2.0 is published, install it with:
+Install Gargamelle:
 
 ```sh
 gleam add gargamelle@0.2.0
@@ -155,8 +155,7 @@ The safe-integer and trusted-callback limitations are part of the contract.
 
 ## Further documentation
 
-The links below target the 0.2.0 documentation and will become available when
-the candidate is published. The published 0.1.0 documentation remains available
+The links below describe the published 0.2.0 release. The published 0.1.0 documentation remains available
 at [HexDocs](https://hexdocs.pm/gargamelle/0.1.0/).
 
 - [Technical contract](https://hexdocs.pm/gargamelle/0.2.0/contract.html): complete intended acceptance, output, emission and error semantics.

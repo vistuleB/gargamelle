@@ -308,7 +308,7 @@ All main-source externals now have native implementations. The actual Erlang API
 and production-plan fixtures compile the vendored helper and use the real regex
 binding. They pass 53 native tests, twelve cross-target compile-negative checks and
 3,636 independent schema cases, including exact historical and cross-target
-schema/output/diagnostic comparisons. All sixteen portability groups pass. A
+schema/output/diagnostic comparisons. All seventeen portability groups pass. A
 separate binding check covers 594 syntax/search cases and operational failures.
 
 The native setup passes on macOS arm64/OTP 29 and Ubuntu 24.04 x86_64 with OTP

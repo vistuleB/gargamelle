@@ -1,7 +1,7 @@
 # Gargamelle technical contract
 
 This document specifies the intended public semantics of Gargamelle 0.2.0
-(in development).
+(released 2026-10-11).
 “Must” denotes a requirement, not a claim that the implementation has been
 formally proved. Verification results and implementation history are separate.
 

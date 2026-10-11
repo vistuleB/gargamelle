@@ -76,7 +76,7 @@ checkpoint commit, regenerate evidence to identify the containing commit.
 ## Native Erlang verification
 
 With Erlang/OTP 29, `make` and a C compiler installed, run
-`npm run verify:erlang-primitives`. The command runs sixteen groups covering the
+`npm run verify:erlang-primitives`. The command runs seventeen groups covering the
 actual native library, numeric and scalar admission checks, immutable recursion,
 process transfer and exit, native regex behavior and operational failures.
 Historical prototypes and regex counterexamples remain as regression evidence.

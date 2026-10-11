@@ -1,6 +1,8 @@
 # Preparing and publishing Gargamelle
 
-The working tree contains the unreleased 0.2.0 candidate. Version 0.1.0 was
+Version 0.2.0 was published on 2026-10-11 from commit `41d2948`.
+The published archive checksum is recorded in `release-0.2.md`. This procedure
+remains available for subsequent releases. Version 0.1.0 was
 published separately and its tag must remain unchanged. Candidate preparation does
 not tag, push, publish or change repository visibility. The release audit is in
 [0.2.0 candidate review](release-0.2.md). The tested native matrix now includes Ubuntu 24.04 x86_64 with OTP 28.5.0.7
@@ -29,7 +31,7 @@ install the Gleam package; they do not need the npm verification dependencies.
    their own license in `verification/official/LICENSE`.
 2. Install pinned dependencies with `npm ci` and `gleam deps download` on first
    setup. Run `npm run prepare:release` with Node 24, Gleam 1.18.1, OTP 29,
-   `make` and a C compiler. It runs JavaScript evidence, sixteen native groups,
+   `make` and a C compiler. It runs JavaScript evidence, seventeen native groups,
    docs generation, archive inspection and fresh extracted-archive consumers on
    both targets. The native deployment group tests a shipment without source
    checkouts. All checks run offline once dependencies are available.

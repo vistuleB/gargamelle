@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.0 — unreleased
+## 0.2.0 — 2026-10-11
 
 - Restrict JSON strings, object keys and schema text to Unicode scalar values.
   Reject unpaired surrogates after syntax parsing and duplicate-key resolution.
@@ -24,8 +24,7 @@
 
 Other native platforms, OTP releases and deployment formats remain unqualified.
 Native regex uses Unicode 16 tables; Node 24.21.0 uses Unicode 17 and has known
-property-match differences. The verified reference is Node 24.10.0. This
-entry describes the candidate, not a published release.
+property-match differences. The verified reference is Node 24.10.0.
 
 ## 0.1.0 — 2026-10-10
 

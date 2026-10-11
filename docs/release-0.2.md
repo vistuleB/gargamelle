@@ -1,7 +1,10 @@
-# 0.2.0 candidate review
+# 0.2.0 release review
 
-This candidate contains the completed native implementation and two deliberate
-breaking changes. It is not yet published. JavaScript is verified on Node 24;
+Version 0.2.0 was published on 2026-10-11 from commit `41d2948`. The downloaded
+Hex archive matches all 23 exported source files at that checkpoint. Its SHA-256
+is `0523ed3d126e3b822b1d84714234e302cb22276a26a19a7af268420bac35dfb1`.
+The release contains the completed native implementation and two deliberate
+breaking changes. JavaScript is verified on Node 24;
 native evidence covers macOS arm64/OTP 29 and Ubuntu 24.04 x86_64 with OTP
 28.5.0.7 and 29.1.1, using Gleam 1.18.1. Broader platform and version claims
 remain outside that tested matrix. No 0.1.0 tag or application dependency pin
@@ -18,13 +21,13 @@ is changed by this preparation.
 | Native failures | Missing helpers, port failures and execution limits remain operational exceptions, including under defaults and auxiliary checks. Temporary workers close before converters; owner exit, nesting and exception cleanup have regressions. |
 | Regex ownership and licensing | Vendored engine files have retained source hashes, patch descriptions and upstream MIT license. No interpreter or JavaScript runtime is required by the native backend. A generated host executable is not shipped in the Hex source archive. |
 | Deployment | A Gleam shipment passes on macOS after all source checkouts are removed and the helper is explicitly installed. Missing-helper failure is tested. Both Linux OTP jobs also pass. This is not evidence for every release tool or operating system. |
-| Documentation | The changelog and migration guide describe both breaking changes. Obsolete temporary-regex-adapter statements are removed. Versioned links target 0.2.0 and remain pending until publication. |
+| Documentation | The changelog and migration guide describe both breaking changes. Obsolete temporary-regex-adapter statements are removed. Versioned links target the published 0.2.0 release. |
 
 The preservation arguments support the design but are not a formal proof. V08
 remains marked for independent review by the evidence checker. This audit does
 not silently convert that status to an automated pass.
 
-## Decisions to review before publication
+## Recorded release decisions
 
 The package keeps exact Gleam dependency pins and requires Gleam 1.18.1 or later.
 Only that compiler version is currently in the recorded candidate evidence;
@@ -71,4 +74,13 @@ expected results; 357 unsupported groups remain explicitly excluded. Broader nat
 operator mutation coverage would strengthen evidence. The corrected Linux CI run passes on both OTP builds with the pinned Unicode 16
 reference. Publishing
 account access, repository visibility and external release availability must be
-checked when publication is requested. No tag, push or publication is included.
+checked when publication is requested. The maintainer published the package; publication was verified separately after
+these preparation checks. Follow-up tests and status documentation are later
+commits and do not change the published archive.
+
+## Post-release verification
+
+The source archive above remains unchanged. Later verification adds a seventeenth
+portability group that detects six isolated compiled Erlang operator mutants.
+Those changes and repository status documentation are post-release commits;
+they are not presented as part of the frozen 0.2.0 archive or its CI result.

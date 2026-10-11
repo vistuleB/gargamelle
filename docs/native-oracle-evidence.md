@@ -60,3 +60,26 @@ on both targets. Original and emitted schemas are checked by Ajv and Hyperjump
 against the fixtures' unchanged validity expectations. All 109 cases pass: 38
 accepted and 71 rejected. The report is `reports/native-official-evidence.json`.
 This adds no arbitrary-schema importer or claim of full-dialect support.
+
+## Post-release native operator mutations
+
+`operator-mutations.test.mjs` constructs six typed fixtures and checks the real
+native baseline against Ajv, Hyperjump and the independent output interpreter.
+It then changes one compiled Erlang module at a time in a temporary checkout:
+
+| Mutation | Behavioral counterexample |
+| --- | --- |
+| Accept the first matching `one_of` branch | An input matching two branches must be rejected. |
+| Treat a present null as absent | An optional nullable field must decode to present-null, not missing. |
+| Disable closed-record extra-key rejection | An undeclared key must be rejected. |
+| Change an inclusive minimum to exclusive | A string exactly at its minimum must be accepted. |
+| Count UTF-16 units instead of scalar code points | One astral character must satisfy a one-character bound. |
+| Offset integer conversion | Accepted integers must preserve their decoded value. |
+
+Every mutant must compile and execute; crashes do not count as detection. Emitted
+schemas must remain equal to the baseline. A behavioral assertion must fail for
+the targeted fixture, then the restored implementation must reproduce the whole
+baseline before the next mutation. The report is
+`reports/native-operator-mutations.json`; failures retain the current mutation
+name. No production source is edited. The six operator mutants complement the
+existing regex-adapter mutant; they do not establish exhaustive mutation coverage.

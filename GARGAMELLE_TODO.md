@@ -6,8 +6,11 @@ all JSON Schema features. Verify external state before acting on it.
 
 ## Current checkpoint
 
-- Package: `gargamelle`, version `0.2.0` in development, MIT license.
+- Package: `gargamelle`, version `0.2.0` published 2026-10-11, MIT license.
 - Repository: https://github.com/vistuleB/gargamelle (private when last checked).
+- Published 0.2.0 source is `41d2948`, verified against the downloaded Hex archive.
+  Annotated tag `v0.2.0` identifies that exact checkpoint; later verification and
+  repository status edits are separate commits.
 - Annotated tag `v0.1.0` remains at `0d15a7a`
   (`Improve onboarding, lineage, and renderer documentation`); it was pushed.
   Graph integration was committed locally on `main` as `08fd1b2`.
@@ -43,8 +46,8 @@ parser now owns string escapes as well as structural and numeric scanning.
 Production Erlang externals are attached for admission, canonical emission,
 code-point counting and UTF-16 sorting. Public construction text is checked too: Result constructors
 return construction errors; direct constructors assert the scalar precondition.
-The working version is 0.2.0, with contract/evidence revision 5. Nothing has been
-published or tagged for this milestone.
+The working version is 0.2.0, with contract/evidence revision 5. The maintainer published 0.2.0 on 2026-10-11 from `41d2948`; the downloaded
+archive matches every exported file. The release tag identifies that checkpoint.
 
 The native regex binding now vendors standalone QuickJS 2026-06-04 code with
 Unicode 16 tables from 2025-09-13. Source hashes and patches are retained under
@@ -59,7 +62,7 @@ All core externals now have native implementations. Native fixtures use the real
 regex helper, without regex test adapters. Current validation: 45 JavaScript
 Gleam tests, 144 Node tests, 17,788 generated pairs and 109 official schema cases;
 53 native tests, twelve cross-target compile-negative checks and 3,636 independent
-cases across 36 schemas. All sixteen portability groups pass.
+cases across 36 schemas. All seventeen current portability groups pass.
 
 Fresh consumers of the extracted 0.2.0 archive pass on both targets using pinned
 dependency sources offline. Native setup requires an explicit C build. Generated
@@ -237,7 +240,7 @@ JSON admission/canonical serialization. The admission/canonical/string helpers
 are deliberately not attached to the public API while surrogate compatibility
 is unresolved.
 
-`npm run verify:erlang-primitives` runs sixteen independent portability test groups,
+`npm run verify:erlang-primitives` runs seventeen independent portability test groups,
 including the isolated immutable-plan and production integration experiments. The current library graph
 group passes with the new construction-plan contract. The earlier captured-
 placeholder failures are recorded historically below.
@@ -554,3 +557,18 @@ and filler. A question alone is not authorization to edit or commit; answer it
 first. Explicit imperative requests authorize the requested work. Keep public
 docs reader-facing: describe the package and its contract rather than the agent's
 progress or anticipated publication state.
+
+## Post-release work — 2026-10-11
+
+0.2.0 is published; preserve its tagged source and admission/recursion contracts.
+The archive checksum is recorded in `docs/release-0.2.md`. Repository release-status
+edits happen after publication and do not modify the Hex archive. While consumer
+feedback is pending, extend native mutation evidence in temporary compiled copies.
+No new schema features or Unicode-table upgrades are included in that work.
+
+The native operator mutation group now detects six independently compiled mutants:
+one-of ambiguity, present-null optional output, closed-record extra keys, an
+inclusive minimum, code-point counting and integer conversion. Schemas stay
+unchanged; assertion failures must come from acceptance or decoded outputs, not
+compilation or runtime crashes. A restored baseline is checked after each mutant.
+This is bounded evidence, not complete native mutation coverage.
