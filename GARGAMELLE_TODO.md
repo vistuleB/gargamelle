@@ -2,8 +2,8 @@
 
 ## Active 0.7.0 admitted JSON work
 
-Work is isolated on `codex/json-070`; main remains the qualified 0.6.0
-publication checkout. Public JSON constructors come first, followed by an
+Work was isolated on `codex/json-070` and promoted to main after qualification
+at `d7666b9`. The prepared 0.7.0 candidate includes public JSON constructors, an
 accept-any-admitted-JSON definition and JSON pass-through encoding. Direct
 constructors preserve opacity and avoid serialization/admission round trips.
 Object constructors deliberately reject duplicate keys with typed attribution;
