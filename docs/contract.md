@@ -25,6 +25,14 @@ decoded value. Invalid inputs return `validate`'s errors. The generic parameter
 the opaque boundary enforces the association between definition and handler.
 See [Verified JSON boundaries](boundaries.html).
 
+`JsonBoundary(a, response)` binds an authoritative definition to a private handler
+receiving `VerifiedJson(a)`. `forward_json` calls `verify` once and invokes the
+handler once on success, without decoding. Invalid input invokes no handler.
+The stored definition is exactly the one exposed by `json_boundary_definition`.
+An arbitrary certificate cannot bypass this receiving check. "Once" refers to
+Gargamelle validation, not admission or application policy. Handler responses
+remain generic/nested and operational exceptions propagate.
+
 Constructors compose opaque `Plan(a, r)` values, where `r` is the recursion
 environment. A completed `Definition(a)` is the closed specialization
 `Plan(a, Nil)`. Only completed definitions can be validated, decoded, emitted or

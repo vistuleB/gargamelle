@@ -39,6 +39,43 @@ host can review its schema before accepting the boundary. Through the Gleam API,
 the host cannot extract the handler or replace the definition within an existing
 boundary.
 
+## JSON-only receiving handlers
+
+For storage or transport that needs only JSON, use
+`json_boundary(definition, handler)` and `forward_json(receiver, json)`.
+The private handler receives `VerifiedJson(a)` after the receiver's stored
+definition accepts the input. No decoded value is constructed and no conversion
+callback runs. `json_boundary_definition` exposes that exact checked definition.
+
+```gleam
+import gargamelle
+import gleam/io
+
+pub fn main() {
+  let receiver = gargamelle.json_boundary(
+    gargamelle.array(gargamelle.text()),
+    fn(verified) {
+      gargamelle.to_string(gargamelle.verified_json(verified), gargamelle.Compact)
+    },
+  )
+  let assert Ok(json) = gargamelle.parse("[\"Brainy\", \"Jokey\"]")
+  let assert Ok(text) = gargamelle.forward_json(receiver, json)
+  io.println(text)
+}
+```
+
+This prints `["Brainy","Jokey"]`, without constructing a decoded list.
+
+Each submission performs one Gargamelle contract check. Admission, authorization,
+storage limits and other host policies are separate checks. Submission accepts
+`Json`, not a certificate from another contract. If a handler returns `Result`,
+the application result is nested inside the outer validation result. Handler
+exceptions and resource failures propagate as operational failures.
+
+For a future typed output path, pair an encoder with this receiving boundary,
+encode to admitted unverified JSON, and call `forward_json` once. The receiving
+definition is authoritative; there is no separate codec definition to reconcile.
+
 ## Retaining verified JSON
 
 `verify(definition, json)` checks acceptance without constructing a decoded value

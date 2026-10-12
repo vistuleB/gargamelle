@@ -19,6 +19,10 @@ The maintainer authorized `VerifiedJson` and an opaque input boundary on
 `forward` calls `decode` once. Certificates retain JSON and the checked definition,
 with `verify` calling `validate` without conversion. Usage is in
 `docs/boundaries.md`; decisions for review are in `docs/verified-json-design.md`.
+`JsonBoundary` now supports JSON-only receiving handlers without conversion.
+An isolated host-storage test using the flashcard equation provider's actual
+result definition accepted valid evidence and rejected wrong versions, outcomes
+and extra fields, with zero decoded conversions and no app checkout changes.
 This work is unreleased and the earlier release archive fingerprints do not
 cover it. The maintainer subsequently authorized an isolated encoder prototype;
 see `verification/encoder/` and `docs/encoder-prototype.md`. Production encoder

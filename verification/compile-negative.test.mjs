@@ -7,6 +7,10 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 const root=fileURLToPath(new URL('../',import.meta.url));
 const cases=[
+ ['opaque_json_boundary','pub fn main() { s.JsonBoundary(s.text(), fn(x) { x }) }','Unknown module value'],
+ ['certificate_not_json_submission','pub fn main(v: s.VerifiedJson(String)) { s.forward_json(s.json_boundary(s.text(), fn(x) { x }), v) }','Type mismatch'],
+ ['json_boundary_handler_type','pub fn main() { s.json_boundary(s.text(), fn(x: s.VerifiedJson(Int)) { x }) }','Type mismatch'],
+ ['private_json_handler','pub fn main() { s.json_boundary(s.text(), fn(x) { x }).handler }','Unknown record field'],
  ['opaque_verified_json','pub fn main() { let assert Ok(v) = s.parse("null") s.VerifiedJson(v, Nil) }','Unknown module value'],
  ['opaque_boundary','pub fn main() { s.Boundary(s.text(), fn(x, _) { x }) }','Unknown module value'],
  ['verified_not_forward_input','pub fn main(v: s.VerifiedJson(String)) { s.forward(s.boundary(s.text(), fn(data, _) { data }), v) }','Type mismatch'],

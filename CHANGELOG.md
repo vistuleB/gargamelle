@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add opaque `JsonBoundary` receiving handlers with one contract check and no
+  decoding, for JSON storage and transport.
+
 - Add `assert_format(_, Uuid)` with explicit schema length/pattern checks;
   annotation-only formats remain separate.
 

@@ -6,6 +6,11 @@ This contributor note records decisions for review; the usage guide is
 - Keep the types and functions in the main module, as discussed with the
   maintainer. Boundaries use `boundary`, `boundary_definition` and `forward`.
   Certificates use `verify`, `verified_json` and `verified_definition`.
+- JSON-only receivers use `JsonBoundary`, `json_boundary`,
+  `json_boundary_definition` and `forward_json`. Their stored definition is
+  authoritative and the private handler receives a certificate after one
+  `verify` call. A future typed path pairs an encoder with this receiver, not
+  another codec definition; encode to unchecked admitted JSON then submit once.
 - A boundary invokes a private `fn(a, Json) -> response` after calling `decode`
   once against its stored definition. It passes decoded data and original JSON
   separately, without constructing a certificate. A handler that needs only the

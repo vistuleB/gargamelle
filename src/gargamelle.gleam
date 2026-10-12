@@ -181,6 +181,13 @@ pub opaque type Boundary(a, response) {
   Boundary(Definition(a), fn(a, Json) -> response)
 }
 
+/// A definition and a private handler receiving verified JSON without decoding.
+/// Construct with `json_boundary`, inspect with `json_boundary_definition`, and
+/// submit admitted JSON with `forward_json`.
+pub opaque type JsonBoundary(a, response) {
+  JsonBoundary(Definition(a), fn(VerifiedJson(a)) -> response)
+}
+
 /// The opaque recursion environment supplied to a self-recursive plan.
 /// User code cannot construct or execute this environment.
 pub opaque type Recursive(a) {
@@ -1676,6 +1683,38 @@ pub fn forward(
   let Boundary(definition, handler) = boundary
   use data <- result.try(decode(definition, json))
   Ok(handler(data, json))
+}
+
+/// Bind a JSON-only receiving handler to its authoritative definition.
+/// Construction invokes neither validation nor callbacks.
+pub fn json_boundary(
+  definition: Definition(a),
+  handler: fn(VerifiedJson(a)) -> response,
+) -> JsonBoundary(a, response) {
+  JsonBoundary(definition, handler)
+}
+
+/// Return the exact definition used by `forward_json`; the handler stays private.
+pub fn json_boundary_definition(
+  boundary: JsonBoundary(a, response),
+) -> Definition(a) {
+  let JsonBoundary(definition, _) = boundary
+  definition
+}
+
+/// Validate once against the receiving boundary's definition, then invoke its
+/// handler once with a certificate. This never decodes or invokes converters.
+/// "Once" concerns Gargamelle validation; admission and host policy are separate.
+/// Invalid input invokes no handler. Operational failures and handler exceptions
+/// propagate. A handler's Result response remains nested inside the outer Result.
+/// Input must be admitted JSON, not a certificate checked under another contract.
+pub fn forward_json(
+  boundary: JsonBoundary(a, response),
+  json: Json,
+) -> Result(response, List(DataError)) {
+  let JsonBoundary(definition, handler) = boundary
+  use verified <- result.try(verify(definition, json))
+  Ok(handler(verified))
 }
 
 /// Check JSON against a definition and retain the JSON and checked definition.
