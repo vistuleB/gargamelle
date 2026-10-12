@@ -3,7 +3,6 @@ version = "0.7.0"
 licences = ["MIT"]
 description = "Typed JSON decoding and JSON Schema 2020-12 generation from one Gleam definition"
 links = [{ title = "Source archive", href = "https://repo.hex.pm/tarballs/gargamelle-0.7.0.tar" }]
-internal_modules = ["schema_fixtures"]
 target = "javascript"
 gleam = ">= 1.18.1"
 
@@ -83,3 +82,8 @@ source = "./docs/migration-0.6.md"
 title = "Constructing JSON values"
 path = "json-values.html"
 source = "./docs/json-values.md"
+
+[[documentation.pages]]
+title = "Migrating to 0.7.0"
+path = "migration-0.7.html"
+source = "./docs/migration-0.7.md"

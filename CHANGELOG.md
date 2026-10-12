@@ -13,7 +13,10 @@
   invalid numbers, strings, object keys and duplicate keys. Arrays and objects
   compose admitted children without reparsing.
 
-## 0.6.0 — Unreleased
+## 0.6.0 — 2026-10-12
+
+- Exclude verification fixtures from the package, leaving one top-level Gleam
+  namespace. Runtime APIs are unchanged.
 
 - Add typed encoding failures with output JSON Pointer attribution, including
   nested records, arrays, recursion and string-domain rejection. Invalid field

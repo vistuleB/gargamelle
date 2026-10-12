@@ -22,7 +22,7 @@ let directory;
 writeFileSync(reportPath,JSON.stringify({status:'running',source:before.digest})+'\n');
 try {
   const version=readFileSync(join(root,'gleam.toml'),'utf8').match(/^version = "([^"]+)"$/m)[1];
-  assert.equal(version,'0.6.0');
+  assert.equal(version,'0.7.0');
   const pkg=JSON.parse(readFileSync(join(root,'package.json'))),lock=JSON.parse(readFileSync(join(root,'package-lock.json')));
   assert.equal(pkg.version,version);assert.equal(lock.version,version);assert.equal(lock.packages[''].version,version);
   assert.equal(pkg.private,true);
@@ -58,6 +58,10 @@ try {
     assert.ok(!/(^|\/)\.env(?:\.|$)|(?:^|\/)(?:credentials|id_rsa|id_ed25519)$/.test(path),`Credential path: ${path}`);
   }
   for(const path of ['gleam.toml','README.md','LICENSE','src/gargamelle.gleam','src/gargamelle/encoding.gleam','src/gargamelle/encoding_runtime.mjs','src/gargamelle_encoding_runtime.erl','src/runtime.mjs','src/gargamelle_runtime.erl','src/gargamelle_regex.erl','priv/regex-src/Makefile','priv/regex-src/PROVENANCE.json','priv/regex-src/LICENSE.quickjs'])assert.ok(entries.includes(path),`Missing archive member: ${path}`);
+  assert.ok(!entries.includes('src/schema_fixtures.gleam'),'Verification fixtures must not ship');
+  assert.ok(!entries.some(path=>path.startsWith('test/')),'Test modules must not ship');
+  const topLevel=entries.flatMap(path=>/^src\/([^/]+)\.gleam$/.exec(path)?.slice(1)??[]);
+  assert.deepEqual(topLevel,['gargamelle'],'Package must expose only its own top-level namespace');
   run('tar',['-xzf',contents,'-C',library]);
   checkPackageReadme(readFileSync(join(root,'README.md')),readFileSync(join(library,'README.md')));
   // Consumers use only the extracted package and pinned dependency source copies.
@@ -94,12 +98,22 @@ pub fn main() {
     writeFileSync(join(consumer,`src/${module}.gleam`),source);
     return [module,encodingOutputs[index]];
   });
+  const jsonGuide=readFileSync(join(root,'docs/json-values.md'),'utf8');
+  const jsonSnippets=[...jsonGuide.matchAll(/```gleam\n([\s\S]*?)\n```/g)].map(match=>match[1]);
+  const jsonOutputs=[...jsonGuide.matchAll(/```text\n([\s\S]*?)\n```/g)].map(match=>match[1]);
+  assert.equal(jsonSnippets.length,2);assert.equal(jsonOutputs.length,2);
+  const jsonConsumers=jsonSnippets.map((source,index)=>{
+    const module=`json_guide_${index}`;
+    writeFileSync(join(consumer,`src/${module}.gleam`),source);
+    return [module,jsonOutputs[index]];
+  });
+  cpSync(join(root,'verification/json_consumer.gleam'),join(consumer,'src/json_consumer.gleam'));
   console.log('Checking fresh consumers of the exported archive…');
   for(const target of ['javascript','erlang']){
     if(target==='erlang')run('make',['-C','priv/regex-src'],library,'release-consumer-helper.log');
     const output=run('gleam',['run','--target',target],consumer,`release-consumer-${target}.log`);
     assert.equal(output.trim(),'release consumer passed');
-    for(const [module,expected] of [['contract_consumer','release contract consumer passed'],['readme_names',expectedNames],['readme_boundaries',expectedBoundaries],['readme_user','README user passed'],['preferences_reference',expectedArticle],...encodingConsumers]){
+    for(const [module,expected] of [['contract_consumer','release contract consumer passed'],['readme_names',expectedNames],['readme_boundaries',expectedBoundaries],['readme_user','README user passed'],['preferences_reference',expectedArticle],...encodingConsumers,...jsonConsumers,['json_consumer','release JSON consumer passed']]){
       const result=run('gleam',['run','--target',target,'--module',module],consumer,`release-${module}-${target}.log`);
       assert.equal(result.trim(),expected,`${module} output differs on ${target}`);
     }

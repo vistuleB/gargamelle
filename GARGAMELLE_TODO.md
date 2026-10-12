@@ -14,8 +14,10 @@ The OTP parser compatibility/performance investigation is reserved for potential
 0.8.0 work. It is not a 0.7.0 release gate or a promised parser replacement.
 Constructors, anything(), JSON pass-through encoding and one-way standard JSON
 conversion are implemented. Shared tests, independent schema checks and guide
-compilation pass. Full evidence is being regenerated; 0.7.0 is not yet a prepared
-release, and its release-script guard will be updated during release preparation.
+compilation pass. Main cleanup is incorporated. The release script now targets
+0.7.0 and exercises JSON guide examples and rejection semantics from the exported
+archive on both targets. Final qualification is recorded in docs/release-0.7.0.md
+and ignored reports; publication remains the maintainer’s action.
 The older sections below retain earlier checkpoints.
 
 ## Active 0.6.0 encoder work

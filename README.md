@@ -16,15 +16,9 @@ decoded Gleam values and original JSON, or verified JSON.
 Boundary APIs are optional; definitions, decoding and schema generation can be
 used directly.
 
-Definitions can also generate browsable HTML documentation.
-
-Explicit typed encoders are defined separately in `gargamelle/encoding`. They
-produce admitted JSON, checked output certificates, or submit encoded JSON through
-a receiving boundary.
-
 | Operation | API |
 | --- | --- |
-| Direct admitted JSON construction | `json_null` / `json_bool` / `json_string` / `json_int` / `json_number` / `json_array` / `json_object` |
+| Direct admitted JSON construction | `json_*` constructors |
 | JSON decoding into a Gleam value | `decode` |
 | Decoding or validation with semantic requirements | `decode_contract` / `validate_contract` |
 | JSON Schema generation | `schema_json` / `schema_string` |
@@ -284,6 +278,8 @@ to handlers.
 - [Constructing JSON values](https://hexdocs.pm/gargamelle/0.7.0/json-values.html): public constructors for opaque admitted JSON.
 - [Typed JSON encoding](https://hexdocs.pm/gargamelle/0.7.0/encoding.html): explicit encoders, checked output and typed receiving paths.
 - [Verified JSON boundaries](https://hexdocs.pm/gargamelle/0.7.0/boundaries.html): typed ingress and JSON-only receiving handlers.
+- [Migrating to 0.7.0](https://hexdocs.pm/gargamelle/0.7.0/migration-0.7.html): admitted JSON construction and arbitrary metadata.
+- [Migrating to 0.6.0](https://hexdocs.pm/gargamelle/0.7.0/migration-0.6.html): explicit typed encoders and output boundaries.
 - [Migrating to 0.5.0](https://hexdocs.pm/gargamelle/0.7.0/migration-0.5.html): semantic contracts, boundary arguments and rejection diagnostics.
 - [Migrating to 0.4.0](https://hexdocs.pm/gargamelle/0.7.0/migration-0.4.html): boundary APIs and added schema constraints.
 - [Migrating to 0.3.0](https://hexdocs.pm/gargamelle/0.7.0/migration-0.3.html): required API renames.
@@ -295,7 +291,7 @@ The library is checked with typed-output and rejection fixtures, generated
 compositions, independent JSON Schema validators, selected official suite cases
 and deliberate implementation mutations. These provide evidence for the contract,
 not a formal proof or full-dialect conformance. The package source is
-available in the [Hex archive](https://repo.hex.pm/tarballs/gargamelle-0.6.0.tar).
+available in the [Hex archive](https://repo.hex.pm/tarballs/gargamelle-0.7.0.tar).
 
 ## License
 
