@@ -9,7 +9,9 @@ export function retainOperationalFailure({recipe,value,context,error},directory=
 }
 
 export function checkpointCase(recipe,values,context){
- const directory=fileURLToPath(new URL('./generated-failures/',import.meta.url));mkdirSync(directory,{recursive:true});
+ // In-flight state is generated output, not retained source evidence. Keeping
+ // it under reports also makes concurrent source fingerprints stable.
+ const directory=fileURLToPath(new URL('../reports/generated-checkpoints/',import.meta.url));mkdirSync(directory,{recursive:true});
  const file=join(directory,'in-flight.json');
  writeFileSync(file,JSON.stringify({classification:'in-flight',context,recipe,values},null,2)+'\n');return file;
 }
