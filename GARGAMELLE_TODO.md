@@ -7,7 +7,11 @@ The maintainer reports 0.7.0 released and authorized an isolated investigation o
 unchanged. Callback-only and conservative-fallback prototypes are in
 `verification/otp-parser`; findings and decisions for review are in
 `docs/otp-parser-investigation.md`. Linux OTP 28/29 probe mode is separate from
-release qualification. No replacement or performance improvement is promised.
+release qualification. Probe commit `3eae10b` passed on macOS OTP 29 and Linux
+OTP 28/29; all 9,637 hybrid cases match, but callback-only replacement remains
+blocked by negative zero and overwritten surrogate admission. Production parsing
+remains unchanged. Full-path cost, memory and operational failure evaluation would
+be required before any hybrid integration. No replacement is promised.
 
 The older sections below retain historical development checkpoints.
 

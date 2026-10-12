@@ -82,3 +82,30 @@ custom scanner/preprocessor. A hybrid can be considered only as a separately
 measured optimization worth keeping alongside the current parser. Keep production
 parsing unchanged until compatibility, operational failure handling and full-path
 costs justify an integration.
+
+## Completed cross-platform checkpoint
+
+Probe commit `3eae10b` passed on macOS arm64 OTP 29.0.5 and Ubuntu 24.04 x86_64
+OTP 28 and 29. Linux run `38276182470` retains both reports. Corpus hashes match:
+9,637 cases, including 2,114 distinct generated inputs. The hybrid matched the
+reference in all three runs; callback-only output differed on 5,640 edge cases
+in each. Both negative-zero and overwritten-surrogate blockers persisted, as did
+float-callback exception reclassification.
+
+Within-machine parse-stage median ratios for the compatible hybrid were roughly
+1.6–2.7x on the small provider-shaped result, 2.1–2.5x on eligible provider-like
+entries, 8–11x on long scalar text, and 2.1–3.5x on the numeric array. The otherwise
+identical entry payload containing blank-0 IDs received no consistent benefit.
+The tiny guarded-text and overwritten-surrogate fallback cases were slower. These
+measurements exclude public Json construction and do not establish full-path or
+allocation savings; platform timings must not be compared as hardware rankings.
+
+Recommendation: retain production parsing. Do not promise callback-only replacement
+for 0.8.0. Before considering a hybrid integration, measure the complete public
+parse path, allocation/retention behavior, realistic fallback frequency, and
+operational failure handling. Direct JSON construction inside encoding remains a
+separate, potentially simpler optimization for both targets. No contract relaxation
+or upstream issue publication has been performed.
+
+The final evidence summary is reports/otp-parser-investigation-summary.json. These
+status notes follow the probe commit; they do not change its executable source.
