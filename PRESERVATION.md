@@ -325,3 +325,15 @@ of establishing forbidden rejection. Graph collection and same-input guards
 visit both base and forbidden nodes, rejecting unresolved references, conflicting
 names, and non-progressing recursive cycles. Negation does not introduce descent
 or a decoding-depth cap and does not require a satisfiability solver.
+
+## Direct admitted JSON constructors
+
+Null and Boolean constructors produce the corresponding admitted nodes. String
+and key constructors check the same Unicode scalar domain without parsing text.
+Float construction checks finiteness; Int construction additionally restricts
+the safe range before binary64 conversion. Neither numeric path silently rounds
+an unsafe Int. Arrays compose opaque admitted children without altering them.
+Objects check scalar unique keys and retain the supplied children and ordering.
+Duplicate rejection differs deliberately from parser last-value replacement.
+Canonical serialization remains unchanged; these APIs do not establish any
+definition or Contract acceptance.

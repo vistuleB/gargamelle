@@ -482,3 +482,14 @@ definition. Acceptance uses exact integer remainders after the base definition
 accepts. Repeated divisors intersect; emission uses `multipleOf` and, when needed,
 additional conjunctive `allOf` constraints. Fractional divisors and unrestricted
 number definitions are excluded from this operation.
+
+## Direct JSON construction
+
+Public `json_*` constructors retain opaque admitted `Json`. Null, Boolean and
+array construction are infallible for typed inputs. String and key construction
+requires Unicode scalars; Float construction requires finiteness. Int construction
+requires the common safe range and rejects larger values instead of rounding.
+Object construction rejects repeated keys and attributes the first bad key.
+Children are already admitted and are not serialized or reparsed. Construction
+does not certify a structural definition or Contract.
+See [Constructing JSON values](json-values.html).

@@ -12,13 +12,15 @@
 //// The Erlang target requires a separately compiled C regex helper.
 
 import gleam/bit_array
+import gleam/dict
 import gleam/json
 import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/result
 import gleam/string
 
-/// An opaque JSON value obtained through `parse` or `schema_json`.
+/// An opaque admitted JSON value obtained through parsing, public JSON
+/// constructors, schema generation or encoding.
 /// Numbers are finite binary64 values; strings and keys contain Unicode scalars.
 /// This type is distinct from `gleam/json.Json`; arbitrary runtime objects cannot
 /// enter the validation boundary.
@@ -42,6 +44,16 @@ pub type JsonFormat {
 /// JSON syntax, nonfinite-number or non-scalar-string admission failure.
 pub type AdmissionError {
   AdmissionError(String)
+}
+
+/// A rejected direct JSON construction. Values remain opaque and admitted.
+/// Object constructors reject duplicate keys instead of silently replacing them.
+pub type JsonError {
+  NonFiniteNumber
+  UnsafeInteger
+  NonScalarString
+  NonScalarKey(key: String)
+  DuplicateKey(key: String)
 }
 
 /// An invalid definition, constraint, default, or reference graph.
@@ -321,6 +333,73 @@ pub opaque type Variant(a, r) {
 /// String values and object keys must contain only Unicode scalar values.
 pub fn parse(text: String) -> Result(Json, AdmissionError) {
   parse_runtime(text, fn() { JNull }, JBool, JNumber, JString, JArray, JObject)
+}
+
+/// Construct JSON null.
+pub fn json_null() -> Json {
+  JNull
+}
+
+/// Construct a JSON Boolean.
+pub fn json_bool(value: Bool) -> Json {
+  JBool(value)
+}
+
+/// Construct a finite binary64 JSON number, preserving its numeric value.
+pub fn json_number(value: Float) -> Result(Json, JsonError) {
+  case finite(value) {
+    True -> Ok(JNumber(value))
+    False -> Error(NonFiniteNumber)
+  }
+}
+
+/// Construct a JSON number from an Int in the common safe-integer range.
+/// Reject larger integers rather than silently rounding them to binary64.
+pub fn json_int(value: Int) -> Result(Json, JsonError) {
+  case value >= -9_007_199_254_740_991 && value <= 9_007_199_254_740_991 {
+    True -> Ok(JNumber(as_float(value)))
+    False -> Error(UnsafeInteger)
+  }
+}
+
+@external(erlang, "gargamelle_runtime", "scalar")
+@external(javascript, "./runtime.mjs", "scalar")
+fn scalar(value: String) -> Bool
+
+/// Construct a JSON string containing only Unicode scalar values.
+pub fn json_string(value: String) -> Result(Json, JsonError) {
+  case scalar(value) {
+    True -> Ok(JString(value))
+    False -> Error(NonScalarString)
+  }
+}
+
+/// Construct a JSON array from already admitted children, preserving list order.
+/// Child values are not serialized, parsed or recursively rechecked.
+pub fn json_array(values: List(Json)) -> Json {
+  JArray(values)
+}
+
+/// Construct a JSON object from already admitted children. Keys must contain
+/// Unicode scalars and be unique. Declaration order is retained; serialization
+/// uses the usual canonical key ordering. Keys such as __proto__ are ordinary keys.
+/// The first invalid or repeated key identifies the rejected declaration.
+pub fn json_object(fields: List(#(String, Json))) -> Result(Json, JsonError) {
+  use _ <- result.try(check_json_keys(fields, dict.new()))
+  Ok(JObject(fields))
+}
+
+fn check_json_keys(fields, seen) {
+  case fields {
+    [] -> Ok(Nil)
+    [#(key, _), ..rest] -> {
+      case scalar(key), dict.has_key(seen, key) {
+        False, _ -> Error(NonScalarKey(key))
+        True, True -> Error(DuplicateKey(key))
+        True, False -> check_json_keys(rest, dict.insert(seen, key, Nil))
+      }
+    }
+  }
 }
 
 // Schema text must inhabit the same String domain as admitted JSON. Constructors

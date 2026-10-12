@@ -99,3 +99,6 @@ export function recursion_guard(make, scope, key) {
 }
 export const fresh_identity = () => Symbol();
 export const with_walk = run => run();
+
+// Direct JSON constructors preserve the admission string domain without parsing.
+export const scalar = text => text.isWellFormed();

@@ -1,5 +1,5 @@
 -module(gargamelle_runtime).
--export([integer/1, finite/1, as_int/1, as_float/1, int_text/1,
+-export([scalar/1, integer/1, finite/1, as_int/1, as_float/1, int_text/1,
          parse_number/1, number_text/1, sorted/1, codepoints/1,
          parse_scalar_json/1, canonical_scalar_json/1, fresh_identity/0,
          with_walk/1,
@@ -359,3 +359,11 @@ recursion_guard(Make, Scope, Identity) ->
     end).
 walk_get(Key) -> maps:get(Key, get(?WALK)).
 walk_set(Key, Value) -> put(?WALK, maps:put(Key, Value, get(?WALK))), nil.
+
+%% Validate direct-constructor strings without serializing or parsing JSON.
+scalar(Text) when is_binary(Text) ->
+    case unicode:characters_to_binary(Text, utf8, utf8) of
+        Binary when is_binary(Binary) -> true;
+        {error, _, _} -> false;
+        {incomplete, _, _} -> false
+    end.

@@ -1,5 +1,19 @@
 # Gargamelle handoff and next work
 
+## Active 0.7.0 admitted JSON work
+
+Work is isolated on `codex/json-070`; main remains the qualified 0.6.0
+publication checkout. Public JSON constructors come first, followed by an
+accept-any-admitted-JSON definition and JSON pass-through encoding. Direct
+constructors preserve opacity and avoid serialization/admission round trips.
+Object constructors deliberately reject duplicate keys with typed attribution;
+parsing retains its last-value behavior. Integer constructors reject unsafe
+values instead of rounding. Direct encoder construction is a later optimization.
+
+The OTP parser compatibility/performance investigation is reserved for potential
+0.8.0 work. It is not a 0.7.0 release gate or a promised parser replacement.
+The older sections below retain earlier checkpoints.
+
 ## Active 0.6.0 encoder work
 
 Work is isolated on `codex/encoder-060` to preserve the prepared 0.5.0 main

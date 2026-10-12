@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.0 — Unreleased
+
+- Add public constructors for opaque admitted JSON, with typed errors for
+  invalid numbers, strings, object keys and duplicate keys. Arrays and objects
+  compose admitted children without reparsing.
+
 ## 0.6.0 — Unreleased
 
 - Add typed encoding failures with output JSON Pointer attribution, including
