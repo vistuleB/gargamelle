@@ -6,8 +6,10 @@ The maintainer authorized `VerifiedJson` and an opaque input boundary on
 2026-10-11. The implementation retains original JSON and decoded data, calling
 `decode` once before invoking the private handler. Usage is in
 `docs/boundaries.md`; decisions for review are in `docs/verified-json-design.md`.
-An encoder and output boundary are deferred. This work is unreleased and the
-earlier release archive fingerprints do not cover it.
+This work is unreleased and the earlier release archive fingerprints do not
+cover it. The maintainer subsequently authorized an isolated encoder prototype;
+see `verification/encoder/` and `docs/encoder-prototype.md`. Production encoder
+integration and a separate output-boundary API remain deferred.
 
 0.3.0 is published; its JSON formatting replacement preparation is tracked in `docs/release-0.3.0.md`. It introduces
 `schema_json` and `schema_string`, replacing `emit_json` and `emit_text`. `Json`, `RecordPolicy` and `to_string` replace `Value`,
