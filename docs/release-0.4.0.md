@@ -1,5 +1,13 @@
 # 0.4.0 release preparation
 
+The README now introduces definitions and receiving boundaries together, followed
+by an operation map, installation, a basic example and a complete two-receiver
+example. Certificate semantics and short guarantees precede typed records and
+the feature catalogue. The detailed contract and compatibility information remain
+linked. Related libraries separate glon provenance from Sextant's documented
+`use`-based typed-decoding/schema API, checked on 2026-10-12. README boundary code
+is exercised on both targets in the documentation tests and fresh archive checks.
+
 The audit of `736466a` found that alternating object modifiers could overwrite
 emitted `dependentRequired` or `propertyNames` assertions. The replacement
 candidate preserves collisions as additional `allOf` clauses, including existing

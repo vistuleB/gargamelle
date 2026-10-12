@@ -3,11 +3,23 @@
 [![Package Version](https://img.shields.io/hexpm/v/gargamelle)](https://hex.pm/packages/gargamelle)
 [![Hex Docs](https://img.shields.io/badge/hex-docs-ffaff3)](https://hexdocs.pm/gargamelle/)
 
-Gargamelle builds a matching pair of a typed JSON decoder and a JSON Schema 2020-12 document from a single Gleam definition. It can also generate HTML documentation for the schema.
+Gargamelle defines which JSON your application accepts, how to decode it into
+Gleam values, and how to describe it with JSON Schema 2020-12—all from one
+Gleam definition.
 
-See the [technical contract](https://hexdocs.pm/gargamelle/0.4.0/contract.html).
+Its receiving boundaries check that JSON satisfies the stored definition before
+invoking your handler. Handlers can receive decoded Gleam values or verified JSON
+for storage and transport.
 
-Inspired by [glon](https://hexdocs.pm/glon/).
+Gargamelle can also generate browsable HTML documentation from those definitions.
+
+| You want to… | Use |
+| --- | --- |
+| Decode JSON into a Gleam value | `decode` |
+| Generate the matching JSON Schema | `schema_json` / `schema_string` |
+| Invoke a handler with validated, decoded data | `boundary` → `Boundary` + `forward` |
+| Invoke a handler with validated JSON, without decoding | `json_boundary` → `JsonBoundary` + `forward_json` |
+| Retain JSON with the definition that accepted it | `verify` → `VerifiedJson` |
 
 ## Getting started
 
@@ -83,10 +95,82 @@ annotations describe the whole `Ok(...)` pattern; `_` leaves the error type infe
 indentation or `Compact` for canonical JSON. `to_string(json, format)` serializes
 any Gargamelle `Json`, not just schemas.
 
-Handle admission errors separately from validation errors in application code;
-these assertions only keep the introductory example short. `validate` checks
-acceptance without invoking converters. `decode` validates before constructing
-output. See the typed record example below, the [recursive examples](https://hexdocs.pm/gargamelle/0.4.0/advanced.html), and the [API reference](https://hexdocs.pm/gargamelle/0.4.0/gargamelle.html).
+Handle parsing errors and decoding errors in application code; the assertions
+keep this example short. `validate` checks acceptance without constructing the
+decoded output.
+
+## Receiving boundaries
+
+Use a boundary when a handler must receive only input accepted by its declared
+definition. It keeps the handler and that definition together, so callers submit
+JSON through one operation instead of separately decoding and invoking the handler.
+
+This complete example uses the same array-of-strings definition for two receivers:
+
+```gleam
+import gargamelle
+import gleam/io
+import gleam/string
+
+pub fn main() {
+  let names: gargamelle.Definition(List(String)) = gargamelle.array(gargamelle.text())
+  let assert Ok(json): Result(gargamelle.Json, _) = gargamelle.parse("[\"Brainy\", \"Jokey\"]")
+
+  let receiver = gargamelle.boundary(
+    names,
+    fn(decoded_names, _original_json) { string.join(decoded_names, ", ") },
+  )
+  let assert Ok(response): Result(String, _) = gargamelle.forward(receiver, json)
+  io.println(response)
+
+  let json_receiver = gargamelle.json_boundary(
+    names,
+    fn(verified) {
+      gargamelle.to_string(gargamelle.verified_json(verified), gargamelle.Compact)
+    },
+  )
+  let assert Ok(response): Result(String, _) = gargamelle.forward_json(json_receiver, json)
+  io.println(response)
+}
+```
+
+Output:
+
+```text
+Brainy, Jokey
+["Brainy","Jokey"]
+```
+
+Both boundaries check their stored definition before invoking the handler.
+`Boundary` also decodes and passes the typed data and original JSON;
+`JsonBoundary` delivers a `VerifiedJson` certificate without running decoding
+conversions. Invalid input does not invoke either handler.
+
+`VerifiedJson(a)` retains the original admitted JSON and the exact definition that
+accepted it. It does not contain a decoded `a`. The type parameter identifies the
+definition's output type, not its particular constraints: two definitions producing
+`String` can accept different inputs. Receiving boundaries always check their own
+stored definition; a certificate from another definition cannot bypass that check.
+
+Use `boundary_definition` or `json_boundary_definition` to inspect the receiving
+definition or generate its schema. See [Verified JSON boundaries](https://hexdocs.pm/gargamelle/0.4.0/boundaries.html)
+for retaining certificates and handling application responses.
+
+## Guarantees and scope
+
+- Validation, decoding acceptance and the generated schema describe the same
+  structural rules within the documented JSON domain and validator settings.
+- Receiving boundaries validate before invoking a handler; invalid input runs
+  neither decoding conversions nor the handler.
+- Application rules, such as whether a score agrees with its answers, need
+  separate checks. A definition does not automatically express those rules.
+- Conversion callbacks must be pure and total. Conversion or handler exceptions
+  and resource failures remain operational failures, rather than validation errors.
+- The opaque Gleam APIs enforce access through public operations. They are not a
+  sandbox against hostile code in the same runtime.
+
+See the [technical contract](https://hexdocs.pm/gargamelle/0.4.0/contract.html)
+for the JSON domain, external validator settings, decoded-value semantics and limits.
 
 ## Typed records
 
@@ -95,7 +179,7 @@ import gargamelle as s
 
 pub type User { User(name: String, active: Bool) }
 
-pub fn user_definition() {
+pub fn user_definition() -> s.Definition(User) {
   let assert Ok(fields) =
     s.record(fn(name) { fn(active) { User(name, active) } })
     |> s.required("name", s.text())
@@ -113,88 +197,59 @@ For input `{"name":"Brainy","active":true}`, `read_user` returns
 `Ok(User("Brainy", True))`. `s.Strict` rejects undeclared fields.
 `s.schema_string(user_definition(), s.Pretty)` generates the record’s schema.
 
-## Component boundaries
+## More definitions
 
-`boundary(definition, handler)` binds a handler to its input contract. `forward`
-decodes once and passes the decoded value and original JSON to that handler.
-For storage or transport that needs only JSON, `json_boundary` and `forward_json`
-check the receiving contract without decoding and pass a `VerifiedJson` certificate.
-See [Verified JSON boundaries](https://hexdocs.pm/gargamelle/0.4.0/boundaries.html).
+| Feature | Constructors |
+| --- | --- |
+| Recursive structures | `recursive`, `recursive_pair` |
+| Tuples and array membership | `tuple`, `element`, `contains` |
+| Object key and presence constraints | `property_names`, `dependent_required` |
+| Conditional constraints and exclusion | `if_then`, `if_then_else`, `exclude` |
+| Numeric constraints | `bounds`, `number_bounds`, `integer_multiple_of` |
+| Schema metadata | `title`, `description`, `examples`, `default`, `format` |
+| Explicit UUID validation | `assert_format(_, Uuid)` |
 
-## Design and contract
+Metadata does not change acceptance. A schema `default` annotation does not insert
+a value; a defaulted record field is a separate decoding feature. `format` is an
+annotation, while `assert_format` adds validation constraints.
 
-A `Definition(a)` specifies an acceptance predicate over admitted JSON and a
-conversion from accepted inputs to `a`. The definition is authoritative; schema
-emission, validation and decoding are interpretations of the same structural
-representation. The opaque API prevents independently injecting a schema,
-decoder or arbitrary rejection predicate.
-
-For a finalized definition S and admitted input x, the intended invariant is:
-
-```text
-Valid202012(schema_json(S), x)
-    ⇔ validate(S, x) = Ok(Nil)
-    ⇔ ∃v. decode(S, x) = Ok(v)
-```
-
-This is an equivalence of acceptance, plus a contract for v. Arrays preserve order
-and duplicates; dictionaries preserve keys; records construct declared types with
-explicit presence, default and extra-field policies. `any_of` converts the first
-matching branch; `one_of` accepts exactly one match. Maps change the output but
-cannot add rejection rules. Optional nullable fields retain three states:
-missing, present null, and present non-null.
-
-Construction is static. Curried record builders collect field definitions without
-probing callbacks with fabricated values. Validation and emission never execute
-conversion callbacks. Decoding validates the original input before conversion;
-auxiliary conditions, membership, exclusions and key constraints inspect that
-input without running their converters. Semantic application checks belong after
-structural decoding.
-
-The input domain is finite JSON trees after parsing, with finite
-binary64 numbers and Unicode scalar strings and keys. Parsing may round literals
-and collapse duplicate object keys. Domain checks apply to the final parsed tree.
-The equivalence assumes pure, total callbacks, sufficient runtime resources, and
-external validation of the same parsed value without coercion, inserted defaults
-or removed properties, with optional format assertions disabled. Admission failure, structural rejection and operational
-failure are distinct; exceptions and resource exhaustion are not rejection.
-
-`schema_string(S, Compact)` is byte-stable canonical JSON. `Pretty` changes only
-whitespace. Parsing either format recovers `schema_json(S)`
-as a JSON value. This is a schema serialization round trip; there is no typed
-encoder or decode/encode inversion guarantee. Defaults, projection and maps can
-lose information, and some output values may be unreachable.
-
-The [technical contract](https://hexdocs.pm/gargamelle/0.4.0/contract.html)
-specifies the complete intended semantics.
+See [Advanced definitions](https://hexdocs.pm/gargamelle/0.4.0/advanced.html)
+for these features and the HTML documentation recipe.
 
 ## Limitations
 
-JavaScript is tested on Node 24.10.0, Chrome 155, Firefox 157 and Safari 27;
-see [Browser compatibility](https://hexdocs.pm/gargamelle/0.4.0/browser-support.html).
-The native Erlang implementation is tested on
-macOS arm64 with OTP 29 and Ubuntu 24.04 x86_64 with OTP 28.5.0.7 and 29.1.1,
-and requires a C helper; see [Native Erlang setup](https://hexdocs.pm/gargamelle/0.4.0/native-erlang.html).
+JavaScript is tested on Node 24.10.0, Chrome 155, Firefox 157 and Safari 27.
+Native Erlang requires a C regex helper and is tested on macOS arm64 with OTP 29
+and Ubuntu 24.04 x86_64 with OTP 28.5.0.7 and 29.1.1.
+See [Browser compatibility](https://hexdocs.pm/gargamelle/0.4.0/browser-support.html)
+and [Native Erlang setup](https://hexdocs.pm/gargamelle/0.4.0/native-erlang.html)
+for the compatibility matrix, regex Unicode differences and deployment requirements.
+Other runtimes and platforms are unverified; Windows native support is unavailable.
+
+- Gargamelle supports the JSON Schema features exposed by its constructors. It
+  does not validate arbitrary imported schemas or implement the full 2020-12 dialect.
+- JSON numbers are finite parsed binary64 values; `safe_integer` uses JavaScript's
+  safe-integer range. Strings and object keys must contain Unicode scalar values.
+- General typed intersections, fractional divisibility and fractional constants
+  are unsupported. `integer_multiple_of` supports exact safe-integer divisibility;
+  UUID is the only supported explicit format assertion.
+- Runtime resource use is not bounded. Parsing may round number literals and
+  collapse duplicate object keys.
+- There is no typed encoder, automatic decode/encode inverse or migration API.
+  Defaults, projection and maps can lose information during decoding.
+
 APIs may change before 1.0.
 
-- Native verification covers the runtime matrix above and Gleam shipment
-  deployment. Other platforms, OTP releases and deployment tools are unverified.
-  The regex helper uses POSIX APIs; Windows is not supported. Older and mobile
-  browsers, Bun and Deno are unverified.
-- Native regex Unicode properties use Unicode 16 tables; JavaScript uses its
-  host tables. Regex parity is verified against Node 24.10.0, not Node 24.21.0
-  with Unicode 17.
-- Only the JSON Schema features exposed by the constructors are supported.
-  Gargamelle does not validate arbitrary imported schemas or implement the full
-  Draft 2020-12 dialect.
-- General typed intersections, fractional divisibility, and fractional constants
-  are not supported. `integer_multiple_of` supports exact safe-integer divisibility.
-  UUID is the only supported explicit format assertion; other formats are metadata.
-- Numbers use parsed binary64 values; `safe_integer` is limited to JavaScript's
-  safe-integer range.
-- Conversion callbacks must be pure and total. Exceptions and resource exhaustion
-  remain operational failures; runtime resource use is not bounded.
-- There is no typed encoder, automatic decode/encode inverse, or migration API.
+## Related libraries
+
+Gargamelle was inspired by [glon](https://hexdocs.pm/glon/).
+
+[Sextant](https://hexdocs.pm/sextant/sextant.html) also combines typed decoding with
+JSON Schema 2020-12 generation. Its `use`-based field API supports definitions whose
+later fields depend on earlier decoded values. Gargamelle uses static definitions
+and curried record constructors; its schema describes structural acceptance, while
+application rules are checked separately. Receiving boundaries bind those definitions
+to handlers.
 
 ## Further documentation
 
