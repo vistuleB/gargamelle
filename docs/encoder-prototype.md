@@ -24,9 +24,10 @@ encode(Codec(a), a)        → Result(VerifiedJson(a), EncodingError)
 
 `codec(encoder, definition)` pairs an encoder and a definition with the same
 output type. That shared type does not prove schema agreement. Checked encoding
-constructs admitted JSON, then forwards it through a stored boundary; contract
-violations produce the definition's full data errors. The certificate retains
-original JSON and the one decoded result, exactly as an ingress boundary does.
+constructs admitted JSON, then calls `verify` against the stored definition;
+contract violations produce the definition's full data errors. The certificate
+retains JSON and the checked definition, without a decoded value. Checked
+encoding invokes no decoding constructors or map callbacks.
 
 For example, a record encoder supplies a getter for each field:
 
@@ -47,7 +48,7 @@ pub fn main() {
   let definition = s.finish(record, s.Strict)
   let codec = e.codec(encoder, definition)
   let assert Ok(verified) = e.encode(codec, Named("Brainy"))
-  s.verified_data(verified)
+  s.verified_json(verified)
 }
 ```
 
@@ -61,12 +62,14 @@ altered. Admission enforces Gargamelle's Unicode-scalar string and key domain.
 
 - An encoder is independent of a decoder. A `Codec` pairs them for checked
   output; it does not claim they are inverses. In particular, decoding may map,
-  insert defaults or project fields. The retained decoded value is the result of
-  decoding the produced JSON, not assumed to equal the original input `a`.
-  Reusing the original `a` as the certificate's decoded data would violate this
-  rule for codecs whose encoders and definitions do not round-trip identically.
-- Reuse the existing opaque boundary to create the certificate. No additional
-  standalone `VerifiedJson` constructor or definition-identity mechanism is needed.
+  insert defaults or project fields. A recipient that decodes the produced JSON
+  is not guaranteed to reconstruct the original input `a`. The certificate
+  intentionally retains neither that input nor a reconstructed value.
+- Use Gargamelle's public `verify` operation to create output certificates.
+  `Codec` stores the actual definition alongside its encoder. There is no
+  unchecked certificate constructor, and the certificate retains that definition
+  so recipients can inspect which contract was checked. A recipient's boundary
+  still checks against its own definition.
 - Recursive construction uses typed plans and a completed immutable closure.
   The builder runs once; an unfinished reference cannot be encoded. There are
   no casts, mutable reference cells, registries or release obligations. Completed
@@ -77,7 +80,7 @@ altered. Admission enforces Gargamelle's Unicode-scalar string and key domain.
   raise operational exceptions. Whether to constrain recursion further remains
   an integration question.
 - Encoding first constructs `gleam/json.Json`, serializes it, and calls Gargamelle
-  `parse` once. Checked encoding then calls `decode` once through the boundary.
+  `parse` once. Checked encoding then calls `validate` once through `verify`.
   This keeps the prototype outside the library while enforcing admission, but
   creates temporary JSON text. Production integration should assess cost and
   direct admitted-JSON construction before adopting this implementation.
@@ -90,14 +93,15 @@ altered. Admission enforces Gargamelle's Unicode-scalar string and key domain.
 
 The initial experiment passes 12 behavioral tests on each target, including
 primitive and recursive record round trips, optional omission versus null,
-constraint and shape rejection, duplicate fields, safe-integer limits, single
-conversion, non-inverse mappings, and process-independent recursive construction.
+constraint and shape rejection, duplicate fields, safe-integer limits, zero
+conversion during certification, non-inverse mappings when explicitly decoded,
+and process-independent recursive construction.
 Five forbidden programs fail compilation on both targets. JavaScript admission
 checks reject infinity, negative infinity, NaN, and lone surrogates in values
 and keys. Six output cases are checked independently with Ajv and Hyperjump.
 The guide's record example compiles and runs on both targets, getter exceptions
-propagate, and the complete `npm test` run passes 52 shared Gleam tests and 150
-Node checks, including the isolated prototype gate.
+propagate. Explicit decoding in round-trip tests is separate from certification;
+checked encoding itself constructs no decoded value.
 
 The existing production decoder and schema emitter are unchanged. This evidence
 supports continuing the prototype; it is not a complete encoder contract or a

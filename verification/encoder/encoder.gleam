@@ -28,7 +28,7 @@ pub opaque type Record(a, r) {
 }
 
 pub opaque type Codec(a) {
-  Codec(Encoder(a), s.Boundary(a, s.VerifiedJson(a)))
+  Codec(Encoder(a), s.Definition(a))
 }
 
 pub fn text() -> Plan(String, r) {
@@ -191,16 +191,15 @@ pub fn encode_json(
 }
 
 pub fn codec(encoder: Encoder(a), definition: s.Definition(a)) -> Codec(a) {
-  Codec(encoder, s.boundary(definition, fn(input) { input }))
+  Codec(encoder, definition)
 }
 
-/// The stored decoded value is produced by the definition, not assumed equal
-/// to the value supplied to the encoder. No conversion callback runs twice.
+/// Validate the encoded JSON without conversion or decoded-value allocation.
 pub fn encode(
   codec: Codec(a),
   value: a,
 ) -> Result(s.VerifiedJson(a), EncodingError) {
-  let Codec(encoder, boundary) = codec
+  let Codec(encoder, definition) = codec
   use json <- result.try(encode_json(encoder, value))
-  s.forward(boundary, json) |> result.map_error(Contract)
+  s.verify(definition, json) |> result.map_error(Contract)
 }

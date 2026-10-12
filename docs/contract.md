@@ -14,12 +14,16 @@ There is no independent schema/decoder override or arbitrary predicate escape ha
 
 `Boundary(a, response)` binds a completed definition to a private handler.
 `forward` decodes the submitted `Json` against that exact stored definition and
-invokes the handler only on success. The handler receives `VerifiedJson(a)` with
-the original JSON and decoded output; accessors do not repeat validation or
-conversion. Invalid inputs return `decode`'s errors, and callback exceptions
-remain operational failures. Responses are not checked. The generic parameter
-`a` does not identify a particular definition; the opaque boundary enforces the
-association between definition and handler. See [Verified JSON boundaries](boundaries.html).
+invokes the handler only on success, passing decoded data and original JSON as
+separate arguments. Invalid inputs return `decode`'s errors, and callback
+exceptions remain operational failures. Responses are not checked.
+
+`verify` validates JSON without running conversion callbacks and returns an
+opaque `VerifiedJson(a)` containing the JSON and checked definition, with no
+decoded value. Invalid inputs return `validate`'s errors. The generic parameter
+`a` describes the definition's output type, not its identity or constraints;
+the opaque boundary enforces the association between definition and handler.
+See [Verified JSON boundaries](boundaries.html).
 
 Constructors compose opaque `Plan(a, r)` values, where `r` is the recursion
 environment. A completed `Definition(a)` is the closed specialization

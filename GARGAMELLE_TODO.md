@@ -3,8 +3,9 @@
 ## Active boundary work
 
 The maintainer authorized `VerifiedJson` and an opaque input boundary on
-2026-10-11. The implementation retains original JSON and decoded data, calling
-`decode` once before invoking the private handler. Usage is in
+2026-10-11. Boundary handlers now receive decoded data and original JSON directly;
+`forward` calls `decode` once. Certificates retain JSON and the checked definition,
+with `verify` calling `validate` without conversion. Usage is in
 `docs/boundaries.md`; decisions for review are in `docs/verified-json-design.md`.
 This work is unreleased and the earlier release archive fingerprints do not
 cover it. The maintainer subsequently authorized an isolated encoder prototype;

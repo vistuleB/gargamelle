@@ -2,6 +2,8 @@
 ////
 //// Parse JSON with `parse`, then call `validate` or `decode`. Validation never
 //// invokes user converters; decoding invokes them only after structural success.
+//// `verify` retains accepted JSON and its definition without decoding. A boundary
+//// decodes once and passes the decoded value and original JSON to its handler.
 //// Converters are trusted application code: exceptions are operational failures.
 //// JavaScript and Erlang targets are supported on the
 //// [tested runtimes](https://hexdocs.pm/gargamelle/0.3.0/native-erlang.html).
@@ -155,20 +157,20 @@ pub opaque type Plan(a, r) {
 pub type Definition(a) =
   Plan(a, Nil)
 
-/// Original JSON and its decoded value, created together by `forward`.
-/// Access them with `verified_json` and `verified_data`; neither accessor decodes
-/// again. Both representations remain retained while this value is reachable.
-/// The parameter `a` identifies the output type, not a particular definition.
+/// JSON accepted by the stored definition, created by `verify` without decoding.
+/// Access the JSON and contract with `verified_json` and `verified_definition`.
+/// No decoded value is retained. The parameter `a` identifies the definition's
+/// output type, not a particular definition or its constraints.
 /// Use a `Boundary` to enforce which definition checks a handler's input.
 pub opaque type VerifiedJson(a) {
-  VerifiedJson(Json, a)
+  VerifiedJson(Json, Definition(a))
 }
 
 /// A definition and a private handler invoked only after successful decoding
 /// against that definition. Construct with `boundary`, inspect the contract with
 /// `boundary_definition`, and submit JSON with `forward`.
 pub opaque type Boundary(a, response) {
-  Boundary(Definition(a), fn(VerifiedJson(a)) -> response)
+  Boundary(Definition(a), fn(a, Json) -> response)
 }
 
 /// The opaque recursion environment supplied to a self-recursive plan.
@@ -1490,10 +1492,10 @@ pub fn decode(def: Definition(a), value: Json) -> Result(a, List(DataError)) {
 }
 
 /// Bind a handler to its input definition. Construction does not validate input
-/// or invoke callbacks. The handler receives original JSON and decoded data.
+/// or invoke callbacks. The handler receives decoded data and original JSON.
 pub fn boundary(
   definition: Definition(a),
-  handler: fn(VerifiedJson(a)) -> response,
+  handler: fn(a, Json) -> response,
 ) -> Boundary(a, response) {
   Boundary(definition, handler)
 }
@@ -1516,21 +1518,31 @@ pub fn forward(
 ) -> Result(response, List(DataError)) {
   let Boundary(definition, handler) = boundary
   use data <- result.try(decode(definition, json))
-  Ok(handler(VerifiedJson(json, data)))
+  Ok(handler(data, json))
 }
 
-/// Return the original admitted JSON, including fields omitted from decoded
-/// output by `Open` records. This does not revalidate or serialize the value.
+/// Check JSON against a definition and retain the JSON and checked definition.
+/// This invokes no conversion callbacks and constructs no decoded value.
+/// Rejection and operational failures have the same semantics as `validate`.
+pub fn verify(
+  definition: Definition(a),
+  json: Json,
+) -> Result(VerifiedJson(a), List(DataError)) {
+  use _ <- result.try(validate(definition, json))
+  Ok(VerifiedJson(json, definition))
+}
+
+/// Return the original admitted JSON. This does not validate, decode or serialize.
 pub fn verified_json(verified: VerifiedJson(a)) -> Json {
   let VerifiedJson(json, _) = verified
   json
 }
 
-/// Return the stored decoded value, including maps and applied defaults.
-/// Access does not rerun validation, constructors or conversion callbacks.
-pub fn verified_data(verified: VerifiedJson(a)) -> a {
-  let VerifiedJson(_, data) = verified
-  data
+/// Return the exact definition that accepted the stored JSON, for contract
+/// inspection or later decoding. Retrieving it invokes no conversion callbacks.
+pub fn verified_definition(verified: VerifiedJson(a)) -> Definition(a) {
+  let VerifiedJson(_, definition) = verified
+  definition
 }
 
 fn inspect_definition(def: Definition(a), value: Json) {

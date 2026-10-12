@@ -16,27 +16,34 @@ pub fn main() {
   gleeunit.main()
 }
 
+// Explicit decoding only in round-trip tests; checked encoding does not do this.
+fn decode_for_test(verified: s.VerifiedJson(a)) -> a {
+  let assert Ok(data) =
+    s.decode(s.verified_definition(verified), s.verified_json(verified))
+  data
+}
+
 pub fn primitive_roundtrips_test() {
   let assert Ok(text) = e.encode(e.codec(e.text(), s.text()), "Brainy\n😀")
-  s.verified_data(text) |> should.equal("Brainy\n😀")
+  decode_for_test(text) |> should.equal("Brainy\n😀")
   let assert Ok(number) = e.encode(e.codec(e.number(), s.number()), 1.25)
-  s.verified_data(number) |> should.equal(1.25)
+  decode_for_test(number) |> should.equal(1.25)
   let assert Ok(boolean) = e.encode(e.codec(e.boolean(), s.boolean()), True)
-  s.verified_data(boolean) |> should.equal(True)
+  decode_for_test(boolean) |> should.equal(True)
   let assert Ok(integer) =
     e.encode(e.codec(e.safe_integer(), s.safe_integer()), 9_007_199_254_740_991)
-  s.verified_data(integer) |> should.equal(9_007_199_254_740_991)
+  decode_for_test(integer) |> should.equal(9_007_199_254_740_991)
 }
 
 pub fn arrays_nullable_and_empty_test() {
   let codec =
     e.codec(e.array(e.nullable(e.text())), s.array(s.nullable(s.text())))
   let assert Ok(value) = e.encode(codec, [Some("Brainy"), None])
-  s.verified_data(value) |> should.equal([Some("Brainy"), None])
+  decode_for_test(value) |> should.equal([Some("Brainy"), None])
   s.to_string(s.verified_json(value), s.Compact)
   |> should.equal("[\"Brainy\",null]")
   let assert Ok(empty) = e.encode(codec, [])
-  s.verified_data(empty) |> should.equal([])
+  decode_for_test(empty) |> should.equal([])
 }
 
 pub type Person {
@@ -71,12 +78,12 @@ pub fn record_getters_optional_versus_null_test() {
   let codec = e.codec(person_encoder(), person_definition())
   let person = Person("Brainy", None, None)
   let assert Ok(encoded) = e.encode(codec, person)
-  s.verified_data(encoded) |> should.equal(person)
+  decode_for_test(encoded) |> should.equal(person)
   s.to_string(s.verified_json(encoded), s.Compact)
   |> should.equal("{\"name\":\"Brainy\",\"nickname\":null}")
   let person = Person("Jokey", Some(100), Some("J"))
   let assert Ok(encoded) = e.encode(codec, person)
-  s.verified_data(encoded) |> should.equal(person)
+  decode_for_test(encoded) |> should.equal(person)
 }
 
 pub fn constraints_reject_well_typed_output_test() {
@@ -108,12 +115,12 @@ pub fn unsafe_integer_rejected_test() {
 pub fn encoded_and_decoded_values_need_not_be_equal_test() {
   let codec = e.codec(e.text(), s.map(s.text(), fn(text) { text <> "!" }))
   let assert Ok(verified) = e.encode(codec, "Brainy")
-  s.verified_data(verified) |> should.equal("Brainy!")
+  decode_for_test(verified) |> should.equal("Brainy!")
   s.to_string(s.verified_json(verified), s.Compact)
   |> should.equal("\"Brainy\"")
 }
 
-pub fn checked_encoding_converts_once_test() {
+pub fn checked_encoding_does_not_convert_test() {
   let #(tick, count) = counter(fn(tick, count) { #(tick, count) })
   let codec =
     e.codec(
@@ -124,8 +131,12 @@ pub fn checked_encoding_converts_once_test() {
       }),
     )
   let assert Ok(verified) = e.encode(codec, "Brainy")
-  s.verified_data(verified) |> should.equal("Brainy")
-  s.verified_data(verified) |> should.equal("Brainy")
+  s.to_string(s.verified_json(verified), s.Compact)
+  |> should.equal("\"Brainy\"")
+  s.schema_string(s.verified_definition(verified), s.Compact)
+  |> should.equal(s.schema_string(s.text(), s.Compact))
+  count() |> should.equal(0)
+  decode_for_test(verified) |> should.equal("Brainy")
   count() |> should.equal(1)
 }
 
@@ -169,7 +180,7 @@ pub fn recursive_record_roundtrip_and_transfer_test() {
       let assert Ok(value) = e.encode(codec, tree)
       value
     })
-  s.verified_data(verified) |> should.equal(tree)
+  decode_for_test(verified) |> should.equal(tree)
 }
 
 pub type Sum {

@@ -1,45 +1,62 @@
-# Verified JSON implementation decisions
+# JSON boundary and certificate implementation decisions
 
 This contributor note records decisions for review; the usage guide is
-`docs/boundaries.md`. An encoder and output boundaries are deferred.
+`docs/boundaries.md`. The encoder remains an isolated prototype.
 
 - Keep the types and functions in the main module, as discussed with the
-  maintainer. The small API is `boundary`, `boundary_definition`, `forward`,
-  `verified_json` and `verified_data`.
-- Store original JSON and decoded data, rather than validation evidence or a
-  thunk. `forward` calls the existing `decode` once. Repeated access cannot
-  repeat conversion callbacks. This intentionally retains both representations;
-  it makes no fixed memory-overhead claim.
-- Do not export a standalone certificate constructor or verifier. A generic
-  output type cannot encode the identity of a runtime definition. The opaque
-  boundary binds the definition to the handler; submission always takes raw
-  admitted JSON and checks the boundary's own definition.
-- Expose the stored definition for host approval and schema emission, but not
-  the handler. A component can still export other unchecked functions; this
-  API protects the invocation route the host chooses, not the entire component.
-- Preserve `decode` errors, callback ordering and operational failures. Do not
-  catch exceptions or flatten application `Result` responses into data errors.
-- Opaqueness is a Gleam API guarantee, not a security boundary against untyped
-  code or FFI. Likewise, retained decoded closures remain trusted application
-  code and may themselves have mutable captured state.
-- Leave the published version and release handoff unchanged. Record this as
-  unreleased work; do not treat old archive fingerprints as evidence for it.
+  maintainer. Boundaries use `boundary`, `boundary_definition` and `forward`.
+  Certificates use `verify`, `verified_json` and `verified_definition`.
+- A boundary invokes a private `fn(a, Json) -> response` after calling `decode`
+  once against its stored definition. It passes decoded data and original JSON
+  separately, without constructing a certificate. A handler that needs only the
+  decoded value can ignore the JSON argument. Peak decoding memory still includes
+  both representations; application code determines whether either is retained.
+- `VerifiedJson(a)` stores JSON and the actual checked `Definition(a)`, without
+  a decoded value. It certifies acceptance, not that conversion has executed.
+  `verify` calls `validate`; conversion callbacks do not run. Later decoding is
+  explicit and does not reuse validation evidence.
+- Remove `verified_data`; do not provide compatibility for the earlier unreleased
+  interface. A generic output type does not encode the identity of a runtime
+  definition. A recipient's boundary always checks its own definition, even when
+  passed JSON obtained from another certificate.
+- A public verifier is now appropriate for retained/output certificates because
+  handlers receive plain values rather than accepting standalone certificates.
+  Expose the stored certificate definition so callers can inspect what was
+  checked. No public unchecked certificate constructor is provided.
+- Checked encoding uses `verify`, avoiding decoded-value allocation and conversion
+  callbacks. Encoder and definition remain independent declarations in the
+  prototype, so output is still checked after encoding. Single-pass construction
+  and certification is a separate optimization/design question.
+- Expose a boundary's definition for host approval and schema emission, but not
+  its handler. A component can export other unchecked functions; this API protects
+  the invocation route the host chooses, not the entire component.
+- Preserve validation/decode errors, callback ordering and operational failures.
+  Do not catch exceptions or flatten application `Result` responses into data
+  errors. Responses from boundary handlers remain unchecked.
+- Opaqueness is a Gleam API guarantee, not isolation against untyped code or FFI.
+  A certificate retains the definition and any state captured by its callbacks;
+  it makes no guarantee about the purity or success of later conversion.
+- Leave the published version and release handoff unchanged. This is unreleased
+  work; previous archive fingerprints do not qualify it.
 
-## Verification
+## Verification scope
 
-On 2026-10-11, the shared suite passed 52 Gleam tests. Six new tests cover
-single conversion and handler invocation, repeat access without callbacks,
-complete rejection diagnostics, differing contracts with the same output type,
-original JSON versus defaulted/projected output, application errors, and recursive
-boundary/certificate transfer after creator-process exit.
+The boundary tests cover one conversion and handler invocation, complete rejection
+diagnostics, differing contracts with the same output type, original JSON versus
+defaulted/projected output, application errors, and recursive boundary transfer.
+Certificate tests cover zero conversion callbacks, exact stored definitions,
+validation-error preservation and use after creator-process exit. Compile-negative
+checks reject forged certificates/boundaries, incorrect handler types, private
+handler access, the removed accessor, and forwarding certificates instead of JSON.
 
-The Node suite passed its 146 existing checks. Three additional checks confirmed
-converter and handler exception propagation and compiled/ran the guide's actual
-example on JavaScript and Erlang. All 41 compile-negative programs were rejected
-on both targets, including forged certificates/boundaries, handler type mismatch,
-private handler access and forwarding a certificate instead of admitted JSON.
+The isolated encoder gate checks that checked output invokes no conversion
+callbacks, with explicit decoding only in its round-trip tests. Documentation
+examples are compiled and run on both targets. Production regression gates still
+compare historical JavaScript behavior, native behavior and independent validators.
 
-The production-plan gate passed 60 native tests (52 shared plus eight process/graph
-tests), 32 existing negative checks and 3,636 cases across 36 schemas, including
-historical JavaScript and native comparisons. `gleam docs build` passed. These are
-development checks, not a new prepared release or broader platform qualification.
+On 2026-10-11 the revised implementation passed `npm test` (54 shared Gleam tests
+and 151 Node checks). All 44 compile-negative programs were rejected on both
+targets. The prototype gate passed 12 encoder tests per target and six output
+cases against Ajv and Hyperjump. The production-plan gate passed 62 native tests,
+32 existing negative checks and 3,636 independent cases across 36 schemas.
+`gleam docs build`, formatting checks and `git diff --check` passed.

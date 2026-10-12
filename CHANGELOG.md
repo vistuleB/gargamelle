@@ -3,8 +3,9 @@
 ## Unreleased
 
 - Add opaque `Boundary` and `VerifiedJson` types. `forward` decodes against the
-  boundary's stored definition before invoking its private handler, retaining
-  original JSON and decoded data for access without decoding again.
+  boundary's stored definition before invoking its private handler with decoded
+  data and original JSON. `verify` validates without conversion and retains JSON
+  and the checked definition in `VerifiedJson`.
 
 ## 0.3.0 — 2026-10-11
 

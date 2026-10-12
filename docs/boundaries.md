@@ -5,9 +5,10 @@ A `Boundary(a, response)` binds an input definition to a handler. The host calls
 definition before invoking the handler. Invalid input returns decoding errors
 and the handler does not run.
 
-The handler receives an opaque `VerifiedJson(a)` containing the original `Json`
-and the decoded `a`. `verified_json` and `verified_data` retrieve those values
-without repeating validation or conversion.
+The handler receives two arguments: the decoded `a` and the original `Json`.
+If only the data is needed, ignore the second argument. The boundary decodes
+once; it does not construct a certificate or retain either value after the call
+unless application code retains them.
 
 ```gleam
 import gargamelle
@@ -18,7 +19,7 @@ import gleam/string
 pub fn names_boundary() -> gargamelle.Boundary(List(String), String) {
   gargamelle.boundary(
     gargamelle.array(gargamelle.text()),
-    fn(input) { string.join(gargamelle.verified_data(input), ", ") },
+    fn(names, _) { string.join(names, ", ") },
   )
 }
 
@@ -38,26 +39,36 @@ host can review its schema before accepting the boundary. Through the Gleam API,
 the host cannot extract the handler or replace the definition within an existing
 boundary.
 
-## What is verified
+## Retaining verified JSON
 
-`VerifiedJson(a)` means the stored JSON successfully decoded under the definition
-used to create it. The type parameter describes the decoded output type, not the
-identity of that definition. Two `Definition(String)` values may accept different
-strings. A function accepting a standalone `VerifiedJson(String)` therefore cannot
-assume a particular string constraint. Use a boundary to bind the check and the
-handler invocation; `forward` accepts `Json`, not a certificate from another boundary.
+`verify(definition, json)` checks acceptance without constructing a decoded value
+or invoking conversion callbacks. It returns `Result(VerifiedJson(a), List(DataError))`.
+The opaque certificate retains the JSON and the exact definition that accepted it.
+`verified_json` retrieves the original JSON; `verified_definition` retrieves its
+checked contract. Neither accessor validates or decodes.
 
-The original JSON is retained as admitted. An `Open` record may discard extra
-fields from decoded data; those fields remain in `verified_json`. Defaults and
-maps affect decoded data without rewriting the stored JSON. Both representations
-remain reachable while the wrapper is retained, with memory use depending on the
-definition and runtime sharing.
+The parameter `a` describes the definition's output type, not its identity or
+constraints. Two `Definition(String)` values may accept different strings. A
+function accepting a standalone `VerifiedJson(String)` therefore cannot assume
+a particular string constraint. Use a boundary to bind the check and handler
+invocation; `forward` accepts `Json` and always checks its own stored definition.
+
+The certificate contains no decoded data. To obtain a Gleam value later, call
+`decode(verified_definition(verified), verified_json(verified))`, or forward its
+JSON through the recipient's boundary. That performs validation and conversion
+at that time. Verification is useful when transporting JSON without needing its
+decoded representation immediately.
+
+The original JSON is preserved as admitted. An `Open` record may discard extra
+fields from decoded data; those fields remain in the original JSON. Defaults and
+maps affect decoded data without rewriting JSON. Verification retains the JSON
+and definition, including closures captured by that definition, but no decoded tree.
 
 ## Callbacks and responses
 
 `forward` validates and converts once, then invokes the handler once. Invalid
-input runs neither conversion callbacks nor the handler. Accessing stored data
-does not rerun callbacks. Conversion callbacks and handlers are trusted code;
+input runs neither conversion callbacks nor the handler. `verify` never invokes
+conversion callbacks. Conversion callbacks and handlers are trusted code;
 exceptions and resource failures propagate as operational failures.
 
 The response is whatever the handler returns. If it returns `Result(response,
