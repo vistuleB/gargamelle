@@ -155,3 +155,82 @@ The ignored report `reports/otp-parser-full-path.json` records the compiled publ
 module hash, source fingerprint, runtime, individual samples, routes, exact-result
 comparison, and retained-buffer sizes. Temporary runtime/probe copies are ignored
 under `reports/`; shipped source is unchanged.
+
+## Controlled benchmark protocol
+
+`controlled.mjs` replaces the sequential hot-reload benchmark with separate VMs.
+Each of ten workloads runs five times per variant, with a reproducible shuffled
+workload/variant order. Each VM loads either the reference runtime or the hybrid
+with explicit string copying. One BEAM scheduler, 200 warmups and three timed
+samples are used; startup and compilation are excluded. Parsing uses the actual
+compiled public Gleam module. Public-result hashes must match, and each VM checks
+that a small field decoded from a large open record retains only its own buffer.
+
+The corpus includes small provider results, 100 provider entries with eligible or
+fallback-triggering IDs, long Unicode text, numeric arrays, guarded ordinary text,
+small configuration objects, mixed nested structures, and rejected/overwritten
+surrogates. These are synthetic workload families rather than captured consumer
+traffic; their frequency is unknown, so no weighted overall speedup is claimed.
+Validation, decoding and handlers are excluded from timing. A copying-adapter
+repeat of the 9,637-case compatibility corpus accompanies the benchmark.
+
+Run `gleam build --target erlang`, then:
+
+```sh
+node verification/otp-parser/investigate.mjs --copy-strings
+node verification/otp-parser/controlled.mjs
+```
+
+Reports are `reports/otp-parser-copying-investigation.json` and
+`reports/otp-parser-controlled.json`. The latter retains every VM's samples,
+median ranges, randomized execution order, source and compiled-module hashes,
+workload hash, runtime version and retention checks. The research workflow's
+`parser_probe` mode also runs this protocol on Linux OTP 28 and 29. This mode is
+separate from normal release qualification.
+
+## Controlled results and decision
+
+Benchmark commit `b2ef3cc` completed on macOS arm64 OTP 29.0.5 and Linux x86_64
+OTP 28 (ERTS 16.4.0.6) and 29 (ERTS 17.1). Linux run `38278637102` succeeded for
+both jobs. Each platform completed 100 fresh benchmark VMs. Compiled public-module
+hashes and workload hashes match across platforms; executed benchmark/parser source
+hashes match the current research checkout. The copying compatibility adapter also
+matched the reference on all 9,637 cases on each platform. Every VM's small-field
+retention check passed, with 128 referenced bytes rather than the 1 MiB input.
+
+Within-machine speedups below compare reference median time to copying-hybrid
+median time. Values above 1 mean the hybrid is faster. Hardware/runtime results
+must not be compared as platform rankings.
+
+| Workload | macOS OTP 29 | Linux OTP 28 | Linux OTP 29 |
+| --- | ---: | ---: | ---: |
+| Small provider result | 1.88x | 1.86x | 2.00x |
+| 100 provider entries, eligible IDs | 1.29x | 1.18x | 1.28x |
+| 100 provider entries, fallback IDs | 1.03x | 1.03x | 0.99x |
+| Long scalar text | 5.81x | 9.03x | 10.30x |
+| Numeric array | 2.58x | 3.00x | 3.10x |
+| Small configuration | 1.55x | 1.48x | 1.58x |
+| Nested mixed JSON | 1.98x | 1.91x | 2.09x |
+| Ordinary guarded text | 0.84x | 0.81x | 0.82x |
+| Overwritten surrogate | 0.81x | 0.81x | 0.78x |
+| Rejected surrogate | 0.23x | 0.13x | 0.17x |
+
+Tiny fallback slowdowns are measured in microseconds: guarded text gains roughly
+0.3–0.4 microseconds of overhead, overwritten surrogates roughly 0.8–1.7, and
+rejected surrogates roughly 0.7–1.2. Large ID-triggered fallback differences are
+near parity and within the measured ranges. Large eligible provider payloads gain
+about 18–29% speed, while long-text/numeric gains are substantially larger. The
+previous phase-dependent discrepancy disappeared with separate VMs.
+
+Decision: retain production parsing. The copying hybrid is a technically credible
+performance option, but not a simpler parser replacement. Integration should follow
+a consumer profile showing that parsing is material and that its actual payloads
+use the fast path frequently. Before shipping, operational failure classification,
+broader full-public-path compatibility, and deployment qualification remain gates.
+No contract relaxation is proposed. Encoding's serialize/reparse step remains a
+separate optimization with potential benefit on both targets; this benchmark does
+not measure or implement that optimization.
+
+The ignored evidence index `reports/otp-parser-controlled-summary.json` links the
+three controlled reports and copying-corpus reports and records the tested commit.
+Production source, main, package version, published archives and tags are unchanged.
