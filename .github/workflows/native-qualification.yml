@@ -53,7 +53,12 @@ jobs:
         run: npm run prepare:release
       - name: Run isolated OTP parser investigation
         if: ${{ inputs.parser_probe }}
-        run: node verification/otp-parser/investigate.mjs
+        run: |
+          node verification/otp-parser/investigate.mjs
+          node verification/otp-parser/investigate.mjs --copy-strings
+          gleam deps download
+          gleam build --target erlang
+          node verification/otp-parser/controlled.mjs
       - name: Retain evidence and failure logs
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

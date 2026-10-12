@@ -1,16 +1,26 @@
 #!/usr/bin/env escript
-main(_) ->
+main(Args) ->
     %% Expose ordered reference mode only in an ignored temporary copy.
     {ok, Runtime} = file:read_file("src/gargamelle_runtime.erl"),
     Copy = "reports/otp-parser-reference/gargamelle_runtime.erl",
     ok = filelib:ensure_dir(Copy),
     ok = file:write_file(Copy, binary:replace(Runtime, <<"parse_scalar_json/1,">>,
         <<"parse_scalar_json/1, parse_scalar_json/2,">>)),
+    ProbePath = case Args of
+        [] -> "verification/otp-parser/otp_parser_probe.erl";
+        ["copy"] ->
+            {ok, Probe} = file:read_file("verification/otp-parser/otp_parser_probe.erl"),
+            Copied = binary:replace(Probe, <<"Decoders = #{integer">>,
+                <<"Decoders = #{string => fun binary:copy/1, integer">>),
+            true = Copied =/= Probe,
+            P = "reports/otp-parser-reference/otp_parser_probe.erl",
+            ok = file:write_file(P, Copied), P
+    end,
     lists:foreach(fun({Module, Path}) ->
         {ok, Module, Beam} = compile:file(Path, [binary, warnings_as_errors]),
         {module, Module} = code:load_binary(Module, Path, Beam)
     end, [{gargamelle_runtime, Copy},
-          {otp_parser_probe, "verification/otp-parser/otp_parser_probe.erl"}]),
+          {otp_parser_probe, ProbePath}]),
     loop().
 loop() ->
     case io:get_line(standard_io, "") of
