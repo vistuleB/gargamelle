@@ -377,3 +377,7 @@ keyword at the same emitted node use the outermost (last supplied) value.
 `default` attaches an admitted JSON annotation without checking conformance or
 changing conversion. A defaulted record field emits its validated declared
 default, overriding any standalone default annotation on its child.
+
+`format` is annotation-only, including custom names. Schema/decoder agreement
+assumes external validators do not enable optional format assertions. A consumer
+that enables such assertions adds acceptance rules beyond this contract.

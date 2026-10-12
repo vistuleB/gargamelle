@@ -2,6 +2,33 @@ import gargamelle as s
 import gleam/option as gleam_option
 import gleeunit/should
 
+pub fn format_is_not_an_assertion_test() {
+  let definition = s.format(s.text(), "email")
+  let assert Ok(json) = s.parse("\"not an email\"")
+  s.decode(definition, json) |> should.equal(Ok("not an email"))
+  let assert Ok(expected) =
+    s.parse(
+      "{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"type\":\"string\",\"format\":\"email\"}",
+    )
+  s.schema_string(definition, s.Compact)
+  |> should.equal(s.to_string(expected, s.Compact))
+}
+
+pub fn custom_format_replaces_and_preserves_constraints_test() {
+  let assert Ok(definition) =
+    s.format(s.text(), "email")
+    |> s.bounds(gleam_option.Some(1), gleam_option.None)
+  let definition = s.format(definition, "application-name")
+  let assert Ok(empty) = s.parse("\"\"")
+  s.validate(definition, empty) |> should.be_error
+  let assert Ok(expected) =
+    s.parse(
+      "{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"type\":\"string\",\"minLength\":1,\"format\":\"application-name\"}",
+    )
+  s.schema_string(definition, s.Compact)
+  |> should.equal(s.to_string(expected, s.Compact))
+}
+
 pub fn default_annotation_does_not_supply_missing_field_test() {
   let assert Ok(value) = s.parse("false")
   let child = s.default(s.text(), value)

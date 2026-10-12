@@ -176,6 +176,10 @@ fn constraints(s: Value) {
       True -> "examples: " <> show(get(s, "examples"))
       False -> ""
     },
+    case has(s, "format") {
+      True -> "format: " <> text(get(s, "format")) <> " (annotation)"
+      False -> ""
+    },
     case text(get(s, "type")) {
       "object" ->
         case get(s, "additionalProperties") {

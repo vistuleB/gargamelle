@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add annotation-only `format` metadata with explicit non-assertion semantics.
+
 - Add standalone schema `default` annotations without decoded-value substitution.
 
 - Add schema `examples` annotations and display them in HTML documentation.

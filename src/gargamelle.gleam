@@ -1073,6 +1073,16 @@ pub fn default(def: Plan(a, r), value: Json) -> Plan(a, r) {
   definition(AnnotatedNode(node, "default", value), convert)
 }
 
+/// Attach a JSON Schema `format` annotation, such as "email" or "uuid".
+/// This does not check the format, change acceptance or invoke converters.
+/// Custom names are allowed. Names must contain only Unicode scalar values.
+pub fn format(def: Plan(a, r), name: String) -> Plan(a, r) {
+  let assert Ok(_) = scalar_argument(name)
+    as "String argument must contain Unicode scalar values"
+  let Plan(node, convert) = def
+  definition(AnnotatedNode(node, "format", JString(name)), convert)
+}
+
 /// Start a record with a curried constructor. Each field consumes one argument;
 /// call `finish` after supplying all fields. Multi-argument constructors need currying.
 pub fn record(constructor: a) -> Record(a, r) {

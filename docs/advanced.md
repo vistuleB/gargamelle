@@ -20,6 +20,12 @@ checks the sample against the definition nor substitutes it during decoding.
 Use `defaulted` for a record field whose absence should supply a validated value;
 that field's actual default overrides any standalone annotation on its child.
 
+`format(definition, "email")` describes a format without validating it. Standard
+and custom names are accepted; a non-email string still passes a text definition
+annotated as email. HTML documentation labels this metadata as an annotation.
+Schema consumers must leave format assertions disabled to use the same acceptance
+semantics. Asserted formats are not supplied by this operation.
+
 ## Fractional numbers
 
 `number()` returns `Definition(Float)` and accepts every finite number admitted by

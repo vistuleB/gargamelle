@@ -4,6 +4,7 @@ import {s,unwrap,toList,emitted} from './generated-api.mjs';
 import * as docs from '../build/dev/javascript/gargamelle/gargamelle/documentation.mjs';
 import {compileOracle} from './oracle.mjs';
 import {compileSupplementary} from './supplementary-oracle.mjs';
+import Ajv2020 from 'ajv/dist/2020.js';
 
 test('schema examples are annotations, including invalid samples, and never convert',async()=>{
   let calls=0;
@@ -18,6 +19,24 @@ test('schema examples are annotations, including invalid samples, and never conv
   assert.match(html,/examples:/);
   assert.match(html,/&lt;script&gt;/);
   assert.equal(calls,0);
+});
+
+test('format uses annotation semantics with explicitly disabled oracle assertions',async()=>{
+  for(const name of ['email','uuid','application-name']){
+    const definition=s.format(s.text(),name);
+    const schema=emitted(definition);
+    const ajv=new Ajv2020({strict:true,validateFormats:false});
+    assert.equal(ajv.validateSchema(schema),true);
+    const validate=ajv.compile(schema);
+    const supplementary=await compileSupplementary(schema);
+    for(const [value,accepted] of [['not a format',true],[false,false]]){
+      assert.equal(validate(value),accepted);
+      assert.equal(supplementary(value).accepted,accepted);
+      assert.equal(s.validate(definition,unwrap(s.parse(JSON.stringify(value)))).isOk(),accepted);
+    }
+    assert.match(docs.render(definition,'format'),/\(annotation\)/);
+  }
+  assert.throws(()=>s.format(s.text(),'\ud800'),/Unicode scalar/);
 });
 
 test('standalone default is unrestricted metadata and never inserts or converts',async()=>{
