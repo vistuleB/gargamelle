@@ -67,6 +67,12 @@ pub type RecordPolicy {
   Open
 }
 
+/// Supported asserted formats. Assertions are emitted as ordinary schema
+/// constraints as well as format metadata; optional format checking is unnecessary.
+pub type FormatAssertion {
+  Uuid
+}
+
 /// A finite numeric endpoint. Inclusive endpoints accept equality.
 pub type NumberBound {
   Inclusive(Float)
@@ -1180,6 +1186,27 @@ pub fn format(def: Plan(a, r), name: String) -> Plan(a, r) {
     as "String argument must contain Unicode scalar values"
   let Plan(node, convert) = def
   definition(AnnotatedNode(node, "format", JString(name)), convert)
+}
+
+/// Assert a supported format on string inputs, preserving the base converter.
+/// UUID accepts the 36-character, case-insensitive hexadecimal/dash syntax,
+/// including nil UUIDs, without a URN prefix or whitespace. Version/variant bits
+/// are not restricted. Nonstrings remain governed by the base definition.
+pub fn assert_format(
+  def: Plan(a, r),
+  assertion: FormatAssertion,
+) -> Plan(a, r) {
+  case assertion {
+    Uuid -> {
+      let assert Ok(uuid) =
+        pattern(
+          text(),
+          "^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$",
+        )
+      let assert Ok(uuid) = bounds(uuid, Some(36), Some(36))
+      if_then(def, text(), format(uuid, "uuid"))
+    }
+  }
 }
 
 /// Start a record with a curried constructor. Each field consumes one argument;

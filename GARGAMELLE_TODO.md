@@ -1,5 +1,17 @@
 # Gargamelle handoff and next work
 
+## Active schema coverage work
+
+The maintainer authorized the ordered coverage list on 2026-10-11, with one
+commit per feature. Schema `examples`, standalone `default`, annotation-only
+`format`, and `dependent_required` are implemented. Divisibility is initially
+restricted to `integer_multiple_of` on safe-integer definitions; fractional
+divisibility is deferred with reproducible validator disagreements in
+`docs/multiple-of-policy.md`. Explicit format assertions initially support UUID
+syntax through ordinary emitted constraints; other assertions are deferred per
+`docs/format-assertion-policy.md`. This is unreleased work; do not reuse the older
+release archive fingerprints. Encoder ergonomics remain a separate follow-up.
+
 ## Active boundary work
 
 The maintainer authorized `VerifiedJson` and an opaque input boundary on

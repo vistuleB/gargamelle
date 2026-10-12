@@ -26,6 +26,17 @@ annotated as email. HTML documentation labels this metadata as an annotation.
 Schema consumers must leave format assertions disabled to use the same acceptance
 semantics. Asserted formats are not supplied by this operation.
 
+`assert_format(definition, Uuid)` additionally checks the 36-character UUID
+hexadecimal/dash syntax, preserving the original case and decoded output. Nil
+UUIDs are accepted; URN prefixes, whitespace and missing dashes are rejected.
+It emits explicit length and pattern constraints, so schema consumers enforce
+the same checks without enabling optional format assertions. It does not restrict
+UUID version or variant bits. As in JSON Schema, format constraints apply only
+to string inputs; the base definition governs other types. UUID is the only
+asserted format currently supplied. Email, URI and date/time remain annotation-only.
+Supply primitive bounds and patterns before `assert_format`, which composes a
+conditional definition rather than a direct string node.
+
 ## Property dependencies
 
 `dependent_required(definition, "token", ["expires_at"])` constrains a record or

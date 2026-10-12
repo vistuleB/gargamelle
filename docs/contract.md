@@ -370,6 +370,8 @@ without changing number tokens, string escaping or key order. Empty arrays
 and objects remain inline; neither format adds a trailing newline. Parsing
 both formats recovers the same admitted JSON value.
 
+## Schema annotations and additional constraints
+
 `examples` attaches admitted JSON samples as metadata without checking their
 conformance or changing acceptance/conversion. Repeated annotations of the same
 keyword at the same emitted node use the outermost (last supplied) value.
@@ -381,6 +383,12 @@ default, overriding any standalone default annotation on its child.
 `format` is annotation-only, including custom names. Schema/decoder agreement
 assumes external validators do not enable optional format assertions. A consumer
 that enables such assertions adds acceptance rules beyond this contract.
+
+`assert_format(_, Uuid)` adds a string-only UUID syntax check using explicit
+36-code-point bounds and an ASCII hexadecimal/dash pattern. Both decoder and
+schema enforce those ordinary constraints. The `uuid` format keyword remains
+metadata; no Format-Assertion vocabulary or optional validator switch is required.
+UUID version and variant bits are not restricted, and accepted case is preserved.
 
 `dependent_required` checks original own-key presence on object definitions.
 Null is present; decoded defaults do not create input presence. Repeated trigger

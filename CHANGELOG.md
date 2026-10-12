@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add `assert_format(_, Uuid)` with explicit schema length/pattern checks;
+  annotation-only formats remain separate.
+
 - Add exact safe-integer `integer_multiple_of` constraints; fractional divisibility
   remains outside the supported numeric policy.
 
