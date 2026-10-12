@@ -1,6 +1,6 @@
 # Constructor preservation arguments
 
-Contract: [Gargamelle 0.2.1 technical contract](docs/contract.md).
+Contract: [Gargamelle technical contract](docs/contract.md).
 These are implementation design arguments, not formal proofs or passed release gates.
 
 The opaque `Definition(a)` pairs a closed `Node` tree with a conversion function.
@@ -179,6 +179,26 @@ recheck each duplicate branch exponentially. This does not change schema emissio
 or impose a decoding-depth limit.
 
 ## Object property names
+
+Object assertion emission must conjoin a modifier with its child's schema.
+`conjoin_object_keyword` inserts an absent keyword directly; on a collision it
+retains the original keyword and appends the new assertion to `allOf`, retaining
+any existing clauses. Each added clause includes the redundant object type.
+This invariant holds even when different modifiers separate repeated
+`propertyNames` or `dependentRequired` wrappers. Replacing an object key alone
+would discard an assertion and is not conjunction. Annotation replacement is a
+separate, intentional last-annotation-wins rule.
+
+`dependent_required` checks original own-key presence, not decoded defaults;
+null is present. Its emitted dependency arrays impose the same implications.
+Adjacent repetitions merge required keys; separated repetitions remain
+conjoined by the emitter helper. Neither path runs conversion callbacks.
+
+The bounded composition suite checks runtime/schema equivalence, non-weakening,
+and order invariance only for a whitelist of independent assertions. Metadata
+and maps preserve acceptance; their output or annotation order is not claimed
+to commute. Seed and interaction coverage and three destructive emitter
+mutations are recorded separately from these informal arguments.
 
 For an admitted object, every own property name is a JSON string. The
 property-name wrapper retains the original object's validation and applies each

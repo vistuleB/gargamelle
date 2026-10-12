@@ -12,6 +12,9 @@ try {
   for (const [name, digest] of Object.entries(report.logs)) {
     if (sha256(readFileSync(resolve(root, 'reports', name))) !== digest) throw new Error(`Evidence log changed: ${name}`);
   }
+  for (const [path, digest] of [[report.composition?.report, report.composition?.sha256], [report.composition?.mutations, report.composition?.mutationsSha256]]) {
+    if (!path || !digest || sha256(readFileSync(resolve(root, path))) !== digest) throw new Error('Missing or changed composition evidence');
+  }
   verifyCoverage(report.coverage);
   console.log('READY FOR REVIEW: standalone Node candidate passed automated evidence checks; V08 preservation argument requires human review. Not a formal proof or publication approval.');
 } catch (error) {

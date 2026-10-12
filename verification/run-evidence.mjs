@@ -30,6 +30,14 @@ try {
   const selection = JSON.parse(readFileSync(resolve(root, 'verification/official/selection.json')));
   const after = fingerprint();
   if (before.digest !== after.digest) throw new Error('Source changed during evidence run; rerun after changes stop');
+  const composition = JSON.parse(readFileSync(resolve(reports, 'composition-coverage.json')));
+  const compositionMutations = JSON.parse(readFileSync(resolve(reports, 'composition-mutations.json')));
+  for (const result of [composition, compositionMutations]) {
+    if (result.status !== 'passed' || result.source !== after.digest) throw new Error('Missing or stale composition evidence');
+  }
+  if (composition.sequenceCount !== 32 || composition.recursiveSequences !== 4
+      || compositionMutations.mutants.length !== 3
+      || compositionMutations.mutants.some(m => m.status !== 'killed')) throw new Error('Incomplete bounded composition coverage');
   const version = (command, args) => {
     const result = spawnSync(command, args, { cwd: root, encoding: 'utf8', timeout: 10000 });
     if (result.error || result.status !== 0) throw new Error(`Cannot record ${command} version`);
@@ -48,6 +56,8 @@ try {
     commands: ['gleam format --check src test', 'gleam test', `node --test --test-reporter=tap ${tests.map(n => `verification/${n}`).join(' ')}`],
     limits: { subprocessTimeoutMs: 180000, maxOutputBytes: 30 * 1024 * 1024 },
     counts: { gleam: Number(gleam.match(/(\d+) passed, no failures/)?.[1]), node: counts }, coverage,
+    composition: { report: 'reports/composition-coverage.json', sha256: sha256(readFileSync(resolve(reports, 'composition-coverage.json'))), sequences: composition.sequenceCount, comparisons: composition.comparisons,
+      mutations: 'reports/composition-mutations.json', mutationsSha256: sha256(readFileSync(resolve(reports, 'composition-mutations.json'))), killed: compositionMutations.mutants.length },
     conformance: { commit: selection.commit, selectedGroups: selection.groups.filter(g => g.status === 'selected').length, selectedCases: selection.groups.filter(g => g.status === 'selected').reduce((n, g) => n + g.tests, 0), excludedGroups: selection.groups.filter(g => g.status === 'excluded').length, manifest: 'verification/official/selection.json' },
     oracleExceptions: JSON.parse(readFileSync(resolve(root, 'verification/known-oracle-discrepancies.json'))),
     logs: Object.fromEntries(['format.log','gleam.log','node.tap'].map(name => [name, sha256(readFileSync(resolve(reports, name)))])),

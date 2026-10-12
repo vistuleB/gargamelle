@@ -7,6 +7,15 @@ conjunctions. Regression checks cover both reported cases, repeated triggers and
 conditional composition against runtime validation, decoding, Ajv and Hyperjump.
 Evidence from `736466a` is superseded and must not qualify the corrected archive.
 
+Additional hardening uses four reproducible seeds and bounded object-modifier
+sequences, including named definitions, annotation/map wrappers, conditionals,
+exclusion and occasional recursive values. One suite checks agreement with both
+schema oracles, non-weakening and an explicit order-invariance whitelist. Three
+mutants challenge keyword replacement and lost conjunctions. Coverage is in
+`reports/composition-coverage.json` and `reports/composition-mutations.json`;
+the collision invariant is recorded in `PRESERVATION.md`. This is not exhaustive
+coverage. Regenerate release evidence after these verification-source changes.
+
 The maintainer requested 0.4.0 preparation after JSON-only boundary integration.
 Only the maintainer publishes, using `gleam publish` for this new version.
 Current Hex metadata and the downloaded 0.3.0 archive were inspected on 2026-10-12;
