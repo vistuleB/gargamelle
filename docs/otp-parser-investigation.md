@@ -109,3 +109,49 @@ or upstream issue publication has been performed.
 
 The final evidence summary is reports/otp-parser-investigation-summary.json. These
 status notes follow the probe commit; they do not change its executable source.
+
+## Public-path and retained-buffer follow-up
+
+The isolated `full-path.escript` loads the freshly compiled public Gleam module
+and replaces only its runtime dependency inside a disposable VM. The same
+`gargamelle.parse` constructor callbacks execute in reference, hybrid, and
+string-copying hybrid variants. Eleven representative inputs, including error
+and duplicate-replacement cases, produced exactly equal public results. This is
+additional smoke coverage, not another exhaustive compatibility run.
+
+A concrete retention case exposed an additional integration cost. The input has
+a 128-byte `keep` string and a 1 MiB `discard` string. Decoding an open record
+retains only `keep`. `binary:referenced_byte_size` reports:
+
+| Parser variant | Retained string bytes | Referenced backing bytes |
+| --- | ---: | ---: |
+| Existing parser | 128 | 128 |
+| OTP hybrid | 128 | 1,048,728 |
+| OTP hybrid with `string => fun binary:copy/1` | 128 | 128 |
+
+Default OTP decoding shares that larger backing binary as well. Explicit copying
+removes this particular retention hazard. These sizes describe backing-buffer
+sharing, not total allocations or process memory. A future adapter must decide
+its ownership policy deliberately; allowing a small decoded field to pin a large
+discarded document is a material change in memory behavior.
+
+On local macOS OTP 29, exploratory complete-public-parse measurements still show
+benefits on eligible text and numeric payloads, including the copying variant.
+However, the three variants run sequentially in one VM, and timings vary across
+phases even on unchanged fallback paths. The harness does not control heap/phase
+effects sufficiently for a release speed claim. Retention results repeated;
+performance conclusions require randomized isolated runs, representative input
+mixes, and Linux repetition. No production parser integration is justified yet.
+
+To repeat this follow-up, first build a checkout whose source matches this
+research branch's unchanged production modules with `gleam build --target erlang`.
+Then run from the research worktree:
+
+```sh
+node verification/otp-parser/full-path.mjs /absolute/path/to/checkout/build/dev/erlang
+```
+
+The ignored report `reports/otp-parser-full-path.json` records the compiled public
+module hash, source fingerprint, runtime, individual samples, routes, exact-result
+comparison, and retained-buffer sizes. Temporary runtime/probe copies are ignored
+under `reports/`; shipped source is unchanged.
