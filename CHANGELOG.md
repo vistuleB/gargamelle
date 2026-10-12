@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add schema `examples` annotations and display them in HTML documentation.
+
 - Add opaque `Boundary` and `VerifiedJson` types. `forward` decodes against the
   boundary's stored definition before invoking its private handler with decoded
   data and original JSON. `verify` validates without conversion and retains JSON

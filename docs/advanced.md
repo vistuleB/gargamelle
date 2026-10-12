@@ -6,6 +6,15 @@ semantics are specified in the [technical contract](https://hexdocs.pm/gargamell
 To bind a component handler to its input definition, see
 [Verified JSON boundaries](boundaries.html).
 
+## Schema annotations
+
+`examples(definition, values)` adds the standard JSON Schema `examples`
+annotation. Values must be admitted `Json`; they are not required to satisfy
+that definition. This metadata changes neither acceptance nor decoding and
+runs no conversion callbacks. Repeated calls replace the examples at that node.
+The HTML renderer displays these samples as metadata. For examples checked against
+an input contract before rendering, use `documentation.render_examples` instead.
+
 ## Fractional numbers
 
 `number()` returns `Definition(Float)` and accepts every finite number admitted by

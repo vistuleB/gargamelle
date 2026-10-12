@@ -105,7 +105,7 @@ type Node {
   NamedNode(String, Node)
   ReferenceNode(String, Identity)
   UniqueNode(Node)
-  AnnotatedNode(Node, String, String)
+  AnnotatedNode(Node, String, Json)
 }
 
 // Reference bindings are finite immutable schema terms; typed converters live
@@ -1045,7 +1045,7 @@ pub fn description(def: Plan(a, r), s: String) -> Plan(a, r) {
   let assert Ok(_) = scalar_argument(s)
     as "String argument must contain Unicode scalar values"
   let Plan(n, d) = def
-  definition(AnnotatedNode(n, "description", s), d)
+  definition(AnnotatedNode(n, "description", JString(s)), d)
 }
 
 /// Add a schema title without changing validation or decoding.
@@ -1053,7 +1053,15 @@ pub fn title(def: Plan(a, r), s: String) -> Plan(a, r) {
   let assert Ok(_) = scalar_argument(s)
     as "String argument must contain Unicode scalar values"
   let Plan(n, d) = def
-  definition(AnnotatedNode(n, "title", s), d)
+  definition(AnnotatedNode(n, "title", JString(s)), d)
+}
+
+/// Attach the JSON Schema `examples` annotation without affecting acceptance or
+/// conversion. Examples are admitted JSON, but need not satisfy the definition.
+/// A later call replaces an earlier examples annotation at the same schema node.
+pub fn examples(def: Plan(a, r), values: List(Json)) -> Plan(a, r) {
+  let Plan(node, convert) = def
+  definition(AnnotatedNode(node, "examples", JArray(values)), convert)
 }
 
 /// Start a record with a curried constructor. Each field consumes one argument;
@@ -2306,6 +2314,6 @@ fn emit(n: Node) -> Json {
           ),
         ),
       ])
-    AnnotatedNode(c, k, v) -> put(emit(c), k, JString(v))
+    AnnotatedNode(c, k, v) -> put(emit(c), k, v)
   }
 }

@@ -172,6 +172,10 @@ fn constraints(s: Value) {
       True -> "default: " <> show(get(s, "default"))
       False -> ""
     },
+    case has(s, "examples") {
+      True -> "examples: " <> show(get(s, "examples"))
+      False -> ""
+    },
     case text(get(s, "type")) {
       "object" ->
         case get(s, "additionalProperties") {

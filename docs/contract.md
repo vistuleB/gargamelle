@@ -369,3 +369,7 @@ canonical JSON. `Pretty` formats that same text with two-space indentation,
 without changing number tokens, string escaping or key order. Empty arrays
 and objects remain inline; neither format adds a trailing newline. Parsing
 both formats recovers the same admitted JSON value.
+
+`examples` attaches admitted JSON samples as metadata without checking their
+conformance or changing acceptance/conversion. Repeated annotations of the same
+keyword at the same emitted node use the outermost (last supplied) value.

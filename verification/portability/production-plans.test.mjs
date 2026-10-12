@@ -36,7 +36,7 @@ test('main library preserves baseline behavior with immutable recursive plans',(
     const run=(args)=>spawnSync('gleam',args,{cwd:directory,encoding:'utf8',timeout:60000,maxBuffer:5*1024*1024,env:{...process.env,GIT_DIR:'',GIT_WORK_TREE:''}});
     const javascript=run(['test','--target','javascript']);
     assert.equal(javascript.status,0,javascript.stderr+'\n'+javascript.stdout);
-    assert.match(javascript.stdout,/54 passed, no failures/);
+    assert.match(javascript.stdout,/56 passed, no failures/);
     const probe=target=>{
       const result=run(['run','--target',target,'-m','integration_probe']);
       assert.equal(result.status,0,result.stderr+'\n'+result.stdout);
@@ -80,7 +80,7 @@ test('main library preserves baseline behavior with immutable recursive plans',(
     assert.equal(build.status,0,build.stdout+'\n'+build.stderr);
     const erlang=run(['test','--target','erlang']);
     assert.equal(erlang.status,0,erlang.stderr+'\n'+erlang.stdout);
-    assert.match(erlang.stdout,/62 passed, no failures/);
+    assert.match(erlang.stdout,/64 passed, no failures/);
     assert.deepEqual(probe('erlang'),integrated,'cross-target schema/output/diagnostic mismatch');
     benchmark('erlang');
     for(const [name,body,privateValue] of [
@@ -128,6 +128,6 @@ pub fn forbidden() {
     }
     t.diagnostic('32 compile-negative checks passed on the integrated API');
     t.diagnostic(`${integrated.length} schemas, ${integrated.reduce((sum,row)=>sum+row.cases.length,0)} independent cases; exact historical JavaScript and native comparison`);
-    t.diagnostic('54 main-source tests and eight native process/graph tests passed');
+    t.diagnostic('56 main-source tests and eight native process/graph tests passed');
   } finally {rmSync(directory,{recursive:true,force:true});}
 });
