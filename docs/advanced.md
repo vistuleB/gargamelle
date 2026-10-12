@@ -1,7 +1,7 @@
 # Advanced definitions and documentation
 
 These examples extend the core record and array workflows. Acceptance and output
-semantics are specified in the [technical contract](https://hexdocs.pm/gargamelle/0.3.0/contract.html).
+semantics are specified in the [technical contract](https://hexdocs.pm/gargamelle/0.4.0/contract.html).
 
 To bind a component handler to its input definition, see
 [Verified JSON boundaries](boundaries.html).

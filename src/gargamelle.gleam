@@ -6,7 +6,7 @@
 //// decodes once and passes the decoded value and original JSON to its handler.
 //// Converters are trusted application code: exceptions are operational failures.
 //// JavaScript and Erlang targets are supported on the
-//// [tested runtimes](https://hexdocs.pm/gargamelle/0.3.0/native-erlang.html).
+//// [tested runtimes](https://hexdocs.pm/gargamelle/0.4.0/native-erlang.html).
 //// The Erlang target requires a separately compiled C regex helper.
 
 import gleam/bit_array

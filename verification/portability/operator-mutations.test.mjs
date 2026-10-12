@@ -23,7 +23,7 @@ test('six compiled native operator mutants fail independent behavioral checks',a
   const variants=[
     {name:'one-of-first-match',row:0,file:'gargamelle.erl',from:'case Exclusive andalso (Rest /= []) of',to:'case false andalso Exclusive andalso (Rest /= []) of'},
     {name:'present-null-as-absent',row:1,file:'gargamelle.erl',from:'gleam@option:map(member(V, Name), fun(Value) ->',to:'gleam@option:map(case member(V, Name) of {some, j_null} -> none; Found -> Found end, fun(Value) ->'},
-    {name:'disabled-extra-key-rejection',row:2,file:'gargamelle.erl',from:'err(~"extra_key", path(P, erlang:element(1, X@2)))',to:'[]'},
+    {name:'disabled-extra-key-rejection',row:2,file:'gargamelle.erl',from:/err\(~"extra_key", path\(P, erlang:element\(1, X@\d+\)\)\)/g,to:'[]'},
     {name:'exclusive-inclusive-minimum',row:3,file:'gargamelle.erl',from:'N >= X;',to:'N > X;'},
     {name:'utf16-length-for-codepoints',row:4,file:'gargamelle_runtime.erl',from:'codepoints(Value) -> count_codepoints(Value, 0).',to:'codepoints(Value) -> byte_size(unicode:characters_to_binary(Value, utf8, {utf16, little})) div 2.'},
     {name:'incorrect-integer-conversion',row:5,file:'gargamelle_runtime.erl',from:'as_int(X) when is_float(X) -> trunc(X).',to:'as_int(X) when is_float(X) -> trunc(X) + 1.'},
@@ -62,9 +62,11 @@ test('six compiled native operator mutants fail independent behavioral checks',a
       checkpoint={stage:'mutation',name:variant.name};
       const path=join(directory,'build/dev/erlang/gargamelle/_gleam_artefacts',variant.file);
       const source=readFileSync(path,'utf8');
-      assert.equal(source.split(variant.from).length-1,1,variant.name+' requires one exact target');
+      const matches=variant.from instanceof RegExp ? [...source.matchAll(variant.from)].map(match=>match[0]) : source.split(variant.from).slice(1).map(()=>variant.from);
+      assert.equal(matches.length,1,variant.name+' requires one exact target');
+      const target=matches[0];
       try {
-        writeFileSync(path,source.replace(variant.from,variant.to));
+        writeFileSync(path,source.replace(target,variant.to));
         run('erlc',['-o',ebin,path]);
         const mutated=probe();assert.equal(mutated.length,normal.length);
         for(const [index,row] of mutated.entries())assert.equal(row.schema,normal[index].schema,variant.name+' must preserve emitted schema');

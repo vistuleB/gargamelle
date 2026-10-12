@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.4.0 — 2026-10-12
 
 - Add opaque `JsonBoundary` receiving handlers with one contract check and no
   decoding, for JSON storage and transport.

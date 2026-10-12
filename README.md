@@ -5,7 +5,7 @@
 
 Gargamelle builds a matching pair of a typed JSON decoder and a JSON Schema 2020-12 document from a single Gleam definition. It can also generate HTML documentation for the schema.
 
-See the [technical contract](https://hexdocs.pm/gargamelle/0.3.0/contract.html).
+See the [technical contract](https://hexdocs.pm/gargamelle/0.4.0/contract.html).
 
 Inspired by [glon](https://hexdocs.pm/glon/).
 
@@ -16,7 +16,7 @@ Requires Gleam 1.18.1 or later.
 Install Gargamelle:
 
 ```sh
-gleam add gargamelle@0.3.0
+gleam add gargamelle@0.4.0
 ```
 
 ### JavaScript
@@ -42,7 +42,7 @@ gleam deps download
 make -C build/packages/gargamelle/priv/regex-src
 ```
 
-See [Native Erlang setup](https://hexdocs.pm/gargamelle/0.3.0/native-erlang.html)
+See [Native Erlang setup](https://hexdocs.pm/gargamelle/0.4.0/native-erlang.html)
 for tested runtimes and deployment instructions.
 
 ## Basic example
@@ -86,7 +86,7 @@ any Gargamelle `Json`, not just schemas.
 Handle admission errors separately from validation errors in application code;
 these assertions only keep the introductory example short. `validate` checks
 acceptance without invoking converters. `decode` validates before constructing
-output. See the typed record example below, the [recursive examples](https://hexdocs.pm/gargamelle/0.3.0/advanced.html), and the [API reference](https://hexdocs.pm/gargamelle/0.3.0/gargamelle.html).
+output. See the typed record example below, the [recursive examples](https://hexdocs.pm/gargamelle/0.4.0/advanced.html), and the [API reference](https://hexdocs.pm/gargamelle/0.4.0/gargamelle.html).
 
 ## Typed records
 
@@ -112,6 +112,14 @@ pub fn read_user(source: String) {
 For input `{"name":"Brainy","active":true}`, `read_user` returns
 `Ok(User("Brainy", True))`. `s.Strict` rejects undeclared fields.
 `s.schema_string(user_definition(), s.Pretty)` generates the record’s schema.
+
+## Component boundaries
+
+`boundary(definition, handler)` binds a handler to its input contract. `forward`
+decodes once and passes the decoded value and original JSON to that handler.
+For storage or transport that needs only JSON, `json_boundary` and `forward_json`
+check the receiving contract without decoding and pass a `VerifiedJson` certificate.
+See [Verified JSON boundaries](https://hexdocs.pm/gargamelle/0.4.0/boundaries.html).
 
 ## Design and contract
 
@@ -148,7 +156,7 @@ binary64 numbers and Unicode scalar strings and keys. Parsing may round literals
 and collapse duplicate object keys. Domain checks apply to the final parsed tree.
 The equivalence assumes pure, total callbacks, sufficient runtime resources, and
 external validation of the same parsed value without coercion, inserted defaults
-or removed properties. Admission failure, structural rejection and operational
+or removed properties, with optional format assertions disabled. Admission failure, structural rejection and operational
 failure are distinct; exceptions and resource exhaustion are not rejection.
 
 `schema_string(S, Compact)` is byte-stable canonical JSON. `Pretty` changes only
@@ -157,16 +165,16 @@ as a JSON value. This is a schema serialization round trip; there is no typed
 encoder or decode/encode inversion guarantee. Defaults, projection and maps can
 lose information, and some output values may be unreachable.
 
-The [technical contract](https://hexdocs.pm/gargamelle/0.3.0/contract.html)
+The [technical contract](https://hexdocs.pm/gargamelle/0.4.0/contract.html)
 specifies the complete intended semantics.
 
 ## Limitations
 
 JavaScript is tested on Node 24.10.0, Chrome 155, Firefox 157 and Safari 27;
-see [Browser compatibility](https://hexdocs.pm/gargamelle/0.3.0/browser-support.html).
+see [Browser compatibility](https://hexdocs.pm/gargamelle/0.4.0/browser-support.html).
 The native Erlang implementation is tested on
 macOS arm64 with OTP 29 and Ubuntu 24.04 x86_64 with OTP 28.5.0.7 and 29.1.1,
-and requires a C helper; see [Native Erlang setup](https://hexdocs.pm/gargamelle/0.3.0/native-erlang.html).
+and requires a C helper; see [Native Erlang setup](https://hexdocs.pm/gargamelle/0.4.0/native-erlang.html).
 APIs may change before 1.0.
 
 - Native verification covers the runtime matrix above and Gleam shipment
@@ -179,8 +187,9 @@ APIs may change before 1.0.
 - Only the JSON Schema features exposed by the constructors are supported.
   Gargamelle does not validate arbitrary imported schemas or implement the full
   Draft 2020-12 dialect.
-- General typed intersections, format assertions, `multipleOf`, and fractional
-  constants are not supported.
+- General typed intersections, fractional divisibility, and fractional constants
+  are not supported. `integer_multiple_of` supports exact safe-integer divisibility.
+  UUID is the only supported explicit format assertion; other formats are metadata.
 - Numbers use parsed binary64 values; `safe_integer` is limited to JavaScript's
   safe-integer range.
 - Conversion callbacks must be pure and total. Exceptions and resource exhaustion
@@ -189,10 +198,12 @@ APIs may change before 1.0.
 
 ## Further documentation
 
-- [Technical contract](https://hexdocs.pm/gargamelle/0.3.0/contract.html): complete intended acceptance, output, emission and error semantics.
-- [Advanced definitions](https://hexdocs.pm/gargamelle/0.3.0/advanced.html): numeric constraints, recursion, tuples, key constraints, membership, conditionals, exclusion and HTML documentation.
-- [Migrating to 0.3.0](https://hexdocs.pm/gargamelle/0.3.0/migration-0.3.html): required API renames.
-- [Migrating to 0.2.0](https://hexdocs.pm/gargamelle/0.3.0/migration-0.2.html): string requirements and changes to recursive construction.
+- [Technical contract](https://hexdocs.pm/gargamelle/0.4.0/contract.html): complete intended acceptance, output, emission and error semantics.
+- [Advanced definitions](https://hexdocs.pm/gargamelle/0.4.0/advanced.html): numeric constraints, recursion, tuples, key constraints, membership, conditionals, exclusion and HTML documentation.
+- [Verified JSON boundaries](https://hexdocs.pm/gargamelle/0.4.0/boundaries.html): typed ingress and JSON-only receiving handlers.
+- [Migrating to 0.4.0](https://hexdocs.pm/gargamelle/0.4.0/migration-0.4.html): boundary APIs and added schema constraints.
+- [Migrating to 0.3.0](https://hexdocs.pm/gargamelle/0.4.0/migration-0.3.html): required API renames.
+- [Migrating to 0.2.0](https://hexdocs.pm/gargamelle/0.4.0/migration-0.2.html): string requirements and changes to recursive construction.
 
 ## Verification
 
@@ -200,9 +211,9 @@ The library is checked with typed-output and rejection fixtures, generated
 compositions, independent JSON Schema validators, selected official suite cases
 and deliberate implementation mutations. These provide evidence for the contract,
 not a formal proof or full-dialect conformance. The package source is
-available in the [Hex archive](https://repo.hex.pm/tarballs/gargamelle-0.3.0.tar).
+available in the [Hex archive](https://repo.hex.pm/tarballs/gargamelle-0.4.0.tar).
 
 ## License
 
-Gargamelle is distributed under the MIT License. See [Licenses](https://hexdocs.pm/gargamelle/0.3.0/license.html)
+Gargamelle is distributed under the MIT License. See [Licenses](https://hexdocs.pm/gargamelle/0.4.0/license.html)
 for the library, native regex engine and retained JSON Schema test-suite notices.
