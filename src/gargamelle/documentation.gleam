@@ -428,6 +428,29 @@ pub fn render(definition: gargamelle.Definition(a), id: String) -> String {
   html
 }
 
+/// Render the structural definition and every semantic requirement description.
+/// Rendering runs no conversion or requirement callbacks. Requirement prose is
+/// documentation; it does not establish that a callback implements that prose.
+pub fn render_contract(contract: gargamelle.Contract(a), id: String) -> String {
+  let html = render(gargamelle.contract_definition(contract), id)
+  case gargamelle.contract_requirements(contract) {
+    [] -> html
+    descriptions -> {
+      let items =
+        descriptions
+        |> list.map(fn(description) {
+          "<li>" <> escape_html(description) <> "</li>"
+        })
+        |> string.join("")
+      let section =
+        "<section class=\"semantic-requirements\"><h2>Additional semantic requirements</h2><p>The generated JSON Schema describes structural acceptance only. Full contract acceptance also requires these checks.</p><ol>"
+        <> items
+        <> "</ol></section>"
+      string.replace(html, "</article>", section <> "</article>")
+    }
+  }
+}
+
 /// Render JSON emitted by Gargamelle. Aliases are optional *presentation-only*
 /// pairs (omitted definition, displayed definition); they must name existing
 /// definitions and point directly to a displayed definition. They do not change

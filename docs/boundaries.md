@@ -1,8 +1,8 @@
 # Verified JSON boundaries
 
-A `Boundary(a, response)` binds an input definition to a handler. The host calls
-`forward` with admitted JSON. Gargamelle decodes it against the boundary's stored
-definition before invoking the handler. Invalid input returns decoding errors
+A `Boundary(a, response)` binds an input contract to a handler. The host calls
+`forward` with admitted JSON. Gargamelle decodes it and runs the boundary's stored semantic requirements
+before invoking the handler. Rejected input returns `ContractError`
 and the handler does not run.
 
 The handler receives two arguments: the decoded `a` and the original `Json`.
@@ -18,7 +18,7 @@ import gleam/string
 // The component publishes a boundary; its handler stays private.
 pub fn names_boundary() -> gargamelle.Boundary(List(String), String) {
   gargamelle.boundary(
-    gargamelle.array(gargamelle.text()),
+    gargamelle.contract(gargamelle.array(gargamelle.text())),
     fn(names, _) { string.join(names, ", ") },
   )
 }
@@ -34,18 +34,21 @@ pub fn main() {
 ```
 
 This prints the array-of-strings schema followed by `Brainy, Jokey`.
-`boundary_definition` exposes the exact definition used for acceptance, so the
+`boundary_definition` exposes the structural definition used for acceptance, so the
 host can review its schema before accepting the boundary. Through the Gleam API,
-the host cannot extract the handler or replace the definition within an existing
+the host cannot extract the handler or replace the contract within an existing
 boundary.
 
 ## JSON-only receiving handlers
 
 For storage or transport that needs only JSON, use
-`json_boundary(definition, handler)` and `forward_json(receiver, json)`.
+`json_boundary(contract, handler)` and `forward_json(receiver, json)`.
 The private handler receives `VerifiedJson(a)` after the receiver's stored
-definition accepts the input. No decoded value is constructed and no conversion
-callback runs. `json_boundary_definition` exposes that exact checked definition.
+contract accepts the input. With no semantic requirements, no decoded value is
+constructed and no conversion callback runs. With requirements, decoding runs
+once to supply the checks; the decoded value is then discarded.
+`json_boundary_contract` exposes the full contract; `json_boundary_definition`
+exposes its structural definition.
 
 ```gleam
 import gargamelle
@@ -53,7 +56,7 @@ import gleam/io
 
 pub fn main() {
   let receiver = gargamelle.json_boundary(
-    gargamelle.array(gargamelle.text()),
+    gargamelle.contract(gargamelle.array(gargamelle.text())),
     fn(verified) {
       gargamelle.to_string(gargamelle.verified_json(verified), gargamelle.Compact)
     },
@@ -74,46 +77,92 @@ exceptions and resource failures propagate as operational failures.
 
 For a future typed output path, pair an encoder with this receiving boundary,
 encode to admitted unverified JSON, and call `forward_json` once. The receiving
-definition is authoritative; there is no separate codec definition to reconcile.
+contract is authoritative; there is no separate codec contract to reconcile.
+
+## Semantic requirements
+
+A contract can add checks that JSON Schema does not express. This complete
+example checks whether a decoded name agrees with immutable bound context:
+
+```gleam
+import gargamelle
+import gleam/io
+
+pub fn main() {
+  let expected = "Brainy"
+  let contract = gargamelle.contract(gargamelle.text())
+    |> gargamelle.require("Name agrees with the registered name", fn(name) {
+      case name == expected {
+        True -> Ok(Nil)
+        False -> Error([gargamelle.Violation("", "Unexpected name")])
+      }
+    })
+  let receiver = gargamelle.json_boundary(contract, fn(verified) {
+    gargamelle.to_string(gargamelle.verified_json(verified), gargamelle.Compact)
+  })
+  let assert Ok(json) = gargamelle.parse("\"Brainy\"")
+  let assert Ok(response) = gargamelle.forward_json(receiver, json)
+  io.println(response)
+}
+```
+
+This prints `"Brainy"`. The underlying string schema also accepts `"Jokey"`,
+but the full contract rejects it before the handler runs. Semantic requirements
+inspect decoded data and cannot repair or transform it. Requirements must be
+pure and total, with immutable captured context.
+
+`contract_requirements` lists descriptions in declaration order.
+`documentation.render_contract` renders the structural definition followed by
+all requirement descriptions without running checks. Generated JSON Schema
+contains only the structural rules. Descriptions document intended behavior;
+they do not prove that callbacks implement it.
 
 ## Retaining verified JSON
 
-`verify(definition, json)` checks acceptance without constructing a decoded value
-or invoking conversion callbacks. It returns `Result(VerifiedJson(a), List(DataError))`.
-The opaque certificate retains the JSON and the exact definition that accepted it.
-`verified_json` retrieves the original JSON; `verified_definition` retrieves its
-checked contract. Neither accessor validates or decodes.
+`verify(contract, json)` returns `Result(VerifiedJson(a), ContractError)`.
+It validates without conversion if the contract has no semantic requirements;
+otherwise it decodes once and checks the decoded value. The opaque certificate
+retains original JSON and the exact full contract, but no decoded data.
+`verified_json` retrieves the JSON; `verified_contract` retrieves the full contract;
+`verified_definition` retrieves only its structural definition. These accessors
+execute no callbacks.
 
-The parameter `a` describes the definition's output type, not its identity or
-constraints. Two `Definition(String)` values may accept different strings. A
-function accepting a standalone `VerifiedJson(String)` therefore cannot assume
-a particular string constraint. Use a boundary to bind the check and handler
-invocation; `forward` accepts `Json` and always checks its own stored definition.
+The parameter `a` describes an output type, not contract identity or constraints.
+Two `Contract(String)` values may accept different strings. A standalone
+`VerifiedJson(String)` therefore does not establish particular constraints.
+Receiving boundaries bind checks and handler invocation; forwarding always
+checks the recipient's contract, even if another contract accepted that JSON.
 
-The certificate contains no decoded data. To obtain a Gleam value later, call
-`decode(verified_definition(verified), verified_json(verified))`, or forward its
-JSON through the recipient's boundary. That performs validation and conversion
-at that time. Verification is useful when transporting JSON without needing its
-decoded representation immediately.
+To obtain decoded data later, call
+`decode_contract(verified_contract(verified), verified_json(verified))`, which
+repeats validation, conversion and semantic checks. A typed receiving boundary
+avoids that additional work when decoded data is needed immediately.
 
 The original JSON is preserved as admitted. An `Open` record may discard extra
 fields from decoded data; those fields remain in the original JSON. Defaults and
 maps affect decoded data without rewriting JSON. Verification retains the JSON
-and definition, including closures captured by that definition, but no decoded tree.
+and contract, including closures captured by its definition and requirements, but no decoded tree.
 
 ## Callbacks and responses
 
-`forward` validates and converts once, then invokes the handler once. Invalid
-input runs neither conversion callbacks nor the handler. `verify` never invokes
-conversion callbacks. Conversion callbacks and handlers are trusted code;
-exceptions and resource failures propagate as operational failures.
+`forward` validates and converts once, runs semantic checks, then invokes the
+handler once on acceptance. Structural rejection skips conversion, requirements
+and the handler. Semantic rejection skips the handler. Every normal requirement
+result is collected in declaration order. Exceptions propagate and may stop later
+checks. Conversion callbacks, requirements and handlers are trusted code.
+
+`ContractError.Structural` contains structural `DataError` values;
+`ContractError.Semantic` contains `RequirementFailure` values with zero-based
+requirement indices, descriptions and `Violation(path, message)` diagnostics.
+An empty rejection list is replaced with a root violation, so it cannot become
+acceptance. Paths are application-supplied JSON Pointers.
 
 The response is whatever the handler returns. If it returns `Result(response,
 application_error)`, `forward` returns `Result(Result(response, application_error),
-List(DataError))`, keeping application errors separate from input failures.
+ContractError)`, keeping application errors separate from input failures.
 It does not validate outgoing JSON or provide an encoder.
 
-The boundary enforces the supplied definition. The host must still approve that
+The boundary enforces the supplied contract. The host must still approve that
 contract and apply any additional application policy. These opaque types enforce
 access through Gleam's public API; they do not isolate hostile JavaScript, Erlang
 or foreign-function code running in the same runtime.

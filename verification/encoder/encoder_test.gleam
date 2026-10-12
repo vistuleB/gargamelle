@@ -88,7 +88,7 @@ pub fn record_getters_optional_versus_null_test() {
 
 pub fn constraints_reject_well_typed_output_test() {
   let codec = e.codec(e.text(), s.string_constant("Brainy"))
-  let assert Error(e.Contract(errors)) = e.encode(codec, "Jokey")
+  let assert Error(e.Contract(s.Structural(errors))) = e.encode(codec, "Jokey")
   let assert Ok(json) = s.parse("\"Jokey\"")
   s.decode(s.string_constant("Brainy"), json) |> should.equal(Error(errors))
 }

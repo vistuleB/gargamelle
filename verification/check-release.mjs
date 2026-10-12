@@ -4,7 +4,7 @@ import { root, fingerprint, required, evidenceKind, rowEvidence, sha256, verifyC
 
 try {
   const report = JSON.parse(readFileSync(resolve(root, 'reports/evidence.json')));
-  if (report.status !== 'passed' || report.contractRevision !== 5) throw new Error('No successful revision-5 evidence run');
+  if (report.status !== 'passed' || report.contractRevision !== 6) throw new Error('No successful revision-6 evidence run');
   if (report.source.digest !== fingerprint().digest) throw new Error('Evidence is stale after source changes');
   for (const id of required) {
     if (report.rows[id]?.status !== (id === 'V08' ? 'review-required' : 'passed') || report.rows[id]?.kind !== evidenceKind(id) || JSON.stringify(report.rows[id].evidence) !== JSON.stringify(rowEvidence[id])) throw new Error(`Incomplete evidence mapping for ${id}`);

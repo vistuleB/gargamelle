@@ -11,7 +11,7 @@ export const rowEvidence = {
   V01: ['composition.test.mjs', 'exclude.test.mjs', 'conditional.test.mjs', 'contains.test.mjs', 'property-names.test.mjs', 'tuple.test.mjs', 'recursion.test.mjs', 'numbers.test.mjs', 'extensions.test.mjs', 'generated.test.mjs', 'generated-values.test.mjs', 'foundation.test.mjs'],
   V02: ['extensions.test.mjs', 'hardening.test.mjs', 'generated.test.mjs', 'conformance.test.mjs', 'supplementary-oracle.test.mjs'],
   V03: ['hardening.test.mjs', 'generated.test.mjs', 'conformance.test.mjs', 'supplementary-oracle.test.mjs'],
-  V04: ['hardening.test.mjs', 'generated-values.test.mjs', 'foundation.test.mjs', 'cloze.test.mjs'],
+  V04: ['contract.test.mjs', 'boundary.test.mjs', 'hardening.test.mjs', 'generated-values.test.mjs', 'foundation.test.mjs', 'cloze.test.mjs'],
   V05: ['compile-negative.test.mjs', 'generated-values.test.mjs'],
   V06: ['generated.test.mjs', 'generated-values.test.mjs', 'conformance.test.mjs'],
   V07: ['generated-values.test.mjs', 'supplementary-oracle.test.mjs', 'cloze.test.mjs'],
@@ -20,7 +20,7 @@ export const rowEvidence = {
   V10: ['composition-mutations.test.mjs', 'exclude-mutations.test.mjs', 'conditional-mutations.test.mjs', 'contains-mutations.test.mjs', 'property-names-mutations.test.mjs', 'tuple-mutations.test.mjs', 'recursion-mutations.test.mjs', 'number-mutations.test.mjs', 'generated-mutations.test.mjs', 'oracle.test.mjs'],
   V11: ['cloze.test.mjs'],
   V12: ['generated-runtime.test.mjs', 'compile-negative.test.mjs'],
-  V13: ['foundation.test.mjs', 'generated-values.test.mjs', 'generated-runtime.test.mjs'],
+  V13: ['contract.test.mjs', 'boundary.test.mjs', 'foundation.test.mjs', 'generated-values.test.mjs', 'generated-runtime.test.mjs'],
 };
 
 export function fingerprint() {

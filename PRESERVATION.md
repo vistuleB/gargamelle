@@ -10,6 +10,27 @@ Thus ordinary schema rejection does not execute author code. Total/pure mapping
 functions remain an explicit assumption. Callback exceptions are deliberately not
 caught as validation errors.
 
+## Semantic contracts
+
+`Contract(a)` wraps a completed definition without modifying its node or runner.
+`require` appends a check, so adding requirements cannot enlarge acceptance.
+Structural validation must succeed before conversion; conversion supplies the
+same decoded value to every check and, on acceptance, the typed handler.
+Collected semantic rejections prevent handler invocation. The zero-requirement
+JSON path calls structural validation only; otherwise JSON verification uses the
+same contract decoding path and discards decoded data. Certificates retain the
+full contract but are not accepted as boundary submissions, preventing certificate
+identity from replacing the recipient's acceptance check.
+
+Structural accessors expose the original definition unchanged. Schema emission
+therefore preserves its existing equivalence relation and never runs semantic
+callbacks. Requirement documentation reads descriptions only and escapes their
+HTML. Semantic assertions are intentionally absent from schema equivalence.
+Pure, total callbacks and immutable captured context remain assumptions; neither
+callback prose nor opaque types establish those properties against hostile FFI.
+Shared Contract tests and JavaScript operational-failure tests exercise these
+invariants; the isolated provider probe separates historical and current context.
+
 ## Base cases
 
 - **P01 Boolean/null:** node checks the matching JSON constructor; schema emits

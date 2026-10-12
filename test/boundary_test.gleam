@@ -17,7 +17,7 @@ pub fn decode_once_and_pass_both_test() {
       text <> "!"
     })
   let boundary =
-    s.boundary(definition, fn(data, json) {
+    s.boundary(s.contract(definition), fn(data, json) {
       count() |> should.equal(1)
       tick()
       #(data, json)
@@ -37,16 +37,18 @@ pub fn invalid_input_skips_conversion_and_handler_test() {
         text
       }),
     )
-  let boundary = s.boundary(definition, fn(_, _) { tick() })
+  let boundary = s.boundary(s.contract(definition), fn(_, _) { tick() })
   let assert Ok(json) = s.parse("[\"valid\", false, 42]")
   let assert Error(expected) = s.decode(definition, json)
-  s.forward(boundary, json) |> should.equal(Error(expected))
+  s.forward(boundary, json) |> should.equal(Error(s.Structural(expected)))
   count() |> should.equal(0)
 }
 
 pub fn same_output_type_different_contract_test() {
-  let first = s.boundary(s.string_constant("Brainy"), fn(data, _) { data })
-  let second = s.boundary(s.string_constant("Jokey"), fn(data, _) { data })
+  let first =
+    s.boundary(s.contract(s.string_constant("Brainy")), fn(data, _) { data })
+  let second =
+    s.boundary(s.contract(s.string_constant("Jokey")), fn(data, _) { data })
   let assert Ok(json) = s.parse("\"Brainy\"")
   s.forward(first, json) |> should.equal(Ok("Brainy"))
   s.forward(second, json) |> should.be_error
@@ -59,7 +61,9 @@ pub fn original_json_and_defaulted_output_test() {
   let assert Ok(record) =
     s.defaulted(s.record(fn(name) { name }), "name", s.text(), default)
   let boundary =
-    s.boundary(s.finish(record, s.Open), fn(data, json) { #(data, json) })
+    s.boundary(s.contract(s.finish(record, s.Open)), fn(data, json) {
+      #(data, json)
+    })
   let assert Ok(json) = s.parse("{\"extra\":true}")
   let assert Ok(#(data, original)) = s.forward(boundary, json)
   data |> should.equal("Brainy")
@@ -69,7 +73,8 @@ pub fn original_json_and_defaulted_output_test() {
 }
 
 pub fn handler_result_is_separate_test() {
-  let boundary = s.boundary(s.text(), fn(_, _) { Error("application error") })
+  let boundary =
+    s.boundary(s.contract(s.text()), fn(_, _) { Error("application error") })
   let assert Ok(json) = s.parse("\"Brainy\"")
   s.forward(boundary, json) |> should.equal(Ok(Error("application error")))
   let assert Ok(invalid) = s.parse("false")
@@ -88,7 +93,7 @@ pub fn recursive_boundary_and_output_transfer_test() {
         s.recursive("boundary-tree", fn(self) {
           s.any_of([s.map(s.number(), Leaf), s.map(s.array(self), Branch)])
         })
-      s.boundary(definition, fn(data, json) { #(data, json) })
+      s.boundary(s.contract(definition), fn(data, json) { #(data, json) })
     })
   let #(data, original) =
     handoff(fn() {
@@ -109,14 +114,15 @@ pub fn verify_without_conversion_and_exact_contract_test() {
       text <> "!"
     })
   let assert Ok(json) = s.parse("\"Brainy\"")
-  let assert Ok(verified) = s.verify(definition, json)
+  let assert Ok(verified) = s.verify(s.contract(definition), json)
   s.verified_json(verified) |> should.equal(json)
   s.schema_string(s.verified_definition(verified), s.Compact)
   |> should.equal(s.schema_string(definition, s.Compact))
   count() |> should.equal(0)
   let assert Ok(other) = s.parse("\"Jokey\"")
   let assert Error(expected) = s.validate(definition, other)
-  s.verify(definition, other) |> should.equal(Error(expected))
+  s.verify(s.contract(definition), other)
+  |> should.equal(Error(s.Structural(expected)))
   count() |> should.equal(0)
   s.decode(s.verified_definition(verified), s.verified_json(verified))
   |> should.equal(Ok("Brainy!"))
@@ -131,7 +137,7 @@ pub fn verified_json_and_definition_transfer_test() {
           s.any_of([s.map(s.number(), Leaf), s.map(s.array(self), Branch)])
         })
       let assert Ok(json) = s.parse("[1,[2]]")
-      let assert Ok(verified) = s.verify(definition, json)
+      let assert Ok(verified) = s.verify(s.contract(definition), json)
       verified
     })
   s.decode(s.verified_definition(verified), s.verified_json(verified))

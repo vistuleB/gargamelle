@@ -13,7 +13,7 @@ pub fn receiver_verifies_without_conversion_test() {
   let #(tick, count) = counter(fn(tick, count) { #(tick, count) })
   let definition = s.map(s.text(), fn(_) { panic as "must not decode" })
   let receiver =
-    s.json_boundary(definition, fn(verified) {
+    s.json_boundary(s.contract(definition), fn(verified) {
       tick()
       verified
     })
@@ -31,18 +31,18 @@ pub fn receiver_verifies_without_conversion_test() {
 pub fn invalid_input_preserves_errors_and_skips_handler_test() {
   let #(tick, count) = counter(fn(tick, count) { #(tick, count) })
   let definition = s.array(s.text())
-  let receiver = s.json_boundary(definition, fn(_) { tick() })
+  let receiver = s.json_boundary(s.contract(definition), fn(_) { tick() })
   let assert Ok(json) = s.parse("[false,42]")
   let assert Error(expected) = s.validate(definition, json)
-  s.forward_json(receiver, json) |> should.equal(Error(expected))
+  s.forward_json(receiver, json) |> should.equal(Error(s.Structural(expected)))
   count() |> should.equal(0)
 }
 
 pub fn receiver_contract_is_authoritative_test() {
   let assert Ok(json) = s.parse("\"Jokey\"")
-  let assert Ok(other_certificate) = s.verify(s.text(), json)
+  let assert Ok(other_certificate) = s.verify(s.contract(s.text()), json)
   let receiver =
-    s.json_boundary(s.string_constant("Brainy"), fn(verified) {
+    s.json_boundary(s.contract(s.string_constant("Brainy")), fn(verified) {
       s.verified_json(verified)
     })
   s.forward_json(receiver, s.verified_json(other_certificate))
@@ -54,7 +54,7 @@ pub fn receiver_contract_is_authoritative_test() {
 pub fn application_errors_and_process_transfer_test() {
   let receiver =
     handoff(fn() {
-      s.json_boundary(s.string_constant("Brainy"), fn(_) {
+      s.json_boundary(s.contract(s.string_constant("Brainy")), fn(_) {
         Error("storage failure")
       })
     })

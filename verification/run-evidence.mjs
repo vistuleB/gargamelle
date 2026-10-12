@@ -47,7 +47,7 @@ try {
   const baseCommit = gitHead.status === 0 ? gitHead.stdout.trim() : null;
   const sourceCommit = baseCommit !== null && version('git', ['status', '--porcelain', '--', '.']) === '' ? baseCommit : null;
   const report = {
-    status: 'passed', contractRevision: 5, scope: 'Node candidate; not a formal proof or publication approval',
+    status: 'passed', contractRevision: 6, scope: 'Node candidate; not a formal proof or publication approval',
     generatedAt: new Date().toISOString(), source: after, baseCommit,
     sourceCommit,
     sourceIsWorkingTreeSnapshot: true, versions: { node: process.version, gleam: version('gleam', ['--version']) },

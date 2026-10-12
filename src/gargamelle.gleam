@@ -2,11 +2,12 @@
 ////
 //// Parse JSON with `parse`, then call `validate` or `decode`. Validation never
 //// invokes user converters; decoding invokes them only after structural success.
-//// `verify` retains accepted JSON and its definition without decoding. A boundary
-//// decodes once and passes the decoded value and original JSON to its handler.
+//// `Contract` adds semantic requirements above a structural definition. Boundaries
+//// enforce their stored contract before invoking handlers. `verify` retains
+//// original JSON and the accepting contract; semantic requirements decode once.
 //// Converters are trusted application code: exceptions are operational failures.
 //// JavaScript and Erlang targets are supported on the
-//// [tested runtimes](https://hexdocs.pm/gargamelle/0.4.0/native-erlang.html).
+//// [tested runtimes](https://hexdocs.pm/gargamelle/0.5.0/native-erlang.html).
 //// The Erlang target requires a separately compiled C regex helper.
 
 import gleam/bit_array
@@ -58,6 +59,28 @@ pub type DataError {
     branches: List(#(Int, List(DataError))),
     matches: List(Int),
   )
+}
+
+/// A semantic violation. `path` is a JSON Pointer, empty for the whole input.
+/// Locations and messages are supplied by trusted semantic checks.
+pub type Violation {
+  Violation(path: String, message: String)
+}
+
+/// Failures of one semantic requirement, indexed in declaration order.
+pub type RequirementFailure {
+  RequirementFailure(
+    index: Int,
+    description: String,
+    violations: List(Violation),
+  )
+}
+
+/// Structural decoding rejection or rejection by semantic requirements.
+/// Exceptions and resource failures are operational failures, not these values.
+pub type ContractError {
+  Structural(List(DataError))
+  Semantic(List(RequirementFailure))
 }
 
 /// Treatment of undeclared record keys. `Strict` rejects them; `Open` accepts
@@ -165,27 +188,40 @@ pub opaque type Plan(a, r) {
 pub type Definition(a) =
   Plan(a, Nil)
 
-/// JSON accepted by the stored definition, created by `verify` without decoding.
-/// Access the JSON and contract with `verified_json` and `verified_definition`.
-/// No decoded value is retained. The parameter `a` identifies the definition's
-/// output type, not a particular definition or its constraints.
-/// Use a `Boundary` to enforce which definition checks a handler's input.
+/// A completed structural definition and additional checks of decoded values.
+/// Checks must be deterministic, total and free of side effects, with immutable
+/// bound context. They cannot transform the decoded value or the original JSON.
+pub opaque type Contract(a) {
+  Contract(Definition(a), List(Requirement(a)))
+}
+
+type Requirement(a) {
+  Requirement(String, fn(a) -> Result(Nil, List(Violation)))
+}
+
+/// JSON accepted by the stored full contract, created by `verify`.
+/// Semantic requirements cause one decoding pass; no decoded value is retained.
+/// Access the JSON and contract with `verified_json` and `verified_contract`.
+/// The parameter `a` identifies the definition's output type, not a particular
+/// contract or its constraints.
+/// Use a receiving boundary to enforce which contract checks a handler's input.
 pub opaque type VerifiedJson(a) {
-  VerifiedJson(Json, Definition(a))
+  VerifiedJson(Json, Contract(a))
 }
 
-/// A definition and a private handler invoked only after successful decoding
-/// against that definition. Construct with `boundary`, inspect the contract with
-/// `boundary_definition`, and submit JSON with `forward`.
+/// A contract and a private handler invoked only after successful decoding and
+/// semantic checks. Construct with `boundary`, inspect with `boundary_contract`,
+/// and submit JSON with `forward`.
 pub opaque type Boundary(a, response) {
-  Boundary(Definition(a), fn(a, Json) -> response)
+  Boundary(Contract(a), fn(a, Json) -> response)
 }
 
-/// A definition and a private handler receiving verified JSON without decoding.
-/// Construct with `json_boundary`, inspect with `json_boundary_definition`, and
+/// A contract and a private handler receiving verified JSON. Semantic checks
+/// require decoding once; contracts without checks validate without conversion.
+/// Construct with `json_boundary`, inspect with `json_boundary_contract`, and
 /// submit admitted JSON with `forward_json`.
 pub opaque type JsonBoundary(a, response) {
-  JsonBoundary(Definition(a), fn(VerifiedJson(a)) -> response)
+  JsonBoundary(Contract(a), fn(VerifiedJson(a)) -> response)
 }
 
 /// The opaque recursion environment supplied to a self-recursive plan.
@@ -1655,90 +1691,189 @@ pub fn decode(def: Definition(a), value: Json) -> Result(a, List(DataError)) {
   }
 }
 
-/// Bind a handler to its input definition. Construction does not validate input
-/// or invoke callbacks. The handler receives decoded data and original JSON.
-pub fn boundary(
-  definition: Definition(a),
-  handler: fn(a, Json) -> response,
-) -> Boundary(a, response) {
-  Boundary(definition, handler)
+/// Wrap a completed definition without adding semantic requirements.
+pub fn contract(definition: Definition(a)) -> Contract(a) {
+  Contract(definition, [])
 }
 
-/// Return the exact definition used by `forward`, for schema emission or host
-/// review. This does not expose the handler or permit replacing its definition.
-pub fn boundary_definition(boundary: Boundary(a, response)) -> Definition(a) {
-  let Boundary(definition, _) = boundary
+/// Add a requirement without running it. Checks inspect decoded values, so
+/// projected extra fields and distinctions removed by maps are unavailable.
+/// Description strings must contain Unicode scalar values.
+pub fn require(
+  contract: Contract(a),
+  description: String,
+  check: fn(a) -> Result(Nil, List(Violation)),
+) -> Contract(a) {
+  let assert Ok(_) = scalar_argument(description)
+  let Contract(definition, requirements) = contract
+  Contract(
+    definition,
+    list.append(requirements, [Requirement(description, check)]),
+  )
+}
+
+/// Return the structural definition. Its schema does not describe arbitrary
+/// semantic requirements and is not sufficient to establish contract acceptance.
+pub fn contract_definition(contract: Contract(a)) -> Definition(a) {
+  let Contract(definition, _) = contract
   definition
 }
 
-/// Decode once against the boundary's definition, then invoke its handler once.
-/// Invalid input returns the same errors as `decode` and invokes no conversion
-/// callbacks or handler. Operational failures and callback exceptions propagate.
-/// A handler returning `Result` produces a nested `Result`; its errors remain
-/// distinct from input validation errors. Output is not checked by this function.
+/// Return every requirement description in declaration order, without callbacks.
+pub fn contract_requirements(contract: Contract(a)) -> List(String) {
+  let Contract(_, requirements) = contract
+  list.map(requirements, fn(requirement) {
+    let Requirement(description, _) = requirement
+    description
+  })
+}
+
+fn check_requirements(requirements: List(Requirement(a)), data: a) {
+  requirements
+  |> list.index_map(fn(requirement, index) {
+    let Requirement(description, check) = requirement
+    case check(data) {
+      Ok(Nil) -> []
+      Error(violations) -> {
+        let violations = case violations {
+          [] -> [Violation("", "Requirement rejected without a diagnostic")]
+          _ -> violations
+        }
+        [RequirementFailure(index, description, violations)]
+      }
+    }
+  })
+  |> list.flatten
+  |> fn(failures) {
+    case failures {
+      [] -> Ok(Nil)
+      _ -> Error(Semantic(failures))
+    }
+  }
+}
+
+/// Decode once, then run each semantic requirement once in declaration order.
+/// Structural rejection skips all checks. Semantic failures are collected;
+/// exceptions propagate and may prevent later checks from running.
+pub fn decode_contract(
+  contract: Contract(a),
+  json: Json,
+) -> Result(a, ContractError) {
+  let Contract(definition, requirements) = contract
+  use data <- result.try(
+    decode(definition, json) |> result.map_error(Structural),
+  )
+  use _ <- result.try(check_requirements(requirements, data))
+  Ok(data)
+}
+
+/// Check contract acceptance. A contract without semantic requirements validates
+/// without conversion; otherwise decoding occurs once to supply the checks.
+pub fn validate_contract(
+  contract: Contract(a),
+  json: Json,
+) -> Result(Nil, ContractError) {
+  let Contract(definition, requirements) = contract
+  case requirements {
+    [] -> validate(definition, json) |> result.map_error(Structural)
+    _ -> decode_contract(contract, json) |> result.map(fn(_) { Nil })
+  }
+}
+
+/// Bind a handler to its authoritative contract. Construction runs no callbacks.
+pub fn boundary(
+  contract: Contract(a),
+  handler: fn(a, Json) -> response,
+) -> Boundary(a, response) {
+  Boundary(contract, handler)
+}
+
+/// Return the receiving contract without exposing its handler.
+pub fn boundary_contract(boundary: Boundary(a, response)) -> Contract(a) {
+  let Boundary(contract, _) = boundary
+  contract
+}
+
+/// Return the receiving contract's structural definition for schema generation.
+pub fn boundary_definition(boundary: Boundary(a, response)) -> Definition(a) {
+  contract_definition(boundary_contract(boundary))
+}
+
+/// Decode and check the stored contract once, then invoke the handler once.
+/// Rejection invokes no handler. Callback exceptions propagate operationally.
+/// A Result response remains nested; output is not checked.
 pub fn forward(
   boundary: Boundary(a, response),
   json: Json,
-) -> Result(response, List(DataError)) {
-  let Boundary(definition, handler) = boundary
-  use data <- result.try(decode(definition, json))
+) -> Result(response, ContractError) {
+  let Boundary(contract, handler) = boundary
+  use data <- result.try(decode_contract(contract, json))
   Ok(handler(data, json))
 }
 
-/// Bind a JSON-only receiving handler to its authoritative definition.
-/// Construction invokes neither validation nor callbacks.
+/// Bind a JSON receiving handler to its authoritative contract.
 pub fn json_boundary(
-  definition: Definition(a),
+  contract: Contract(a),
   handler: fn(VerifiedJson(a)) -> response,
 ) -> JsonBoundary(a, response) {
-  JsonBoundary(definition, handler)
+  JsonBoundary(contract, handler)
 }
 
-/// Return the exact definition used by `forward_json`; the handler stays private.
+/// Return the receiving contract without exposing its handler.
+pub fn json_boundary_contract(
+  boundary: JsonBoundary(a, response),
+) -> Contract(a) {
+  let JsonBoundary(contract, _) = boundary
+  contract
+}
+
+/// Return the receiving contract's structural definition for schema generation.
 pub fn json_boundary_definition(
   boundary: JsonBoundary(a, response),
 ) -> Definition(a) {
-  let JsonBoundary(definition, _) = boundary
-  definition
+  contract_definition(json_boundary_contract(boundary))
 }
 
-/// Validate once against the receiving boundary's definition, then invoke its
-/// handler once with a certificate. This never decodes or invokes converters.
-/// "Once" concerns Gargamelle validation; admission and host policy are separate.
-/// Invalid input invokes no handler. Operational failures and handler exceptions
-/// propagate. A handler's Result response remains nested inside the outer Result.
-/// Input must be admitted JSON, not a certificate checked under another contract.
+/// Verify the stored contract once, then invoke the handler once. Semantic
+/// requirements cause one decoding pass; without them no converter runs.
+/// Admission and application policy are separate. Certificates from other
+/// contracts cannot bypass this check. Exceptions propagate operationally.
 pub fn forward_json(
   boundary: JsonBoundary(a, response),
   json: Json,
-) -> Result(response, List(DataError)) {
-  let JsonBoundary(definition, handler) = boundary
-  use verified <- result.try(verify(definition, json))
+) -> Result(response, ContractError) {
+  let JsonBoundary(contract, handler) = boundary
+  use verified <- result.try(verify(contract, json))
   Ok(handler(verified))
 }
 
-/// Check JSON against a definition and retain the JSON and checked definition.
-/// This invokes no conversion callbacks and constructs no decoded value.
-/// Rejection and operational failures have the same semantics as `validate`.
+/// Verify a full contract and retain original JSON and that exact contract.
+/// No decoded value is retained. Semantic checks require decoding once;
+/// contracts without them validate without conversion.
 pub fn verify(
-  definition: Definition(a),
+  contract: Contract(a),
   json: Json,
-) -> Result(VerifiedJson(a), List(DataError)) {
-  use _ <- result.try(validate(definition, json))
-  Ok(VerifiedJson(json, definition))
+) -> Result(VerifiedJson(a), ContractError) {
+  use _ <- result.try(validate_contract(contract, json))
+  Ok(VerifiedJson(json, contract))
 }
 
-/// Return the original admitted JSON. This does not validate, decode or serialize.
+/// Return original admitted JSON without validation, decoding or serialization.
 pub fn verified_json(verified: VerifiedJson(a)) -> Json {
   let VerifiedJson(json, _) = verified
   json
 }
 
-/// Return the exact definition that accepted the stored JSON, for contract
-/// inspection or later decoding. Retrieving it invokes no conversion callbacks.
+/// Return the exact contract, including checks and captured context, that accepted
+/// the stored JSON. The output type parameter alone does not identify guarantees.
+pub fn verified_contract(verified: VerifiedJson(a)) -> Contract(a) {
+  let VerifiedJson(_, contract) = verified
+  contract
+}
+
+/// Return the checked contract's underlying structural definition.
 pub fn verified_definition(verified: VerifiedJson(a)) -> Definition(a) {
-  let VerifiedJson(_, definition) = verified
-  definition
+  contract_definition(verified_contract(verified))
 }
 
 fn inspect_definition(def: Definition(a), value: Json) {

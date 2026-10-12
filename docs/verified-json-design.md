@@ -1,5 +1,9 @@
 # JSON boundary and certificate implementation decisions
 
+This records the 0.4.0 design. The 0.5.0 contract changes supersede its
+Definition-only certificate and validation-only claims; see
+[Contract design decisions](contract-design.md).
+
 This contributor note records decisions for review; the usage guide is
 `docs/boundaries.md`. The encoder remains an isolated prototype.
 

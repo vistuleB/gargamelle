@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.0 — Unreleased
+
+- Add opaque `Contract(a)` with ordered reject-only semantic requirements and
+  separate structural and semantic rejection diagnostics.
+- Receiving boundaries and `verify` now take contracts. JSON-only verification
+  skips conversion for check-free contracts and decodes once for semantic checks.
+- Certificates retain the full accepting contract, including captured context.
+- Add contract inspection and HTML requirement documentation without callbacks.
+
+
 ## 0.4.0 — 2026-10-12
 
 - Preserve every object constraint when `property_names` and

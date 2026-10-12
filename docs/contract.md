@@ -1,6 +1,6 @@
 # Gargamelle technical contract
 
-This document specifies the intended public semantics of Gargamelle 0.4.0.
+This document specifies the intended public semantics of Gargamelle 0.5.0.
 “Must” denotes a requirement, not a claim that the implementation has been
 formally proved. Verification results and implementation history are separate.
 
@@ -12,26 +12,48 @@ are opaque and constructible only through library operations. The definition is
 authoritative: schema emission and decoding are derived interpretations of it.
 There is no independent schema/decoder override or arbitrary predicate escape hatch.
 
-`Boundary(a, response)` binds a completed definition to a private handler.
-`forward` decodes the submitted `Json` against that exact stored definition and
-invokes the handler only on success, passing decoded data and original JSON as
-separate arguments. Invalid inputs return `decode`'s errors, and callback
-exceptions remain operational failures. Responses are not checked.
+A `Contract(a)` combines a completed `Definition(a)` with an ordered list of
+semantic requirements. `contract(definition)` adds no requirements;
+`require(contract, description, check)` conjoins a reject-only check of decoded
+`a`. Requirements cannot transform data or weaken structural acceptance. Checks
+must be deterministic, total and free of side effects, with immutable captured
+context. They observe decoded data: defaulted fields are present, `Open` extra
+fields are discarded, and distinctions removed by maps are unavailable.
 
-`verify` validates JSON without running conversion callbacks and returns an
-opaque `VerifiedJson(a)` containing the JSON and checked definition, with no
-decoded value. Invalid inputs return `validate`'s errors. The generic parameter
-`a` describes the definition's output type, not its identity or constraints;
-the opaque boundary enforces the association between definition and handler.
+`decode_contract` performs structural validation and conversion once, then calls
+every requirement once in declaration order. Structural rejection skips all
+conversion and requirement callbacks. Normal semantic rejections are collected
+as ordered `RequirementFailure` values, each containing a zero-based declaration
+index, description and callback-supplied `Violation` diagnostics. Violation paths
+are JSON Pointers supplied by trusted application code; the library does not
+infer or validate their relationship to the original JSON. `Error([])` remains
+rejection and receives a root diagnostic. `ContractError` distinguishes
+`Structural(List(DataError))` from `Semantic(List(RequirementFailure))`.
+Exceptions and resource failures remain operational failures and may prevent
+later checks from running. Semantic errors are not structural errors.
+
+`validate_contract` performs validation without conversion when no requirements
+exist. Otherwise it decodes once to supply the requirements and discards the
+returned data. `verify` uses this operation and returns an opaque `VerifiedJson(a)`
+containing original admitted JSON and the exact full contract, including its
+checks and captured context. No decoded value is retained. The parameter `a`
+identifies an output type, not a particular contract or its constraints.
+
+`Boundary(a, response)` binds a full contract to a private handler. `forward`
+calls `decode_contract` once and invokes the handler only on success, passing
+decoded data and original JSON. `JsonBoundary(a, response)` instead uses `verify`
+and passes a certificate. With semantic requirements this performs one decoding
+pass; without requirements no conversion callback runs. Either kind of rejection
+invokes no handler. Construction and inspection execute no callbacks.
+
+`boundary_contract`, `json_boundary_contract` and `verified_contract` expose the
+exact retained contract. The corresponding `*_definition` accessors expose only
+its structural definition for schema generation. Receiving boundaries always
+check their own stored contract; a foreign certificate cannot bypass a check.
+Handler responses remain generic, including nested `Result` values, and are not
+checked. Admission, authorization and storage policy are separate operations.
+Opaque APIs do not sandbox hostile code in the same runtime.
 See [Verified JSON boundaries](boundaries.html).
-
-`JsonBoundary(a, response)` binds an authoritative definition to a private handler
-receiving `VerifiedJson(a)`. `forward_json` calls `verify` once and invokes the
-handler once on success, without decoding. Invalid input invokes no handler.
-The stored definition is exactly the one exposed by `json_boundary_definition`.
-An arbitrary certificate cannot bypass this receiving check. "Once" refers to
-Gargamelle validation, not admission or application policy. Handler responses
-remain generic/nested and operational exceptions propagate.
 
 Constructors compose opaque `Plan(a, r)` values, where `r` is the recursion
 environment. A completed `Definition(a)` is the closed specialization
@@ -83,6 +105,13 @@ default insertion or property removal. Every comparison must use the same
 parsed input value. A validator’s optional lint restrictions are not additional
 acceptance rules.
 
+For a contract C with underlying definition S and requirements R, successful
+contract decoding additionally requires every check in R to return `Ok(Nil)`
+for S's decoded value. Generated schemas describe S only. Schema acceptance is
+necessary but insufficient for acceptance by C when R contains requirements.
+Requirement descriptions document intended checks; prose is not evidence that
+callbacks implement those descriptions. Schema emission must execute no checks.
+
 For accepted input, the returned v must also satisfy S’s decoded-value contract
 below. Acceptance agreement alone is insufficient. For invalid in-domain input,
 validation and decoding must return structural data errors. They must not treat
@@ -97,7 +126,8 @@ conversion performed by the library mutates the admitted input.
 Mappings are trusted application functions. They cannot add structural rejection
 rules. Exceptions, nontermination and side effects in user functions are outside
 the guarantee. Application checks such as cross-record identity, external
-references and business invariants belong in a separate semantic validation stage.
+references and business invariants can be expressed as `Contract` requirements.
+They do not become structural schema assertions.
 
 ## 3. Constructor semantics
 

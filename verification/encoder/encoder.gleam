@@ -9,7 +9,7 @@ import gleam/result
 pub type EncodingError {
   EncodingError(String)
   Admission(s.AdmissionError)
-  Contract(List(s.DataError))
+  Contract(s.ContractError)
 }
 
 pub opaque type Plan(a, r) {
@@ -201,5 +201,5 @@ pub fn encode(
 ) -> Result(s.VerifiedJson(a), EncodingError) {
   let Codec(encoder, definition) = codec
   use json <- result.try(encode_json(encoder, value))
-  s.verify(definition, json) |> result.map_error(Contract)
+  s.verify(s.contract(definition), json) |> result.map_error(Contract)
 }

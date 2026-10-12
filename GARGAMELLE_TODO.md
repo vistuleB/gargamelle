@@ -1,5 +1,29 @@
 # Gargamelle handoff and next work
 
+## Active 0.5.0 contract work
+
+0.4.0 is published. The maintainer authorized implementation of `Contract(a)` for
+0.5.0 on 2026-10-12, with typed encoder integration reserved for 0.6.0.
+The contract layer, receiving-boundary integration, semantic diagnostics and HTML
+requirement rendering are implemented. Initial tests pass on both targets.
+Decisions for review are in `docs/contract-design.md`; migration guidance is in
+`docs/migration-0.5.md`.
+
+Remaining work:
+
+- Extend the isolated cloze-provider integration to the other providers before
+  updating the app's production dependency. The initial probe passes historical,
+  current-card, inconsistent-total and foreign-certificate checks; run
+  `node verification/provider-contract.mjs /path/to/equation-flashcards`.
+- Split the app's current-card validator into an independent requirement to avoid
+  repeating its permanent historical predicate.
+- Extend release evidence and run Linux qualification for the final candidate.
+- Update release preparation from its 0.4.0 guard only after integration is verified.
+- Prepare the release archive and handoff; the maintainer publishes.
+
+The older sections below retain historical checkpoints and should not be treated
+as the current release state.
+
 ## Active schema coverage work
 
 The maintainer authorized the ordered coverage list on 2026-10-11, with one
