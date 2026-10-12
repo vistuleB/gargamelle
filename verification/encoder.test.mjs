@@ -12,12 +12,17 @@ test('isolated typed encoder prototype works on both targets',async(t)=>{
   const root=fileURLToPath(new URL('../',import.meta.url));
   const directory=mkdtempSync(join(tmpdir(),'gargamelle-encoder-'));
   try{
+    const library=join(directory,'library');
+    for(const name of ['src','priv'])cpSync(join(root,name),join(library,name),{recursive:true});
+    cpSync(join(root,'gleam.toml'),join(library,'gleam.toml'));
+    const helper=spawnSync('make',['-C','priv/regex-src'],{cwd:library,encoding:'utf8',timeout:60000});
+    assert.equal(helper.status,0,helper.stdout+helper.stderr);
     for(const name of ['src','test'])mkdirSync(join(directory,name));
     cpSync(join(root,'verification/encoder/encoder.gleam'),join(directory,'src/encoder.gleam'));
     cpSync(join(root,'verification/encoder/encoder_test.gleam'),join(directory,'test/encoder_test.gleam'));
     for(const name of ['recursion_support.erl','recursion_support.mjs'])cpSync(join(root,'test',name),join(directory,'test',name));
     const dependency=(name,path)=>`${name} = { path = ${JSON.stringify(path)} }\n`;
-    writeFileSync(join(directory,'gleam.toml'),'name = "encoder_probe"\nversion = "0.1.0"\n[dependencies]\n'+dependency('gargamelle',root)+dependency('gleam_stdlib',join(root,'build/packages/gleam_stdlib'))+dependency('gleam_json',join(root,'build/packages/gleam_json'))+'\n[dev-dependencies]\n'+dependency('gleeunit',join(root,'build/packages/gleeunit')));
+    writeFileSync(join(directory,'gleam.toml'),'name = "encoder_probe"\nversion = "0.1.0"\n[dependencies]\n'+dependency('gargamelle',library)+dependency('gleam_stdlib',join(root,'build/packages/gleam_stdlib'))+dependency('gleam_json',join(root,'build/packages/gleam_json'))+'\n[dev-dependencies]\n'+dependency('gleeunit',join(root,'build/packages/gleeunit')));
     writeFileSync(join(directory,'test/encoder_probe_test.gleam'),'import gleeunit\npub fn main() { gleeunit.main() }\n');
     const run=(args)=>spawnSync('gleam',args,{cwd:directory,encoding:'utf8',timeout:60000,maxBuffer:5*1024*1024});
     const guide=readFileSync(join(root,'docs/encoder-prototype.md'),'utf8');
