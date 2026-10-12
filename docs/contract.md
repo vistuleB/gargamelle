@@ -183,7 +183,7 @@ invalid bounds and application to unsupported underlying definitions fail
 construction. Naming and annotations preserve modifier support. Same-input
 assertions retain their checks; modifiers do not distribute over nullable/union
 alternatives or resolve recursive references. Apply a modifier to an alternative
-or recursive body during construction. See the [modifier policy](advanced.html#modifier-composition)
+or recursive body during construction. See the [modifier policy](advanced.html)
 for supported base shapes and named-body reuse rules.
 
 Enums are nonempty, contain distinct strings and perform no coercion. Constants

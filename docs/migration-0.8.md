@@ -18,7 +18,7 @@ Bounds, patterns and integer divisibility update an underlying named body while
 retaining its name. Combining original and modified bodies under one name produces
 the existing graph-conflict error. Distinct reusable bodies need distinct names.
 Array/object assertion modifiers can instead constrain a use of a shared named
-body. See the [modifier policy](advanced.html#modifier-composition) for the
+body. See the [modifier policy](advanced.html) for the
 supported input bases and naming rules.
 
 JSON admission, parsing, semantic Contracts, receiving boundaries and explicit
