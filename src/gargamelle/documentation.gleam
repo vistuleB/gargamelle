@@ -396,7 +396,11 @@ fn node(
 /// Supply a unique article ID when embedding multiple contracts on one page.
 pub fn render(definition: gargamelle.Definition(a), id: String) -> String {
   let assert Ok(html) =
-    render_emitted(gargamelle.schema_string(definition), id, [])
+    render_emitted(
+      gargamelle.schema_string(definition, gargamelle.Compact),
+      id,
+      [],
+    )
   html
 }
 
@@ -499,7 +503,7 @@ pub fn render_examples(
             examples
             |> list.map(fn(value) {
               "<pre><code>"
-              <> escape_html(gargamelle.to_string(value))
+              <> escape_html(gargamelle.to_string(value, gargamelle.Compact))
               <> "</code></pre>"
             })
             |> string.join("")

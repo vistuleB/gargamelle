@@ -9,7 +9,7 @@ const root=fileURLToPath(new URL('../',import.meta.url));
 const mutations=[
  ['inverted-condition','let $ = inspect(probe, v, "", bindings)[0] instanceof $Empty;\n            if ($) {\n              return inspect(yes, v, p, bindings)[0];','let $ = !(inspect(probe, v, "", bindings)[0] instanceof $Empty);\n            if ($) {\n              return inspect(yes, v, p, bindings)[0];',`assert.equal(s.validate(d,unwrap(s.parse('1'))) instanceof Ok,true);`],
  ['else-validation-removed','return inspect(alternative, v, p, bindings)[0];','return $List$Empty$const;',`assert.equal(s.validate(d,unwrap(s.parse('0.5'))) instanceof Ok,false);`],
- ['then-emission-dropped','["then", emit(yes)]','["x-then", emit(yes)]',`assert.equal(JSON.parse(s.schema_string(d)).allOf[1].then?.const,1);`],
+ ['then-emission-dropped','["then", emit(yes)]','["x-then", emit(yes)]',`assert.equal(JSON.parse(s.schema_string(d, s.JsonFormat$Compact$const)).allOf[1].then?.const,1);`],
 ];
 test('condition selection, else validation, and then emission mutants fail assertions',()=>{
  const dir=mkdtempSync(join(tmpdir(),'gargamelle-conditional-mutants-'));

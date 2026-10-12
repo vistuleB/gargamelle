@@ -9,7 +9,7 @@ const root=fileURLToPath(new URL('../',import.meta.url));
 const mutations=[
  ['missing-length-check','let $ = $list.length(children) === $list.length(xs);','let $ = true;',`assert.equal(s.validate(d,unwrap(s.parse('[]'))) instanceof Ok,false);`],
  ['swapped-validation-positions','$list.zip(children, xs)','$list.zip($list.reverse(children), xs)',`assert.equal(s.validate(d,unwrap(s.parse('["x",true]'))) instanceof Ok,true);`],
- ['extra-items-emitted','put(_pipe, "items", new JBool(false))','put(_pipe, "items", new JBool(true))',`assert.equal(JSON.parse(s.schema_string(d)).items,false);`],
+ ['extra-items-emitted','put(_pipe, "items", new JBool(false))','put(_pipe, "items", new JBool(true))',`assert.equal(JSON.parse(s.schema_string(d, s.JsonFormat$Compact$const)).items,false);`],
 ];
 test('tuple length, positional diagnostics, and closed emission mutants fail assertions',()=>{
  const dir=mkdtempSync(join(tmpdir(),'gargamelle-tuple-mutants-'));

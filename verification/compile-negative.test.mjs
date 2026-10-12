@@ -7,6 +7,8 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 const root=fileURLToPath(new URL('../',import.meta.url));
 const cases=[
+ ['missing_json_format','pub fn main() { let assert Ok(v) = s.parse("null") s.to_string(v) }','Incorrect arity'],
+ ['missing_schema_format','pub fn main() { s.schema_string(s.text()) }','Incorrect arity'],
  ['removed_value_type','pub fn main(value: s.Value) { value }','Unknown module type'],
  ['removed_policy_type','pub fn main(policy: s.Policy) { policy }','Unknown module type'],
  ['removed_closed','pub fn main() { s.Closed }','Unknown module value'],
@@ -28,7 +30,7 @@ const cases=[
  ['private_recursion_runner','pub fn main() { s.Recursive(fn(_,_) { Nil }) }','Unknown module value'],
  ['open_plan_decode','pub fn main() { let assert Ok(v) = s.parse("[]") s.recursive("tree",fn(self) { s.decode(self,v) Ok(self) }) }','Type mismatch'],
  ['open_plan_validate','pub fn main() { let assert Ok(v) = s.parse("[]") s.recursive("tree",fn(self) { s.validate(self,v) Ok(self) }) }','Type mismatch'],
- ['open_plan_emit','pub fn main() { s.recursive("tree",fn(self) { s.schema_string(self) Ok(self) }) }','Type mismatch'],
+ ['open_plan_emit','pub fn main() { s.recursive("tree",fn(self) { s.schema_string(self, s.Compact) Ok(self) }) }','Type mismatch'],
  ['open_plan_render','pub fn main() { s.recursive("tree",fn(self) { documentation.render(self,"tree") Ok(self) }) }','Type mismatch'],
  ['opaque_plan','pub fn main() { s.Plan(Nil, fn(_,_,_) { Nil }) }','Unknown module value'],
  ['private_evidence','pub fn main() { s.Atomic }','Unknown module value'],

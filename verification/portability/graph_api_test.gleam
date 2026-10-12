@@ -34,8 +34,8 @@ pub fn process_handoff_test() {
   s.decode(definition, value)
   |> should.equal(Ok(Tree([Tree([]), Tree([Tree([])])])))
   s.validate(definition, value) |> should.equal(Ok(Nil))
-  let schema = s.schema_string(definition)
-  schema |> should.equal(s.schema_string(definition))
+  let schema = s.schema_string(definition, s.Compact)
+  schema |> should.equal(s.schema_string(definition, s.Compact))
   let assert Ok(default) = s.parse("[]")
   let assert Ok(fields) =
     s.defaulted(s.record(fn(v) { v }), "tree", definition, default)
@@ -61,8 +61,8 @@ pub fn pair_handoff_test() {
   let assert Ok(value) = s.parse("[[]]")
   s.decode(a, value) |> should.equal(Ok(First([Second([])])))
   s.decode(b, value) |> should.equal(Ok(Second([First([])])))
-  s.schema_string(a) |> should.not_equal("")
-  s.schema_string(b) |> should.not_equal("")
+  s.schema_string(a, s.Compact) |> should.not_equal("")
+  s.schema_string(b, s.Compact) |> should.not_equal("")
 }
 
 pub fn foreign_context_composition_test() {
@@ -75,7 +75,7 @@ pub fn foreign_context_composition_test() {
     })
   let assert Ok(input) = s.parse("[[]]")
   s.validate(second, input) |> should.equal(Ok(Nil))
-  s.schema_string(second) |> should.not_equal("")
+  s.schema_string(second, s.Compact) |> should.not_equal("")
 }
 
 pub fn failure_cleanup_test() {
@@ -116,9 +116,9 @@ pub fn conflict_cleanup_test() {
   let assert Ok(b) = s.named("same", s.boolean())
   let assert Ok(definition) =
     s.any_of([s.map(a, fn(_) { Nil }), s.map(b, fn(_) { Nil })])
-  exception_cleanup(fn() { s.schema_string(definition) }) |> should.be_true
+  exception_cleanup(fn() { s.schema_string(definition, s.Compact) }) |> should.be_true
   let assert Ok(valid) = tree()
-  s.schema_string(valid) |> should.not_equal("")
+  s.schema_string(valid, s.Compact) |> should.not_equal("")
 }
 
 pub fn shared_guard_layers_test() {

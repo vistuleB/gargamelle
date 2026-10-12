@@ -1,6 +1,6 @@
 # Gargamelle handoff and next work
 
-0.3.0 is published; its README replacement preparation is tracked in `docs/release-0.3.0.md`. It introduces
+0.3.0 is published; its JSON formatting replacement preparation is tracked in `docs/release-0.3.0.md`. It introduces
 `schema_json` and `schema_string`, replacing `emit_json` and `emit_text`. `Json`, `RecordPolicy` and `to_string` replace `Value`,
 `Policy` and `value_text`. Previous API names are removed. Core semantics are unchanged.
 The preceding 0.2.2 replacement handoff is retained in ignored reports.
@@ -602,3 +602,7 @@ large-contract performance measurements remain open.
 
 `Strict` replaces `Closed`, which is removed. `Open` is unchanged. The renderer
 uses the existing “STRICT” badge. No compatibility API is retained.
+
+`JsonFormat` (`Compact` / `Pretty`) is required by `to_string` and
+`schema_string`. No compatibility arity is retained. The README demonstrates
+the complete typed flow in one `main`, with `Pretty` output.

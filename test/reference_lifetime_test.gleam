@@ -15,7 +15,8 @@ pub fn captured_completed_definition_test() {
   let assert Ok(input) = s.parse("\"value\"")
   let assert Ok(Captured(get)) = s.decode(definition, input)
   s.validate(get(), input) |> should.equal(Ok(Nil))
-  s.schema_string(get()) |> should.equal(s.schema_string(definition))
+  s.schema_string(get(), s.Compact)
+  |> should.equal(s.schema_string(definition, s.Compact))
   s.decode(get(), input) |> should.equal(Ok("value"))
 }
 
@@ -39,7 +40,8 @@ pub fn captured_completed_pair_test() {
   let assert Ok(Second(get_first)) =
     s.decode(s.map(second, fn(_) { Second(fn() { first }) }), boolean)
   s.validate(get_second(), boolean) |> should.equal(Ok(Nil))
-  s.schema_string(get_second()) |> should.equal(s.schema_string(second))
+  s.schema_string(get_second(), s.Compact)
+  |> should.equal(s.schema_string(second, s.Compact))
   s.decode(get_second(), boolean) |> should.equal(Ok(True))
   s.decode(get_first(), text) |> should.equal(Ok("value"))
 }

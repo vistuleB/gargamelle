@@ -41,7 +41,7 @@ pub fn hostile_test() {
   let d = s.finish(r, s.Strict)
   let assert Ok(v) = s.parse("{\"__proto__\":\"x\"}")
   s.decode(d, v) |> should.equal(Ok("x"))
-  s.schema_string(d)
+  s.schema_string(d, s.Compact)
   |> should.equal(
     "{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"additionalProperties\":false,\"properties\":{\"__proto__\":{\"type\":\"string\"}},\"required\":[\"__proto__\"],\"type\":\"object\"}",
   )
@@ -57,7 +57,7 @@ pub fn defaults_do_not_call_callbacks_test() {
   let d = s.finish(r, s.Strict)
   let assert Ok(input) = s.parse("{}")
   s.validate(d, input) |> should.equal(Ok(Nil))
-  s.schema_string(d) |> should.not_equal("")
+  s.schema_string(d, s.Compact) |> should.not_equal("")
 }
 
 pub fn callbacks_inspecting_values_test() {
@@ -70,7 +70,7 @@ pub fn callbacks_inspecting_values_test() {
     })
     |> s.required("x", s.text())
   let d = s.finish(r, s.Strict)
-  s.schema_string(d) |> should.not_equal("")
+  s.schema_string(d, s.Compact) |> should.not_equal("")
   let assert Ok(v) = s.parse("{\"x\":\"expected\"}")
   s.decode(d, v) |> should.equal(Ok("passed"))
 }

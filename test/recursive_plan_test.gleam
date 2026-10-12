@@ -75,7 +75,7 @@ pub fn independent_pair_and_generic_helper_builder_once_test() {
   let assert Ok(input) = s.parse("[[]]")
   s.decode(second, input) |> should.equal(Ok("array"))
   s.validate(second, input) |> should.be_ok
-  s.schema_string(first) |> should.not_equal("")
+  s.schema_string(first, s.Compact) |> should.not_equal("")
   count() |> should.equal(1)
 }
 
@@ -106,7 +106,7 @@ pub fn recursive_default_evidence_and_atomic_callback_suppression_test() {
   count() |> should.equal(0)
   let assert Ok(input) = s.parse("{\"a/~\":\"label\"}")
   s.validate(definition, input) |> should.be_ok
-  s.schema_string(definition) |> should.not_equal("")
+  s.schema_string(definition, s.Compact) |> should.not_equal("")
   count() |> should.equal(0)
   s.decode(definition, input)
   |> should.equal(Ok(#(Branch([Leaf("default")]), "label")))

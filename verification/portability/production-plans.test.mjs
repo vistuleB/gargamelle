@@ -36,7 +36,7 @@ test('main library preserves baseline behavior with immutable recursive plans',(
     const run=(args)=>spawnSync('gleam',args,{cwd:directory,encoding:'utf8',timeout:60000,maxBuffer:5*1024*1024,env:{...process.env,GIT_DIR:'',GIT_WORK_TREE:''}});
     const javascript=run(['test','--target','javascript']);
     assert.equal(javascript.status,0,javascript.stderr+'\n'+javascript.stdout);
-    assert.match(javascript.stdout,/45 passed, no failures/);
+    assert.match(javascript.stdout,/46 passed, no failures/);
     const probe=target=>{
       const result=run(['run','--target',target,'-m','integration_probe']);
       assert.equal(result.status,0,result.stderr+'\n'+result.stdout);
@@ -60,7 +60,7 @@ test('main library preserves baseline behavior with immutable recursive plans',(
     // Adapt only API names in copied callers; preserve the frozen baseline.
     const callers=['schema_fixtures.gleam','integration_probe.gleam','gargamelle/documentation.gleam'];
     const originals=callers.map(name=>[name,readFileSync(join(directory,'src',name),'utf8')]);
-    for(const [name,source] of originals)writeFileSync(join(directory,'src',name),source.replaceAll('schema_string','emit_text').replaceAll('schema_json','emit_json').replaceAll('gargamelle.Json','gargamelle.Value').replaceAll('gargamelle.to_string','gargamelle.value_text').replaceAll('s.Strict','s.Closed'));
+    for(const [name,source] of originals)writeFileSync(join(directory,'src',name),source.replaceAll('schema_string','emit_text').replaceAll('schema_json','emit_json').replaceAll('gargamelle.Json','gargamelle.Value').replaceAll('gargamelle.to_string','gargamelle.value_text').replaceAll('s.Strict','s.Closed').replaceAll(', s.Compact','').replaceAll(', gargamelle.Compact',''));
     assert.deepEqual(probe('javascript'),integrated,'schema bytes, decoded outputs or full DataError structures changed');
     for(const [name,source] of originals)writeFileSync(join(directory,'src',name),source);
     writeFileSync(join(directory,'src/gargamelle.gleam'),integratedSource);
@@ -80,13 +80,13 @@ test('main library preserves baseline behavior with immutable recursive plans',(
     assert.equal(build.status,0,build.stdout+'\n'+build.stderr);
     const erlang=run(['test','--target','erlang']);
     assert.equal(erlang.status,0,erlang.stderr+'\n'+erlang.stdout);
-    assert.match(erlang.stdout,/53 passed, no failures/);
+    assert.match(erlang.stdout,/54 passed, no failures/);
     assert.deepEqual(probe('erlang'),integrated,'cross-target schema/output/diagnostic mismatch');
     benchmark('erlang');
     for(const [name,body,privateValue] of [
       ['decode','s.decode(self, value)',false],
       ['validate','s.validate(self, value)',false],
-      ['emit','s.schema_string(self)',false],
+      ['emit','s.schema_string(self, s.Compact)',false],
       ['render','documentation.render(self, "test")',false],
       ['private-evidence','s.Atomic',true],
       ['private-runner','s.Recursive(fn(_, _) { Nil })',true],
@@ -114,6 +114,8 @@ pub fn forbidden() {
       ['removed-value-text', 'import gargamelle as s\npub fn main() { s.value_text(Nil) }', /Unknown module value/],
       ['removed-emit-json', 'import gargamelle as s\npub fn main() { s.emit_json(s.text()) }', /Unknown module value/],
       ['removed-emit-text', 'import gargamelle as s\npub fn main() { s.emit_text(s.text()) }', /Unknown module value/],
+      ['missing-json-format', 'import gargamelle as s\npub fn main() { let assert Ok(v) = s.parse("null") s.to_string(v) }', /Incorrect arity/],
+      ['missing-schema-format', 'import gargamelle as s\npub fn main() { s.schema_string(s.text()) }', /Incorrect arity/],
       ['foreign-json', 'import gargamelle as s\nimport gleam/json\npub fn main() -> s.Json { json.string("not admitted") }', /Type mismatch/],
       ['opaque-json', 'import gargamelle as s\npub fn main() { s.Json("unadmitted") }', /Unknown module value/],
     ]) {
@@ -124,8 +126,8 @@ pub fn forbidden() {
         assert.match(result.stderr, message);
       }
     }
-    t.diagnostic('28 compile-negative checks passed on the integrated API');
+    t.diagnostic('32 compile-negative checks passed on the integrated API');
     t.diagnostic(`${integrated.length} schemas, ${integrated.reduce((sum,row)=>sum+row.cases.length,0)} independent cases; exact historical JavaScript and native comparison`);
-    t.diagnostic('45 main-source tests and eight native process/graph tests passed');
+    t.diagnostic('46 main-source tests and eight native process/graph tests passed');
   } finally {rmSync(directory,{recursive:true,force:true});}
 });

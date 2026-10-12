@@ -292,8 +292,8 @@ without invoking inherited setters or changing prototypes.
 For the same finalized definition, text emission must be byte-identical:
 
 ```text
-parse(schema_string(S)) = Ok(schema_json(S))  // JSON value equality
-schema_string(S) = schema_string(S)            // byte equality on repeated emission
+parse(schema_string(S, Compact)) = Ok(schema_json(S))  // JSON value equality
+schema_string(S, Compact) = schema_string(S, Compact)            // byte equality on repeated emission
 ```
 
 JSON object member order is not part of value equality. Serialization normalizes
@@ -348,3 +348,11 @@ migrations or reversible value conversion. Runtime qualification is limited to
 the documented JavaScript and native Erlang matrix. Machine-checked correctness,
 resource bounds and arbitrary
 user-code safety are not promised.
+
+## JSON text layout
+
+`to_string(json, Compact)` and `schema_string(definition, Compact)` return
+canonical JSON. `Pretty` formats that same text with two-space indentation,
+without changing number tokens, string escaping or key order. Empty arrays
+and objects remain inline; neither format adds a trailing newline. Parsing
+both formats recovers the same admitted JSON value.

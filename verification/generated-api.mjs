@@ -60,10 +60,10 @@ export function evaluate(definition, value) {
 }
 export function evaluateText(definition, text) {
   const input=unwrap(s.parse(text));
-  const before=s.to_string(input);
+  const before=s.to_string(input, s.JsonFormat$Compact$const);
   const result=s.decode(definition,input);
-  if(s.to_string(input)!==before)throw new Error('Decoder mutated input');
+  if(s.to_string(input, s.JsonFormat$Compact$const)!==before)throw new Error('Decoder mutated input');
   return {accepted:result instanceof Ok, value:result[0]};
 }
-export const emitted=d=>JSON.parse(s.schema_string(d));
+export const emitted=d=>JSON.parse(s.schema_string(d, s.JsonFormat$Compact$const));
 export {allKinds,childNodes,proposal,specimen} from './recipe-model.mjs';

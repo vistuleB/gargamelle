@@ -69,18 +69,12 @@ try {
   const readme=readFileSync(join(root,'README.md'),'utf8');
   const snippets=[...readme.matchAll(/```gleam\n([\s\S]*?)\n```/g)].map(match=>match[1]);
   assert.equal(snippets.length,2);
-  writeFileSync(join(consumer,'src/readme_names.gleam'),snippets[0]+`
-import gleam/io
-pub fn main() {
-  let assert Ok(["Ada", "Grace"]) = read_names("[\\\"Ada\\\",\\\"Grace\\\"]")
-  let assert "{\\\"$schema\\\":\\\"https://json-schema.org/draft/2020-12/schema\\\",\\\"items\\\":{\\\"type\\\":\\\"string\\\"},\\\"type\\\":\\\"array\\\"}" = names_schema()
-  io.println("README names passed")
-}
-`);
+  writeFileSync(join(consumer,'src/readme_names.gleam'),snippets[0]);
+  const expectedNames = readme.match(/Output:\n\n```text\n([\s\S]*?)\n```/)[1];
   writeFileSync(join(consumer,'src/readme_user.gleam'),snippets[1]+`
 import gleam/io
 pub fn main() {
-  let assert Ok(User("Ada", True)) = read_user("{\\\"name\\\":\\\"Ada\\\",\\\"active\\\":true}")
+  let assert Ok(User("Brainy", True)) = read_user("{\\\"name\\\":\\\"Brainy\\\",\\\"active\\\":true}")
   io.println("README user passed")
 }
 `);
@@ -93,7 +87,7 @@ pub fn main() {
     if(target==='erlang')run('make',['-C','priv/regex-src'],library,'release-consumer-helper.log');
     const output=run('gleam',['run','--target',target],consumer,`release-consumer-${target}.log`);
     assert.equal(output.trim(),'release consumer passed');
-    for(const [module,expected] of [['readme_names','README names passed'],['readme_user','README user passed'],['preferences_reference',expectedArticle]]){
+    for(const [module,expected] of [['readme_names',expectedNames],['readme_user','README user passed'],['preferences_reference',expectedArticle]]){
       const result=run('gleam',['run','--target',target,'--module',module],consumer,`release-${module}-${target}.log`);
       assert.equal(result.trim(),expected,`${module} output differs on ${target}`);
     }

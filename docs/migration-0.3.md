@@ -23,6 +23,12 @@ pattern matches.
 
 The previous names have been removed. Update explicit type annotations and
 function calls using the table above. Inferred types need no annotation changes.
-Schema bytes, validation, decoding and JSON serialization are unchanged.
+With `Compact`, schema bytes and JSON serialization are unchanged. Validation
+and decoding are unchanged in either format.
 
 See the [API reference](gargamelle.html#Json) for the complete contracts.
+
+`to_string(json, format)` and `schema_string(definition, format)` now require a
+`JsonFormat` argument. Use `Compact` to retain canonical output, or `Pretty`
+for two-space indentation. Both preserve numbers, escaping and key order;
+neither adds a trailing newline, and empty arrays and objects remain inline.

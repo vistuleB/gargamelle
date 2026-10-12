@@ -37,14 +37,14 @@ const typed=readdirSync(join(root,'test')).filter(n=>n.endsWith('_test.gleam')).
  const tests=[...source.matchAll(/export function (\w+_test)\(/g)].map(m=>m[1]);
  return {path,tests};
 });
-assert.equal(typed.reduce((n,m)=>n+m.tests.length,0),45);
+assert.equal(typed.reduce((n,m)=>n+m.tests.length,0),46);
 const {build,s}=await import('../generated-api.mjs');
 const {evaluate,regexCases,nativeJSRegex}=await import('./evaluate.mjs');
 let splits=0,accepted=0,pairs=0;
 console.log('Checking generated Node baseline against independent validators and outputs…');
 const rows=[];
 for(const [index,row] of corpus().entries()){
- const definition=build(row.recipe),schema=s.schema_string(definition),ajv=compileOracle(JSON.parse(schema)),hyperjump=await compileSupplementary(JSON.parse(schema));
+ const definition=build(row.recipe),schema=s.schema_string(definition, s.JsonFormat$Compact$const),ajv=compileOracle(JSON.parse(schema)),hyperjump=await compileSupplementary(JSON.parse(schema));
  const expected=[];
  for(const input of row.inputs){
   const value=JSON.parse(input),result=evaluate(definition,input),a=ajv(value),h=hyperjump(value),ref=reference(row.recipe,value);
@@ -63,7 +63,7 @@ const modules={};
 function hashes(dir){for(const item of readdirSync(dir,{withFileTypes:true})){const path=join(dir,item.name);if(item.isDirectory())hashes(path);else modules[path.slice(workspace.length+1)]=sha256(readFileSync(path));}}
 hashes(workspace);
 const expectedRegex=regexCases.map(nativeJSRegex);
-const baselineReport={source:before,versions:{node:process.version,unicode:process.versions.unicode},typedTests:45,definitions:rows.length,pairs,decoded:accepted,classifiedAjvSplits:splits,fixtureSha256:sha256(fixtureText),artifactHashes:modules,
+const baselineReport={source:before,versions:{node:process.version,unicode:process.versions.unicode},typedTests:46,definitions:rows.length,pairs,decoded:accepted,classifiedAjvSplits:splits,fixtureSha256:sha256(fixtureText),artifactHashes:modules,
  adaptation:'Only gleeunit Node runner import and unused main removed from copied gargamelle_test.mjs; library and assertion bodies unchanged'};
 writeFileSync(join(directory,'baseline.json'),JSON.stringify(baselineReport,null,2)+'\n');
 const allowed=new Set(Object.keys(modules));

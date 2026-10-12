@@ -43,8 +43,8 @@ test('named constraints and recursive dictionary values compose with key validat
  await compare(d,[[{k0:{k1:0.5}},true],[{k0:{bad:1}},false]]);
  assert.equal(emitted(d).$defs['key-tree'].anyOf[1].propertyNames.$ref,'#/$defs/key');
  let escaped;assert.throws(()=>s.recursive('unfinished-key',self=>{escaped=unwrap(s.property_names(s.dictionary(s.number()),s.map(self,()=>'')));throw new Error('stop');}),/stop/);
- assert.throws(()=>s.schema_string(escaped),/unfinalized/);assert.throws(()=>evaluate(escaped,{}),/unfinalized/);
- const conflict=unwrap(s.property_names(unwrap(s.named('same',s.dictionary(s.number()))),unwrap(s.named('same',s.text()))));assert.throws(()=>s.schema_string(conflict),/Conflicting/);
+ assert.throws(()=>s.schema_string(escaped, s.JsonFormat$Compact$const),/unfinalized/);assert.throws(()=>evaluate(escaped,{}),/unfinalized/);
+ const conflict=unwrap(s.property_names(unwrap(s.named('same',s.dictionary(s.number()))),unwrap(s.named('same',s.text()))));assert.throws(()=>s.schema_string(conflict, s.JsonFormat$Compact$const),/Conflicting/);
 });
 
 test('mapped numeric key definition accepts only empty objects with an explicit strictTypes oracle exception',async()=>{

@@ -56,7 +56,7 @@ test('typed generated Erlang definitions agree with two independent schema oracl
       if(context.seed==='depth50')coverage.depth50++;
       assert.equal(native.index,i);assert.equal(native.cases.length,inputs.length);
       assert.deepEqual(normalize(native),normalize(javascript),'Native schema/output/full diagnostics differ from typed JavaScript');
-      assert.equal(native.schema,s.schema_string(build(recipe)),'Typed recipe compiler changed the JavaScript recipe schema');
+      assert.equal(native.schema,s.schema_string(build(recipe), s.JsonFormat$Compact$const),'Typed recipe compiler changed the JavaScript recipe schema');
       const schema=JSON.parse(native.schema),ajv=compileOracle(schema),hyperjump=await compileSupplementary(schema);
       for(let j=0;j<inputs.length;j++) {
         const entry=native.cases[j],value=JSON.parse(inputs[j]);

@@ -198,8 +198,8 @@ reviewable output form for this library; optimizations need an explicit contract
 amendment rather than changing snapshots incidentally. Child schemas are inline.
 
 Two operations are required (names are conceptual): `schema_json(S)` returns a JSON
-schema value, and `schema_string(S)` returns its canonical JSON string. Parsing
-`schema_string(S)` must recover `schema_json(S)` as a JSON value; object member order is
+schema value, and `schema_string(S, Compact)` returns its canonical JSON string. Parsing
+`schema_string(S, Compact)` must recover `schema_json(S)` as a JSON value; object member order is
 not part of that value equality. Byte-stability applies to `schema_string`, not to
 the in-memory JSON representation.
 

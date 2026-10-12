@@ -2,8 +2,10 @@
 
 0.3.0 was published on 2026-10-11 from `cc57613`. The published archive has
 been compared with that commit; every source member matches. The current
-README correction names parsed inputs `json` and is prepared as a replacement. `schema_json` returns a schema Json; `schema_string` returns its
-canonical JSON String. `Json`, `RecordPolicy` and `to_string` replace `Value`,
+replacement adds `JsonFormat` with required format arguments, plus a typed
+monolithic README example using `Pretty`. The maintainer explicitly requested
+replacement of 0.3.0 while Hex permits it. `schema_json` returns a schema Json;
+`schema_string` returns a String in the chosen layout. `Json`, `RecordPolicy` and `to_string` replace `Value`,
 `Policy` and `value_text`. Previous API names are removed; callers must migrate.
 Public examples and current verification callers use the preferred names.
 

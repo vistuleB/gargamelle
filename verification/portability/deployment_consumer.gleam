@@ -44,11 +44,11 @@ pub fn main() {
   let assert Ok(Nil) = s.decode(strict, json)
   let assert Error(_) = s.validate(strict, extra)
   let assert True =
-    s.to_string(s.schema_json(user_definition()))
-    == s.schema_string(user_definition())
+    s.to_string(s.schema_json(user_definition()), s.Compact)
+    == s.schema_string(user_definition(), s.Compact)
   let assert Ok(["Ada", "Grace"]) = read_names("[\"Ada\",\"Grace\"]")
   let assert "{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"items\":{\"type\":\"string\"},\"type\":\"array\"}" =
-    s.schema_string(s.array(s.text()))
+    s.schema_string(s.array(s.text()), s.Compact)
   let assert Ok(user) = s.parse("{\"name\":\"Ada\",\"active\":true}")
   let assert Ok(User("Ada", True)) = s.decode(user_definition(), user)
   let html = documentation.render(user_definition(), "user")
@@ -64,7 +64,8 @@ pub fn main() {
   let assert Ok(Branch([Leaf("one"), Branch([Leaf("α")])])) =
     s.decode(tree, input)
   let assert Ok(Nil) = s.validate(tree, input)
-  let assert True = string.contains(s.schema_string(tree), "#/$defs/tree")
+  let assert True =
+    string.contains(s.schema_string(tree, s.Compact), "#/$defs/tree")
   let html = documentation.render(tree, "Tree")
   let assert True = string.contains(html, "each item")
   let assert False = string.contains(html, "Invalid schema JSON")

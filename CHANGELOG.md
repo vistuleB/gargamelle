@@ -2,6 +2,10 @@
 
 ## 0.3.0 — 2026-10-11
 
+- Add `JsonFormat` (`Compact` / `Pretty`) as a required argument to `to_string`
+  and `schema_string`. Pretty JSON uses two-space indentation and preserves
+  canonical tokens and key order. Show a single typed README example.
+
 - Shorten the HTML record-policy badge to `STRICT`, using the same typography
   and color as `REQUIRED` and `OPTIONAL`.
 

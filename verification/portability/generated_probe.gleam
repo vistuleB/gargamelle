@@ -29,9 +29,9 @@ fn error_json(error: s.DataError) -> json.Json {
 
 fn entry(definition, input) {
   let assert Ok(value) = s.parse(input)
-  let before = s.to_string(value)
+  let before = s.to_string(value, s.Compact)
   let decoded = s.decode(definition, value)
-  let assert True = before == s.to_string(value)
+  let assert True = before == s.to_string(value, s.Compact)
   let errors = case decoded {
     Ok(_) -> []
     Error(errors) -> errors
@@ -62,13 +62,13 @@ pub fn main() {
     let #(index, construct, inputs) = fixture
     checkpoint(index, -1)
     let definition = construct()
-    let schema = s.schema_string(definition)
+    let schema = s.schema_string(definition, s.Compact)
     let cases =
       list.index_map(inputs, fn(input, input_index) {
         checkpoint(index, input_index)
         entry(definition, input)
       })
-    let assert True = schema == s.schema_string(definition)
+    let assert True = schema == s.schema_string(definition, s.Compact)
     json.object([
       #("index", json.int(index)),
       #("schema", json.string(schema)),

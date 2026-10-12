@@ -49,30 +49,39 @@ for tested runtimes and deployment instructions.
 
 ```gleam
 import gargamelle
+import gleam/io
+import gleam/string
 
-pub fn names_definition() {
-  gargamelle.array(gargamelle.text())
-}
+pub fn main() {
+  let definition: gargamelle.Definition(List(String)) = gargamelle.array(gargamelle.text())
+  let schema: String = gargamelle.schema_string(definition, gargamelle.Pretty)
+  let assert Ok(json): Result(gargamelle.Json, _) = gargamelle.parse("[\"Brainy\", \"Jokey\"]")
+  let assert Ok(data): Result(List(String), _) = gargamelle.decode(definition, json)
 
-pub fn read_names(source: String) {
-  let assert Ok(json) = gargamelle.parse(source)
-  gargamelle.decode(names_definition(), json)
-}
-
-pub fn names_schema() {
-  gargamelle.schema_string(names_definition())
+  io.println(schema)
+  io.println(string.join(data, ", "))
 }
 ```
 
-For input `["Ada", "Grace"]`, `read_names` returns `Ok(["Ada", "Grace"])`.
-`names_schema()` returns the following schema text:
+Output:
 
-```json
-{"$schema":"https://json-schema.org/draft/2020-12/schema","items":{"type":"string"},"type":"array"}
+```text
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "items": {
+    "type": "string"
+  },
+  "type": "array"
+}
+Brainy, Jokey
 ```
 
-`parse` returns an opaque `gargamelle.Json` value. `decode` converts it to the
-definition's output type. `to_string` serializes the JSON value as canonical JSON.
+`Definition(List(String))` describes both accepted JSON and decoded output.
+`parse` returns opaque `Json`; `decode` produces `List(String)`. The `Result`
+annotations describe the whole `Ok(...)` pattern; `_` leaves the error type inferred.
+`schema_string` returns the schema as a `String`. Use `Pretty` for two-space
+indentation or `Compact` for canonical JSON. `to_string(json, format)` serializes
+any Gargamelle `Json`, not just schemas.
 
 Handle admission errors separately from validation errors in application code;
 these assertions only keep the introductory example short. `validate` checks
@@ -100,9 +109,9 @@ pub fn read_user(source: String) {
 }
 ```
 
-For input `{"name":"Ada","active":true}`, `read_user` returns
-`Ok(User("Ada", True))`. `s.Strict` rejects undeclared fields.
-`s.schema_string(user_definition())` generates the record’s schema.
+For input `{"name":"Brainy","active":true}`, `read_user` returns
+`Ok(User("Brainy", True))`. `s.Strict` rejects undeclared fields.
+`s.schema_string(user_definition(), s.Pretty)` generates the record’s schema.
 
 ## Design and contract
 
@@ -142,7 +151,8 @@ external validation of the same parsed value without coercion, inserted defaults
 or removed properties. Admission failure, structural rejection and operational
 failure are distinct; exceptions and resource exhaustion are not rejection.
 
-`schema_string(S)` is byte-stable canonical JSON. Parsing it recovers `schema_json(S)`
+`schema_string(S, Compact)` is byte-stable canonical JSON. `Pretty` changes only
+whitespace. Parsing either format recovers `schema_json(S)`
 as a JSON value. This is a schema serialization round trip; there is no typed
 encoder or decode/encode inversion guarantee. Defaults, projection and maps can
 lose information, and some output values may be unreachable.

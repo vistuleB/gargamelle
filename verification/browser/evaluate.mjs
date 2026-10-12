@@ -3,8 +3,8 @@ import {s,unwrap,Ok,Some} from '../generated-api.mjs';
 const errorJSON=e=>({category:e.category,path:e.path,missing_key:e.missing_key instanceof Some?e.missing_key[0]:null,
   branches:[...e.branches].map(([index,errors])=>({index,errors:[...errors].map(errorJSON)})),matches:[...e.matches]});
 export function evaluate(definition,input){
-  const value=unwrap(s.parse(input)),before=s.to_string(value),result=s.decode(definition,value);
-  if(s.to_string(value)!==before)throw new Error('Decoded input changed');
+  const value=unwrap(s.parse(input)),before=s.to_string(value, s.JsonFormat$Compact$const),result=s.decode(definition,value);
+  if(s.to_string(value, s.JsonFormat$Compact$const)!==before)throw new Error('Decoded input changed');
   const accepted=result instanceof Ok;
   if((s.validate(definition,value) instanceof Ok)!==accepted)throw new Error('Validate/decode disagreement');
   return {input,accepted,decoded:accepted?JSON.parse(JSON.stringify(result[0])):null,errors:accepted?[]:[...result[0]].map(errorJSON)};

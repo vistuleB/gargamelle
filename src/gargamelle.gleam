@@ -7,6 +7,7 @@
 //// [tested runtimes](https://hexdocs.pm/gargamelle/0.3.0/native-erlang.html).
 //// The Erlang target requires a separately compiled C regex helper.
 
+import gleam/bit_array
 import gleam/json
 import gleam/list
 import gleam/option.{type Option, None, Some}
@@ -24,6 +25,14 @@ pub opaque type Json {
   JString(String)
   JArray(List(Json))
   JObject(List(#(String, Json)))
+}
+
+/// JSON text layout. `Compact` uses canonical JSON; `Pretty` adds two-space
+/// indentation without changing numbers, escaping or key order. Neither adds
+/// a trailing newline. Empty arrays and objects stay on one line.
+pub type JsonFormat {
+  Compact
+  Pretty
 }
 
 /// JSON syntax, nonfinite-number or non-scalar-string admission failure.
@@ -264,9 +273,81 @@ fn parse_runtime(
   object: fn(List(#(String, Json))) -> Json,
 ) -> Result(Json, AdmissionError)
 
-/// Serialize an admitted value as canonical JSON text. Negative zero becomes `0`.
-pub fn to_string(value: Json) -> String {
-  canonical(json.to_string(json_value(value)))
+/// Serialize any admitted JSON value in the chosen layout. Negative zero
+/// becomes `0`. `Compact` is canonical; `Pretty` changes only whitespace.
+pub fn to_string(value: Json, format: JsonFormat) -> String {
+  let compact = canonical(json.to_string(json_value(value)))
+  case format {
+    Compact -> compact
+    Pretty -> {
+      let assert Ok(text) =
+        pretty_bytes(bit_array.from_string(compact), "", False, False, [])
+        |> bit_array.to_string
+      text
+    }
+  }
+}
+
+// Walk canonical UTF-8 bytes so combining marks cannot merge a quote with a
+// grapheme. Only ASCII punctuation outside strings changes; token bytes survive.
+fn pretty_bytes(
+  input: BitArray,
+  indent: String,
+  quoted: Bool,
+  escaped: Bool,
+  pieces: List(BitArray),
+) -> BitArray {
+  case input {
+    <<>> -> bit_array.concat(list.reverse(pieces))
+    <<byte, rest:bits>> -> {
+      case quoted {
+        True -> {
+          let next_quoted = escaped || byte != 34
+          let next_escaped = !escaped && byte == 92
+          pretty_bytes(rest, indent, next_quoted, next_escaped, [
+            <<byte>>,
+            ..pieces
+          ])
+        }
+        False ->
+          case byte, rest {
+            34, _ ->
+              pretty_bytes(rest, indent, True, False, [<<byte>>, ..pieces])
+            123, <<125, tail:bits>> | 91, <<93, tail:bits>> ->
+              pretty_bytes(tail, indent, False, False, [
+                <<
+                  byte,
+                  case byte {
+                    123 -> 125
+                    _ -> 93
+                  },
+                >>,
+                ..pieces
+              ])
+            123, _ | 91, _ -> {
+              let next = indent <> "  "
+              let chunk = <<byte, "\n":utf8, next:utf8>>
+              pretty_bytes(rest, next, False, False, [chunk, ..pieces])
+            }
+            125, _ | 93, _ -> {
+              let next = string.drop_end(indent, 2)
+              let chunk = <<"\n":utf8, next:utf8, byte>>
+              pretty_bytes(rest, next, False, False, [chunk, ..pieces])
+            }
+            44, _ ->
+              pretty_bytes(rest, indent, False, False, [
+                <<",\n":utf8, indent:utf8>>,
+                ..pieces
+              ])
+            58, _ ->
+              pretty_bytes(rest, indent, False, False, [<<": ":utf8>>, ..pieces])
+            _, _ ->
+              pretty_bytes(rest, indent, False, False, [<<byte>>, ..pieces])
+          }
+      }
+    }
+    _ -> panic as "Canonical JSON contains a partial byte"
+  }
 }
 
 fn json_value(v: Json) -> json.Json {
@@ -1470,7 +1551,7 @@ fn inspect(
       inspect(child, v, p, bindings)
     UniqueNode(child), JArray(xs) -> {
       let base = inspect(child, v, p, bindings)
-      let values = list.map(xs, to_string)
+      let values = list.map(xs, fn(value) { to_string(value, Compact) })
       with_errors(
         base,
         case list.length(list.unique(values)) == list.length(values) {
@@ -1722,9 +1803,9 @@ pub fn schema_json(def: Definition(a)) -> Json {
   })
 }
 
-/// Return a canonical JSON Schema 2020-12 string, including finite local references.
-pub fn schema_string(def: Definition(a)) -> String {
-  to_string(schema_json(def))
+/// Return a JSON Schema 2020-12 string in the chosen layout, including local references.
+pub fn schema_string(def: Definition(a), format: JsonFormat) -> String {
+  to_string(schema_json(def), format)
 }
 
 fn put(v: Json, k: String, x: Json) -> Json {
@@ -1841,7 +1922,7 @@ fn merge_definition(
     Ok(existing) ->
       case
         same_reference(existing, child)
-        || to_string(emit(existing)) == to_string(emit(child))
+        || to_string(emit(existing), Compact) == to_string(emit(child), Compact)
       {
         True -> Ok(definitions)
         False ->
