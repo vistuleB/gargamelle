@@ -1,5 +1,23 @@
 # Gargamelle handoff and next work
 
+## Latest scope — bounded modifier composability
+
+0.7.0 is published, as reported by the maintainer. The current follow-up is
+isolated on `codex/modifier-composability`: document wrapper/modifier support,
+remove unjustified naming/annotation restrictions, preserve all assertions in
+composition, and test accepted/rejected combinations on both targets and against
+independent emitted-schema validators. The published main checkout stays intact. Implementation and policy are complete;
+`docs/advanced.md#modifier-composition` defines supported bases, mapping behavior,
+reference limits and named-body reuse. Regression coverage includes both targets,
+independent schema validators, defaults, auxiliary callback suppression, guarded
+recursive bodies and two targeted destructive mutations. Final verification is
+recorded in ignored reports; no release preparation is included in this pass.
+
+After this pass, pause library feature work. Typed extra properties, additional
+formats and parser/encoding optimization remain deferred pending concrete consumer
+demand and evidence from the provider playground/external trial. The OTP hybrid
+investigation remains on its separate research branch; no parser change is included.
+
 ## Active 0.7.0 admitted JSON work
 
 Work was isolated on `codex/json-070` and promoted to main after qualification

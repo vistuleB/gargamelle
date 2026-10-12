@@ -12,7 +12,7 @@ test('the composition suite kills keyword overwrite, lost conjunction and lost n
   try{
     cpSync(join(root,'build/dev/javascript'),dir,{recursive:true});
     const target=join(dir,'gargamelle/gargamelle.mjs'),original=readFileSync(target,'utf8');
-    const start=original.indexOf('function conjoin_object_keyword('),end=original.indexOf('\nfunction emit_number_bound(',start);
+    const start=original.indexOf('function conjoin_object_keyword('),end=original.indexOf('\nfunction ',start+1);
     assert.ok(start>=0&&end>start,'Unique compiled emitter helper must exist');
     assert.equal(original.split('function conjoin_object_keyword(').length,2);
     const helper=original.slice(start,end);

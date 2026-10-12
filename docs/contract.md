@@ -180,13 +180,17 @@ Regex execution bounds are not guaranteed.
 Integer bounds and size bounds are inclusive. Size limits are nonnegative safe
 integers. `None` denotes an unbounded endpoint. Repetition intersects bounds;
 invalid bounds and application to unsupported underlying definitions fail
-construction. Bounds/patterns should be applied before naming or union composition;
-wrappers are not a promise that every constraint supports every composition.
+construction. Naming and annotations preserve modifier support. Same-input
+assertions retain their checks; modifiers do not distribute over nullable/union
+alternatives or resolve recursive references. Apply a modifier to an alternative
+or recursive body during construction. See the [modifier policy](advanced.html#modifier-composition)
+for supported base shapes and named-body reuse rules.
 
 Enums are nonempty, contain distinct strings and perform no coercion. Constants
 use type-sensitive equality. Integer constants must lie in the safe range.
 
-`unique_items` applies to a direct homogeneous array definition and compares the
+`unique_items` applies to a homogeneous array definition, including supported
+naming/annotation/assertion wrappers, and compares the
 original JSON items structurally, before mapping. Object key order is irrelevant
 and both numeric zero signs are equivalent. Decoded list order is unchanged.
 

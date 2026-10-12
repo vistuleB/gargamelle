@@ -1,7 +1,7 @@
 # Advanced definitions and documentation
 
 These examples extend the core record and array workflows. Acceptance and output
-semantics are specified in the [technical contract](https://hexdocs.pm/gargamelle/0.4.0/contract.html).
+semantics are specified in the [technical contract](contract.html).
 
 To bind a component handler to its input definition, see
 [Verified JSON boundaries](boundaries.html).
@@ -34,8 +34,50 @@ the same checks without enabling optional format assertions. It does not restric
 UUID version or variant bits. As in JSON Schema, format constraints apply only
 to string inputs; the base definition governs other types. UUID is the only
 asserted format currently supplied. Email, URI and date/time remain annotation-only.
-Supply primitive bounds and patterns before `assert_format`, which composes a
-conditional definition rather than a direct string node.
+On a text base, primitive bounds and patterns can be applied before or after
+`assert_format`; its conditional assertion is retained.
+
+## Modifier composition
+
+Modifier support follows the JSON input definition, subject to the function's
+Gleam signature. `map` changes decoded output; it does not change which JSON
+shape a modifier constrains. For example, `bounds` on text mapped to `Int` still
+limits string length, while `integer_multiple_of` rejects that input definition.
+
+| Modifier | Supported input base |
+| --- | --- |
+| `bounds` | Text length, homogeneous array length, dictionary property count, safe-integer interval |
+| `number_bounds` | Finite number interval |
+| `pattern` | Text |
+| `integer_multiple_of` | Safe integer |
+| `unique_items` | Homogeneous array |
+| `contains` | Homogeneous array or exact tuple |
+| `property_names`, `dependent_required` | Record or dictionary |
+
+Naming and all documentation annotations preserve the support in this table.
+Same-input assertions (`if_then`, `if_then_else`, `exclude`, and the applicable
+collection/numeric assertions) retain their checks when further supported
+modifiers are applied. Constraints intersect; adding a modifier does not remove
+earlier checks. Auxiliary converters are not invoked by validation or emission,
+or by decoding the base result.
+
+`bounds`, `number_bounds`, `pattern` and `integer_multiple_of` update the
+underlying definition through wrappers. When that definition is named, its
+`$defs` body is updated under the same name. The original definition remains
+unchanged. Combining original and modified bodies under one name produces the
+existing conflicting-name graph error; give distinct reusable bodies distinct
+names. `contains`, `unique_items`, `property_names` and `dependent_required` can
+instead add assertions at a use of a shared named definition. Equivalent
+acceptance does not imply identical annotation placement or schema bytes.
+
+Modifiers do not distribute over `nullable`, unions or tagged alternatives,
+and do not resolve recursive references. Apply them to the selected branch or
+recursive body during construction. A completed recursive definition can be
+composed normally, but these modifiers do not rewrite its referenced body after
+completion. Unsupported base shapes return `Error(ConstructionError(...))`;
+invalid reference graphs and conflicting names retain their operational graph
+errors during validation/emission. Constants, enums and `anything()` are not
+implicitly converted into one of the supported bases.
 
 ## Property dependencies
 
@@ -53,8 +95,8 @@ lists the presence rules beneath the object heading.
 `number()` returns `Definition(Float)` and accepts every finite number admitted by
 `parse`, including integers and magnitudes outside the safe-integer range.
 `number_bounds` intersects finite numeric endpoints; `None` leaves that side
-unbounded. Apply bounds before naming a definition or composing it into a union.
-Annotations and maps preserve the underlying number node and support bounds.
+unbounded. Naming, annotations, mappings and same-input assertions preserve
+underlying number support. Apply bounds before composing alternatives in a union.
 
 ```gleam
 import gargamelle
@@ -87,7 +129,7 @@ General fractional `multipleOf` and fractional-number constants are not supporte
 `integer_multiple_of(safe_integer(), 3)` adds divisibility by a positive safe
 integer. It uses exact integer remainders, rejects zero/negative/unsafe divisors,
 and emits `multipleOf`. It supports bounded or mapped safe-integer definitions;
-apply it before naming. Repeated divisors intersect without computing an
+naming preserves support. Repeated divisors intersect without computing an
 overflow-prone least common multiple. It does not accept `number()` definitions.
 
 ## Recursive definitions

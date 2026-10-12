@@ -304,6 +304,37 @@ fn bare(n: Node) -> Node {
   }
 }
 
+// Rebuild same-input wrappers around an updated base. Converter closures and
+// recursive bindings are retained; recursive references are never followed.
+fn rewrite_modifier_base(
+  node: Node,
+  modify: fn(Node) -> Result(Node, ConstructionError),
+  unsupported: String,
+) -> Result(Node, ConstructionError) {
+  case node {
+    IdentifiedNode(_, child) -> result.map(modify(child), identified)
+    BoundNode(bindings, child) ->
+      result.map(modify(child), BoundNode(bindings, _))
+    NamedNode(name, child) -> result.map(modify(child), NamedNode(name, _))
+    AnnotatedNode(child, key, value) ->
+      result.map(modify(child), AnnotatedNode(_, key, value))
+    UniqueNode(child) -> result.map(modify(child), UniqueNode)
+    ContainsNode(child, checks) ->
+      result.map(modify(child), ContainsNode(_, checks))
+    PropertyNamesNode(child, keys) ->
+      result.map(modify(child), PropertyNamesNode(_, keys))
+    DependentRequiredNode(child, rules) ->
+      result.map(modify(child), DependentRequiredNode(_, rules))
+    IntegerMultiplesNode(child, divisors) ->
+      result.map(modify(child), IntegerMultiplesNode(_, divisors))
+    ConditionalNode(child, checks) ->
+      result.map(modify(child), ConditionalNode(_, checks))
+    ExcludeNode(child, checks) ->
+      result.map(modify(child), ExcludeNode(_, checks))
+    _ -> Error(ConstructionError(unsupported))
+  }
+}
+
 fn definition(n: Node, convert: fn(r, Json, Evidence) -> a) -> Plan(a, r) {
   Plan(identified(n), convert)
 }
@@ -613,7 +644,8 @@ pub fn number() -> Plan(Float, r) {
 
 /// Require safe-integer inputs divisible by a positive safe-integer divisor.
 /// This exact integer policy does not accept fractional divisors or number()
-/// definitions. Apply before naming. Repeated constraints intersect.
+/// definitions. Naming and same-input wrappers preserve support.
+/// Repeated constraints intersect.
 pub fn integer_multiple_of(
   def: Plan(a, r),
   divisor: Int,
@@ -630,16 +662,6 @@ pub fn integer_multiple_of(
 
 fn integer_multiple_node(node: Node, divisor: Int) {
   case node {
-    IdentifiedNode(_, child) ->
-      result.map(integer_multiple_node(child, divisor), identified)
-    BoundNode(bindings, child) ->
-      result.map(integer_multiple_node(child, divisor), BoundNode(bindings, _))
-    AnnotatedNode(child, key, value) ->
-      result.map(integer_multiple_node(child, divisor), AnnotatedNode(
-        _,
-        key,
-        value,
-      ))
     IntegerMultiplesNode(child, divisors) ->
       Ok(IntegerMultiplesNode(
         child,
@@ -647,9 +669,11 @@ fn integer_multiple_node(node: Node, divisor: Int) {
       ))
     IntegerNode(_, _) -> Ok(IntegerMultiplesNode(identified(node), [divisor]))
     _ ->
-      Error(ConstructionError(
+      rewrite_modifier_base(
+        node,
+        integer_multiple_node(_, divisor),
         "integer_multiple_of requires a safe-integer definition",
-      ))
+      )
   }
 }
 
@@ -708,7 +732,8 @@ fn valid_number_bounds(
 }
 
 /// Intersect a number definition's interval with finite inclusive/exclusive
-/// bounds. Reject inverted intervals and exclusive equal endpoints.
+/// bounds. Reject inverted intervals and exclusive equal endpoints. Naming and
+/// same-input assertion wrappers preserve support; unions/references do not.
 pub fn number_bounds(
   def: Plan(Float, r),
   lower: Option(NumberBound),
@@ -730,12 +755,6 @@ fn number_bound_node(
   upper: Option(NumberBound),
 ) -> Result(Node, ConstructionError) {
   case n {
-    IdentifiedNode(_, child) ->
-      result.map(number_bound_node(child, lower, upper), identified)
-    BoundNode(bindings, child) ->
-      result.map(number_bound_node(child, lower, upper), BoundNode(bindings, _))
-    AnnotatedNode(child, k, v) ->
-      result.map(number_bound_node(child, lower, upper), AnnotatedNode(_, k, v))
     NumberNode(lo, hi) -> {
       let lo = stricter_bound(lo, lower, True)
       let hi = stricter_bound(hi, upper, False)
@@ -744,7 +763,12 @@ fn number_bound_node(
         False -> Error(ConstructionError("empty number interval"))
       }
     }
-    _ -> Error(ConstructionError("number bounds require a number definition"))
+    _ ->
+      rewrite_modifier_base(
+        n,
+        number_bound_node(_, lower, upper),
+        "number bounds require a number definition",
+      )
   }
 }
 
@@ -909,7 +933,9 @@ fn array_node(node: Node) -> Bool {
     AnnotatedNode(child, _, _)
     | NamedNode(_, child)
     | UniqueNode(child)
-    | ContainsNode(child, _) -> array_node(child)
+    | ContainsNode(child, _)
+    | ConditionalNode(child, _)
+    | ExcludeNode(child, _) -> array_node(child)
     _ -> False
   }
 }
@@ -1260,7 +1286,10 @@ fn run_second(
 // references whose complete graph is checked before returning to the caller.
 /// Name a definition for local `$defs`/`$ref` reuse. Names must start with an
 /// ASCII letter and contain only ASCII letters, digits, underscores or hyphens.
-/// Conflicting names fail when the composed graph is validated or emitted.
+/// Shape-rewriting modifiers such as bounds/pattern update the named body.
+/// Reuse of one name for different bodies fails when the graph is validated or
+/// emitted. Apply those modifiers before naming when distinct reusable bodies
+/// require distinct names.
 pub fn named(
   name: String,
   def: Plan(a, r),
@@ -1272,15 +1301,34 @@ pub fn named(
   }
 }
 
-/// Require structurally distinct JSON items in a direct homogeneous array
-/// definition. Uniqueness is checked before mapping, not on decoded outputs.
+/// Require structurally distinct JSON items in a homogeneous array definition.
+/// Naming, annotations and same-input assertion wrappers preserve support.
+/// Uniqueness is checked before mapping, not on decoded outputs.
 pub fn unique_items(
   def: Plan(List(a), r),
 ) -> Result(Plan(List(a), r), ConstructionError) {
   let Plan(node, convert) = def
-  case bare(node) {
-    ArrayNode(_, _, _) -> Ok(definition(UniqueNode(node), convert))
-    _ -> Error(ConstructionError("unique_items requires an array definition"))
+  case homogeneous_array_node(node) {
+    True -> Ok(definition(UniqueNode(node), convert))
+    False ->
+      Error(ConstructionError(
+        "unique_items requires a homogeneous array definition",
+      ))
+  }
+}
+
+fn homogeneous_array_node(node: Node) -> Bool {
+  case node {
+    ArrayNode(_, _, _) -> True
+    IdentifiedNode(_, child)
+    | BoundNode(_, child)
+    | AnnotatedNode(child, _, _)
+    | NamedNode(_, child)
+    | UniqueNode(child)
+    | ContainsNode(child, _)
+    | ConditionalNode(child, _)
+    | ExcludeNode(child, _) -> homogeneous_array_node(child)
+    _ -> False
   }
 }
 
@@ -1649,7 +1697,9 @@ fn bad_bounds(lo: Option(Int), hi: Option(Int), size: Bool) -> Bool {
 
 /// Intersect inclusive integer bounds, Unicode code-point string lengths,
 /// homogeneous array lengths or dictionary key counts. `None` leaves a side
-/// unbounded. Unsupported definitions and invalid intervals fail construction.
+/// unbounded. Naming, annotations and same-input assertions preserve support;
+/// alternatives/references do not. Unsupported definitions and invalid intervals
+/// fail construction.
 pub fn bounds(
   def: Plan(a, r),
   lower: Option(Int),
@@ -1666,20 +1716,6 @@ fn bound_node(
   hi: Option(Int),
 ) -> Result(Node, ConstructionError) {
   case n {
-    IdentifiedNode(_, child) ->
-      result.map(bound_node(child, lo, hi), identified)
-    BoundNode(bindings, child) ->
-      result.map(bound_node(child, lo, hi), BoundNode(bindings, _))
-    AnnotatedNode(child, k, v) ->
-      result.map(bound_node(child, lo, hi), AnnotatedNode(_, k, v))
-    ContainsNode(child, checks) ->
-      result.map(bound_node(child, lo, hi), ContainsNode(_, checks))
-    PropertyNamesNode(child, keys) ->
-      result.map(bound_node(child, lo, hi), PropertyNamesNode(_, keys))
-    DependentRequiredNode(child, rules) ->
-      result.map(bound_node(child, lo, hi), DependentRequiredNode(_, rules))
-    IntegerMultiplesNode(child, divisors) ->
-      result.map(bound_node(child, lo, hi), IntegerMultiplesNode(_, divisors))
     IntegerNode(a, b) -> {
       let l = max_lower(Some(a), lo)
       let h = min_upper(Some(b), hi)
@@ -1722,7 +1758,12 @@ fn bound_node(
         lo,
         hi,
       )
-    _ -> Error(ConstructionError("bounds unsupported for this definition"))
+    _ ->
+      rewrite_modifier_base(
+        n,
+        bound_node(_, lo, hi),
+        "bounds unsupported for this definition",
+      )
   }
 }
 
@@ -1735,7 +1776,8 @@ fn sizes(lo, hi, make, raw_lo, raw_hi) {
 
 /// Intersect an unanchored ECMAScript Unicode regular expression with a string
 /// definition. Anchor explicitly for whole-string matching. Invalid expressions
-/// and unsupported underlying definitions fail construction.
+/// and unsupported underlying definitions fail construction. Naming, annotations
+/// and same-input assertions preserve support; alternatives/references do not.
 pub fn pattern(
   def: Plan(String, r),
   p: String,
@@ -1750,14 +1792,14 @@ pub fn pattern(
 
 fn pattern_node(n: Node, p: String) -> Result(Node, ConstructionError) {
   case n {
-    IdentifiedNode(_, child) -> result.map(pattern_node(child, p), identified)
-    BoundNode(bindings, child) ->
-      result.map(pattern_node(child, p), BoundNode(bindings, _))
     StringNode(a, b, ps) ->
       Ok(StringNode(a, b, list.unique(list.append(ps, [p]))))
-    AnnotatedNode(c, k, v) ->
-      result.map(pattern_node(c, p), AnnotatedNode(_, k, v))
-    _ -> Error(ConstructionError("pattern requires string definition"))
+    _ ->
+      rewrite_modifier_base(
+        n,
+        pattern_node(_, p),
+        "pattern requires string definition",
+      )
   }
 }
 
@@ -2367,6 +2409,15 @@ fn conjoin_object_keyword(schema: Json, key: String, value: Json) -> Json {
   }
 }
 
+fn conjoin_schemas(schema: Json, constraints: List(Json)) -> Json {
+  let assert JObject(fields) = schema
+  let existing = case list.key_find(fields, "allOf") {
+    Ok(JArray(clauses)) -> clauses
+    _ -> []
+  }
+  put(schema, "allOf", JArray(list.append(existing, constraints)))
+}
+
 fn obj(xs: List(#(String, Json))) -> Json {
   JObject(xs)
 }
@@ -2741,11 +2792,17 @@ fn emit(n: Node) -> Json {
       let base = emit(child) |> put("type", JString("array"))
       case schemas {
         [] -> base
-        [JObject(fields)] ->
-          list.fold(fields, base, fn(schema, field) {
-            put(schema, field.0, field.1)
-          })
-        _ -> put(base, "allOf", JArray(schemas))
+        [JObject(fields)] -> {
+          let assert JObject(existing) = base
+          case list.key_find(existing, "contains") {
+            Error(_) ->
+              list.fold(fields, base, fn(schema, field) {
+                put(schema, field.0, field.1)
+              })
+            Ok(_) -> conjoin_schemas(base, schemas)
+          }
+        }
+        _ -> conjoin_schemas(base, schemas)
       }
     }
     PropertyNamesNode(child, keys) -> {

@@ -1,6 +1,13 @@
 # Changelog
 
-## 0.7.0 — Unreleased
+## Unreleased
+
+- Preserve modifier support through naming, annotations and applicable same-input
+  assertions. Unsupported alternatives and recursive references fail explicitly.
+- Preserve existing membership constraints and conjunctions when array modifiers
+  are separated by other assertions. Document named-body reuse and mapping rules.
+
+## 0.7.0 — 2026-10-12
 
 - Add JSON pass-through encoding and one-way conversion to the standard
   `gleam/json.Json` representation.

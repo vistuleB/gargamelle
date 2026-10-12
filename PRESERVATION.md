@@ -355,3 +355,23 @@ value or callback is introduced. Its ordinary serialization/admission path then
 produces admitted output; checked encoding enforces its stored Contract as before.
 Canonical JSON is preserved, not source text or zero-sign representation. The
 public one-way conversion cannot construct or forge Gargamelle Json.
+
+
+## Modifier wrapper policy
+
+Base-rewriting modifiers share `rewrite_modifier_base`: it reconstructs names,
+annotations, bindings and same-input assertion wrappers around the changed base,
+retaining the Plan converter. They do not alter the receipt structure expected
+by that converter. References and alternative-selection nodes are terminal
+unsupported cases; no recursion binding is followed or union distributed.
+A changed named body keeps its name, so existing graph conflict checking remains
+necessary when old and modified bodies are combined.
+
+Array/object assertion modifiers retain the original base conversion. Their
+shape checks permit naming, metadata and applicable same-input assertions, but
+stop at alternatives/references. Repeated array membership assertions must conjoin
+with existing `contains` and `allOf` clauses: `conjoin_schemas` appends rather than
+replaces a conjunction. This is necessary when uniqueness/exclusion separates
+membership modifiers. Validation still retains every base and auxiliary check;
+conversion consumes only the base receipt. Tests include individually missing
+members and accepted witnesses, so rejecting everything cannot satisfy the suite.

@@ -29,8 +29,9 @@ including on native Erlang; they are not converted to successful certification.
 The helper accepts a generic definition because JSON Schema formats only apply
 to string instances. A boolean base remains valid for booleans; a text base plus
 the UUID assertion accepts only UUID strings. Maps preserve their existing output
-type. Bounds and other primitive modifiers should be supplied before the helper,
-which composes a conditional definition.
+type. For a text base, bounds and patterns can be supplied before or after the
+helper: base-rewriting modifiers preserve the conditional assertion. Unsupported
+base shapes still fail construction.
 
 Email, URI and date/time assertions are deferred. Their standards, normalization,
 internationalization, parser behavior and validator compatibility need separate

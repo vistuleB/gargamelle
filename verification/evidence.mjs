@@ -8,7 +8,7 @@ export const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
 export const evidenceKind = id => id === 'V08' ? 'tests-and-reviewed-argument' : 'automated-tests';
 export const required = Array.from({ length: 13 }, (_, i) => `V${String(i + 1).padStart(2, '0')}`);
 export const rowEvidence = {
-  V01: ['composition.test.mjs', 'exclude.test.mjs', 'conditional.test.mjs', 'contains.test.mjs', 'property-names.test.mjs', 'tuple.test.mjs', 'recursion.test.mjs', 'numbers.test.mjs', 'extensions.test.mjs', 'generated.test.mjs', 'generated-values.test.mjs', 'foundation.test.mjs'],
+  V01: ['composition.test.mjs', 'modifier-composition.test.mjs', 'modifier-native.test.mjs', 'exclude.test.mjs', 'conditional.test.mjs', 'contains.test.mjs', 'property-names.test.mjs', 'tuple.test.mjs', 'recursion.test.mjs', 'numbers.test.mjs', 'extensions.test.mjs', 'generated.test.mjs', 'generated-values.test.mjs', 'foundation.test.mjs'],
   V02: ['extensions.test.mjs', 'hardening.test.mjs', 'generated.test.mjs', 'conformance.test.mjs', 'supplementary-oracle.test.mjs'],
   V03: ['hardening.test.mjs', 'generated.test.mjs', 'conformance.test.mjs', 'supplementary-oracle.test.mjs'],
   V04: ['encoding.test.mjs', 'contract.test.mjs', 'boundary.test.mjs', 'hardening.test.mjs', 'generated-values.test.mjs', 'foundation.test.mjs', 'cloze.test.mjs'],
