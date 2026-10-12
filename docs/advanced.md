@@ -406,10 +406,11 @@ Zero minimum with no maximum is vacuous and emits no membership keywords, which
 avoids emitting an unused `contains` keyword. Its matching definition still
 participates in reference/name validation.
 
-Array and fixed-tuple bodies, names, descriptions, titles, and existing unique
-arrays are supported. Nullable arrays and arbitrary unions are rejected as base
-contracts. Apply bounds and uniqueness before membership constraints when those
-operations require an unwrapped homogeneous array. Recursive membership checks
+Array and fixed-tuple bodies are supported through naming, annotations, and
+same-input assertion wrappers. Bounds and uniqueness can be applied before or
+after membership constraints on homogeneous arrays; they do not support fixed
+tuples. Nullable arrays and arbitrary unions are rejected as base contracts.
+Recursive membership checks
 consume array items; no depth cap is introduced. Complex overlapping body and
 match schemas may repeat validation work and increase decoding cost.
 
@@ -446,9 +447,10 @@ Selected-branch errors preserve their ordinary categories and input paths.
 
 Repeated calls intersect their requirements. Emission uses `allOf` with the
 base schema and separate `if`/`then`/optional `else` schemas, so nested conditions
-cannot overwrite earlier ones. General typed intersections are not supported. Primitive modifiers, array/object constraints, and defaults
-should be defined on the base before adding conditionals; existing modifiers
-reject unsupported wrapper nodes rather than dropping conditional checks.
+cannot overwrite earlier ones. General typed intersections are not supported.
+Supported modifiers can be applied before or after conditionals, preserving
+the conditional checks and the base's decoded output. Record fields and defaults
+are declared in the record builder before completion.
 
 For object inspection, use required fields to make presence part of the
 condition. Open inspector records can require selected fields without rejecting
@@ -491,7 +493,8 @@ on original JSON. All references are collected even if the forbidden definition
 could never accept a valid base input. Same-input recursive cycles, including
 cycles through exclusion, are conservatively rejected. Excluding a definition
 from itself can legitimately produce an unsatisfiable contract; construction does
-not solve satisfiability. Apply primitive modifiers to the base before exclusion.
+not solve satisfiability. Supported modifiers can be applied before or after
+exclusion, preserving both the base constraints and the exclusion check.
 
 An identifier can use a nonempty text definition as its base and exclude strings
 matching whitespace. Uniqueness across separately decoded records remains an
