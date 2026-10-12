@@ -7,6 +7,13 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 const root=fileURLToPath(new URL('../',import.meta.url));
 const cases=[
+ ['opaque_encoder','pub fn main() { e.Plan(fn(_,_) { Ok(Nil) }) }','Unknown module value'],
+ ['open_encoder_not_executable','pub fn main() { e.recursive(fn(self) { e.encode_json(self,"x") Ok(self) }) }','Type mismatch'],
+ ['wrong_codec_output_type','pub fn main() { e.codec(e.text(), s.contract(s.safe_integer())) }','Type mismatch'],
+ ['wrong_output_receiver_type','pub fn main() { e.output_boundary(e.text(), s.json_boundary(s.contract(s.safe_integer()), fn(x) { x })) }','Type mismatch'],
+ ['private_output_handler','pub fn main() { e.output_boundary(e.text(),s.json_boundary(s.contract(s.text()),fn(x) { x })).handler }','Unknown record field'],
+ ['wrong_encoder_getter','pub fn main() { e.field(e.record(),"count",e.safe_integer(),fn(_: String) { "wrong" }) }','Type mismatch'],
+
  ['opaque_json_boundary','pub fn main() { s.JsonBoundary(s.text(), fn(x) { x }) }','Unknown module value'],
  ['private_contract','pub fn main() { s.Contract(s.text(), []) }','Unknown module value'],
  ['definition_not_boundary_contract','pub fn main() { s.boundary(s.text(), fn(data, _) { data }) }','Type mismatch'],
@@ -66,7 +73,7 @@ test(`compile-time boundary on both targets: positive baseline and ${cases.lengt
  mkdirSync(join(dir,'src'));
  const q=p=>JSON.stringify(p);
  writeFileSync(join(dir,'gleam.toml'),`name = "negative_probe"\nversion = "0.1.0"\ntarget = "javascript"\n[dependencies]\ngargamelle = { path = ${q(root)} }\ngleam_stdlib = { path = ${q(resolve(root,'build/packages/gleam_stdlib'))} }\ngleam_json = { path = ${q(resolve(root,'build/packages/gleam_json'))} }\n`);
- const compile=(body,target)=>{writeFileSync(join(dir,'src/negative_probe.gleam'),'import gargamelle as s\nimport gargamelle/documentation\nimport gleam/option as gleam_option\n'+body+'\n');const run=spawnSync('gleam',['build','--target',target],{cwd:dir,encoding:'utf8',timeout:30000});if(run.error)throw run.error;return {status:run.status,output:run.stdout+run.stderr};};
+ const compile=(body,target)=>{writeFileSync(join(dir,'src/negative_probe.gleam'),'import gargamelle as s\nimport gargamelle/encoding as e\nimport gargamelle/documentation\nimport gleam/option as gleam_option\n'+body+'\n');const run=spawnSync('gleam',['build','--target',target],{cwd:dir,encoding:'utf8',timeout:30000});if(run.error)throw run.error;return {status:run.status,output:run.stdout+run.stderr};};
  for(const target of ['javascript','erlang']){
  const positive=compile('pub fn main() { s.variant("x",s.record(Nil),s.Strict) }',target);
  assert.equal(positive.status,0,positive.output);

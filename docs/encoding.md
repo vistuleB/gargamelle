@@ -1,0 +1,118 @@
+# Typed JSON encoding
+
+`gargamelle/encoding` defines explicit encoders independently of decoders.
+`Encoder(a)` describes how to produce admitted JSON from `a`. Record encoders
+supply getters; the library does not inspect records, derive encoders from
+`Definition(a)`, or reverse decoding constructors.
+
+| Operation | API | Result on success |
+| --- | --- | --- |
+| Plain admitted JSON encoding | `encode_json(encoder, value)` | `Json` |
+| Encoding checked against a stored Contract | `encode(codec, value)` | `VerifiedJson(a)` |
+| Typed output through a receiving boundary | `send(output, value)` | Handler response |
+
+## Record example
+
+```gleam
+import gargamelle as s
+import gargamelle/encoding as e
+import gleam/io
+
+pub type Named {
+  Named(name: String)
+}
+
+pub fn main() {
+  let assert Ok(fields) = e.field(e.record(), "name", e.text(), fn(value: Named) { value.name })
+  let encoder: e.Encoder(Named) = e.finish(fields)
+  let assert Ok(fields) = s.required(s.record(Named), "name", s.text())
+  let contract = s.contract(s.finish(fields, s.Strict))
+    |> s.require("Name is nonempty", fn(value) {
+      case value.name == "" {
+        True -> Error([s.Violation("/name", "Name must not be empty")])
+        False -> Ok(Nil)
+      }
+    })
+
+  let assert Ok(json) = e.encode_json(encoder, Named("Brainy"))
+  io.println(s.to_string(json, s.Compact))
+
+  let codec = e.codec(encoder, contract)
+  let assert Ok(verified) = e.encode(codec, Named("Brainy"))
+  io.println(s.to_string(s.verified_json(verified), s.Compact))
+
+  let receiver = s.json_boundary(contract, fn(verified) {
+    s.to_string(s.verified_json(verified), s.Compact)
+  })
+  let output = e.output_boundary(encoder, receiver)
+  let assert Ok(response) = e.send(output, Named("Brainy"))
+  io.println(response)
+}
+```
+
+Output:
+
+```text
+{"name":"Brainy"}
+{"name":"Brainy"}
+{"name":"Brainy"}
+```
+
+These are three independent operations. Plain encoding does not claim conformance
+with a schema or Contract. Checked encoding produces a certificate only after
+its stored Contract accepts the encoded JSON. `codec_contract` exposes that exact
+Contract. Encoding and decoding need not be inverses: projection, defaults and
+maps may cause reconstructed data to differ from the original encoder input.
+Semantic requirements check reconstructed data, not the encoder input directly.
+
+## Receiving authority and callback counts
+
+`output_boundary(encoder, receiver)` pairs an encoder with an existing
+`JsonBoundary`. The receiver's Contract is the only acceptance authority;
+`output_contract` exposes it. No second Contract or definition is stored.
+
+`send` performs plain encoding, then calls `forward_json` once. It does not use
+checked `encode` before forwarding. There is one Gargamelle Contract check. A
+Contract with no semantic requirements validates without conversion; otherwise
+it decodes once and checks the decoded value. Accepted output invokes the handler
+once. Structural, semantic, encoding or admission rejection invokes no handler.
+Handler return values remain generic, including nested `Result` responses.
+
+## Composition
+
+Primitive encoders cover strings, booleans, null, finite numbers and safe integers.
+`array` preserves element order. `nullable` emits null for `None`; `optional_field`
+omits its property for `None`. Required fields may use a nullable encoder when
+absence and null need distinct treatment. Duplicate record keys fail construction.
+
+`contramap` adapts an encoder with a getter or projection. `choice` encodes the
+selected branch of a `Result`; a projection can adapt an application sum type.
+Getters run in declaration order and encoding stops at its first failure.
+Construction executes no getters or projections.
+
+`recursive` builds a self-recursive encoder once using typed construction plans
+and an immutable completed body. Only completed `Encoder(a)` values can execute;
+construction references cannot be encoded or supplied as completed encoders.
+`lift` composes a completed encoder into a plan with a recursion environment.
+Encoders, codecs and output boundaries remain usable after creator-process exit
+on Erlang. Recursion must descend through input; immediate self-calls can diverge.
+Mutually recursive encoder pairs are not provided.
+
+## Errors and limits
+
+`EncodingError` distinguishes encoding failures, JSON admission failures, and
+receiving `ContractError` values. Contract structural failures retain JSON Pointer
+attribution; semantic failures retain their requirement indices and supplied
+paths. Primitive encoding and admission errors currently lack a field path.
+Getters, projections, converters, requirements and handlers are trusted application
+code. Exceptions and resource failures remain operational failures.
+
+Encoding constructs intermediate `gleam/json.Json`, serializes
+it and admits the JSON text once. This enforces the same admission domain as
+`parse`, including finite binary64 numbers and Unicode scalar strings and keys.
+It creates temporary text and does not claim single-pass encoding and certification.
+Safe-integer encoders reject values outside the common safe range. General numeric
+encoding uses `Float`; nonfinite values are rejected before serialization.
+
+Direct JSON construction, additional collection helpers, structured encoding
+paths and automatic encoder derivation are not provided.

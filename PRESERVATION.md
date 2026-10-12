@@ -31,6 +31,29 @@ callback prose nor opaque types establish those properties against hostile FFI.
 Shared Contract tests and JavaScript operational-failure tests exercise these
 invariants; the isolated provider probe separates historical and current context.
 
+## Typed encoders
+
+An Encoder independently constructs gleam/json.Json through explicit getters
+and projections. Primitive numeric guards reject nonfinite Floats and unsafe
+Ints before serialization; final public admission is the only route to the
+opaque Gargamelle Json result. This retains the existing JSON domain invariant.
+Field constructors reject duplicate and non-scalar names without invoking getters.
+Encoding uses declaration order and stops at its first failure.
+
+Codec encoding uses plain encoding followed by verify of the exact stored
+Contract. OutputBoundary stores only an Encoder and receiving JsonBoundary;
+send performs plain encoding followed by forward_json once. There is no second
+Contract to reconcile, no pre-verification and no unchecked certificate constructor.
+Requirements inspect decoded emitted output, preserving receiving Contract
+semantics even when the original encoder input differs from reconstructed data.
+Rejection occurs before handler invocation; callback exceptions are not caught.
+
+Self-recursion closes over a completed immutable body using typed environments,
+with the builder executed once. Lift ignores the construction environment and
+executes a completed encoder with Nil. No mutable registry or casts are used.
+Termination and finite input remain trusted-code assumptions; no syntactic guard
+for descending encoder recursion or allocation bound is claimed.
+
 ## Base cases
 
 - **P01 Boolean/null:** node checks the matching JSON constructor; schema emits

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.6.0 — Unreleased
+
+- Add `gargamelle/encoding` with explicit typed encoders, record getters, nullable
+  and list composition, sum projections and self-recursive construction.
+- Add checked `Codec` encoding against a full Contract and typed output through
+  an authoritative JSON receiving boundary with one Contract check.
+- Encoding and decoding remain independent; no inverse or derivation is claimed.
+
+
 ## 0.5.0 — Unreleased
 
 - Add opaque `Contract(a)` with ordered reject-only semantic requirements and

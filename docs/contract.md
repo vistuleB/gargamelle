@@ -1,6 +1,6 @@
 # Gargamelle technical contract
 
-This document specifies the intended public semantics of Gargamelle 0.5.0.
+This document specifies the intended public semantics of Gargamelle 0.6.0.
 “Must” denotes a requirement, not a claim that the implementation has been
 formally proved. Verification results and implementation history are separate.
 
@@ -348,7 +348,7 @@ schema_string(S, Compact) = schema_string(S, Compact)            // byte equalit
 ```
 
 JSON object member order is not part of value equality. Serialization normalizes
-negative zero to zero. There is no typed encoder, arbitrary schema importer,
+negative zero to zero. There is no arbitrary schema importer,
 surjectivity guarantee onto the output type or decode/encode inversion promise.
 Defaults, projection and maps can deliberately lose the original representation.
 
@@ -389,12 +389,49 @@ are returned instead of rendering a successful example section. Accepted example
 are displayed as escaped canonical input JSON, not as decoded outputs. An empty
 example list has the ordinary rendering behavior.
 
+## Typed encoding
+
+`gargamelle/encoding` supplies independent opaque `Encoder(a)` plans. Primitive
+encoders, field getters, projections, lists, nullable values and selected sum
+branches construct a JSON representation explicitly. No encoder is inferred
+from a Definition and no inverse of a decoding constructor is assumed.
+
+`encode_json` must return admitted JSON or an encoding/admission error. It
+asserts no structural or semantic acceptance rule. `Codec(a)` pairs an Encoder
+with a full Contract; checked `encode` must encode once and call `verify` once.
+Success retains the emitted JSON and exact accepting Contract. Requirements
+inspect the decoded emitted representation, not the original encoder input.
+Those values need not be equal after mapping, projection or default insertion.
+
+`OutputBoundary(a, response)` pairs an Encoder with an existing JsonBoundary.
+The receiver's Contract is authoritative. `send` must perform plain encoding
+then forward once through that receiver, without pre-verifying against another
+Contract. Encoding/admission rejection or receiving rejection invokes no handler.
+Success invokes the receiving handler once. Responses remain generic/nested and
+operational exceptions propagate.
+
+Only completed encoding plans execute. A self-recursive builder executes once,
+and its completed immutable encoder must survive creator-process exit and
+transfer on Erlang without a registry, casts or manual release. `lift` adapts a
+completed encoder to a construction environment. Recursion and callback
+termination are trusted-code assumptions; immediate encoder recursion can diverge.
+Mutual encoder pairs and resource bounds are not provided.
+
+Encoding currently serializes an intermediate gleam/json.Json representation
+and admits its text once. No fused single-pass encoding/certification or allocation
+bound is claimed. Nonfinite Float and unsafe Int inputs must fail rather than be
+silently normalized to null or rounded integer output. Encoding failures stop at
+the first failure and currently lack a field path. Contract failures retain their
+normal structural and semantic diagnostics. Construction must invoke no getters,
+projections, requirements or receiving handlers.
+See [Typed JSON encoding](encoding.html).
+
 ## 11. Excluded guarantees
 
 The contract does not claim full JSON Schema dialect support, arbitrary schema
 import, remote/dynamic references, arbitrary heterogeneous recursion groups,
 general public intersection, pattern properties, schema-constrained extra record
-fields, general format assertions, fractional multipleOf, fractional/general JSON constants, encoders,
+fields, general format assertions, fractional multipleOf, fractional/general JSON constants, automatic encoder derivation,
 migrations or reversible value conversion. Runtime qualification is limited to
 the documented JavaScript and native Erlang matrix. Machine-checked correctness,
 resource bounds and arbitrary

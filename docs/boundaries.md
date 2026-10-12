@@ -75,9 +75,11 @@ storage limits and other host policies are separate checks. Submission accepts
 the application result is nested inside the outer validation result. Handler
 exceptions and resource failures propagate as operational failures.
 
-For a future typed output path, pair an encoder with this receiving boundary,
-encode to admitted unverified JSON, and call `forward_json` once. The receiving
-contract is authoritative; there is no separate codec contract to reconcile.
+For typed output, `encoding.output_boundary(encoder, receiver)` pairs an explicit
+encoder with this receiving boundary. `encoding.send` encodes to admitted
+unverified JSON and calls `forward_json` once. The receiving contract is
+authoritative; there is no separate codec contract to reconcile.
+See [Typed JSON encoding](encoding.html).
 
 ## Semantic requirements
 

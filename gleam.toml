@@ -1,8 +1,8 @@
 name = "gargamelle"
-version = "0.5.0"
+version = "0.6.0"
 licences = ["MIT"]
 description = "Typed JSON decoding and JSON Schema 2020-12 generation from one Gleam definition"
-links = [{ title = "Source archive", href = "https://repo.hex.pm/tarballs/gargamelle-0.5.0.tar" }]
+links = [{ title = "Source archive", href = "https://repo.hex.pm/tarballs/gargamelle-0.6.0.tar" }]
 internal_modules = ["schema_fixtures"]
 target = "javascript"
 gleam = ">= 1.18.1"
@@ -68,3 +68,8 @@ source = "./docs/migration-0.4.md"
 title = "Migrating to 0.5.0"
 path = "migration-0.5.html"
 source = "./docs/migration-0.5.md"
+
+[[documentation.pages]]
+title = "Typed JSON encoding"
+path = "encoding.html"
+source = "./docs/encoding.md"

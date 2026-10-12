@@ -1,5 +1,20 @@
 # Gargamelle handoff and next work
 
+## Active 0.6.0 encoder work
+
+Work is isolated on `codex/encoder-060` to preserve the prepared 0.5.0 main
+checkout. The public `gargamelle/encoding` module provides explicit encoders,
+checked Codec output, and an OutputBoundary pairing an Encoder with the existing
+receiving JsonBoundary. The receiving Contract is authoritative; send does not
+pre-verify. Semantic checks inspect decoded emitted output, not encoder input.
+
+Decisions and remaining work are in `docs/encoding-design.md`. The initial
+implementation retains serialize-then-admit; assess direct JSON construction and
+cost before final integration. Field ergonomics, structured encoding errors,
+additional collection helpers and mutual recursion remain review candidates.
+0.6.0 is not prepared for publication. The release script remains guarded for
+0.5.0 until its complete contents and qualification are established.
+
 ## Active 0.5.0 contract work
 
 0.4.0 is published. The maintainer authorized implementation of `Contract(a)` for

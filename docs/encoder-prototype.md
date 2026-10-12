@@ -1,5 +1,10 @@
 # Encoder prototype for review
 
+This records the original isolated experiment. The 0.6.0 integration supersedes
+its Definition-only Codec and check-free certification assumptions; see
+[Encoder integration decisions](encoding-design.md) and
+[Typed JSON encoding](encoding.md).
+
 The experiment lives under `verification/encoder/`; it is not a shipped module
 or a release preparation. Run it with:
 
