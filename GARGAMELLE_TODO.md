@@ -9,13 +9,18 @@ receiving JsonBoundary. The receiving Contract is authoritative; send does not
 pre-verify. Semantic checks inspect decoded emitted output, not encoder input.
 
 Decisions and remaining work are in `docs/encoding-design.md`. The initial
-implementation retains serialize-then-admit; assess direct JSON construction and
-cost before final integration. Structured encoding diagnostics now include typed reasons and output JSON
+implementation retains serialize-then-admit; direct JSON construction is a
+future optimization, not a release gate. Structured encoding diagnostics now include typed reasons and output JSON
 Pointers; constructor errors identify invalid/duplicate field declarations.
 Field ergonomics is lower priority, per the maintainer. Additional collection
 helpers and mutual recursion remain review candidates.
-0.6.0 is not prepared for publication. The release script remains guarded for
-0.5.0 until its complete contents and qualification are established.
+The release script targets 0.6.0 and compiles both encoding-guide examples from
+the archive on both targets. Final qualification and handoff are recorded in
+`docs/release-0.6.0.md` and ignored reports. The typed cloze provider integration
+uses actual receiving contracts; invalid output cannot invoke storage.
+
+0.5.0 is published. Its 23 packaged files match the prepared source byte-for-byte.
+The main publication checkout remains preserved.
 
 ## Active 0.5.0 contract work
 

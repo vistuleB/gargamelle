@@ -13,7 +13,7 @@
 - Encoding and decoding remain independent; no inverse or derivation is claimed.
 
 
-## 0.5.0 — Unreleased
+## 0.5.0 — 2026-10-12
 
 - Add opaque `Contract(a)` with ordered reject-only semantic requirements and
   separate structural and semantic rejection diagnostics.

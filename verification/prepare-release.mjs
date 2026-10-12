@@ -22,7 +22,7 @@ let directory;
 writeFileSync(reportPath,JSON.stringify({status:'running',source:before.digest})+'\n');
 try {
   const version=readFileSync(join(root,'gleam.toml'),'utf8').match(/^version = "([^"]+)"$/m)[1];
-  assert.equal(version,'0.5.0');
+  assert.equal(version,'0.6.0');
   const pkg=JSON.parse(readFileSync(join(root,'package.json'))),lock=JSON.parse(readFileSync(join(root,'package-lock.json')));
   assert.equal(pkg.version,version);assert.equal(lock.version,version);assert.equal(lock.packages[''].version,version);
   assert.equal(pkg.private,true);
@@ -57,7 +57,7 @@ try {
     assert.ok(!/(^|\/)(?:build|node_modules|reports|\.git|\.aws)(?:\/|$)|\.(?:beam|o|dylib|so|exe)$|(^|\/)gargamelle_regex_port$/.test(path),`Generated/private artifact: ${path}`);
     assert.ok(!/(^|\/)\.env(?:\.|$)|(?:^|\/)(?:credentials|id_rsa|id_ed25519)$/.test(path),`Credential path: ${path}`);
   }
-  for(const path of ['gleam.toml','README.md','LICENSE','src/gargamelle.gleam','src/runtime.mjs','src/gargamelle_runtime.erl','src/gargamelle_regex.erl','priv/regex-src/Makefile','priv/regex-src/PROVENANCE.json','priv/regex-src/LICENSE.quickjs'])assert.ok(entries.includes(path),`Missing archive member: ${path}`);
+  for(const path of ['gleam.toml','README.md','LICENSE','src/gargamelle.gleam','src/gargamelle/encoding.gleam','src/gargamelle/encoding_runtime.mjs','src/gargamelle_encoding_runtime.erl','src/runtime.mjs','src/gargamelle_runtime.erl','src/gargamelle_regex.erl','priv/regex-src/Makefile','priv/regex-src/PROVENANCE.json','priv/regex-src/LICENSE.quickjs'])assert.ok(entries.includes(path),`Missing archive member: ${path}`);
   run('tar',['-xzf',contents,'-C',library]);
   checkPackageReadme(readFileSync(join(root,'README.md')),readFileSync(join(library,'README.md')));
   // Consumers use only the extracted package and pinned dependency source copies.
@@ -85,12 +85,21 @@ pub fn main() {
   const recipe=advanced.split('## Optional HTML documentation')[1].match(/```gleam\n([\s\S]*?)\n```/)[1];
   writeFileSync(join(consumer,'src/preferences_reference.gleam'),recipe);
   const expectedArticle=readFileSync(join(root,'documentation/example.html'),'utf8').match(/<article[\s\S]*?<\/article>/)[0];
+  const encodingGuide=readFileSync(join(root,'docs/encoding.md'),'utf8');
+  const encodingSnippets=[...encodingGuide.matchAll(/```gleam\n([\s\S]*?)\n```/g)].map(match=>match[1]);
+  const encodingOutputs=[...encodingGuide.matchAll(/```text\n([\s\S]*?)\n```/g)].map(match=>match[1]);
+  assert.equal(encodingSnippets.length,2);assert.equal(encodingOutputs.length,2);
+  const encodingConsumers=encodingSnippets.map((source,index)=>{
+    const module=`encoding_guide_${index}`;
+    writeFileSync(join(consumer,`src/${module}.gleam`),source);
+    return [module,encodingOutputs[index]];
+  });
   console.log('Checking fresh consumers of the exported archive…');
   for(const target of ['javascript','erlang']){
     if(target==='erlang')run('make',['-C','priv/regex-src'],library,'release-consumer-helper.log');
     const output=run('gleam',['run','--target',target],consumer,`release-consumer-${target}.log`);
     assert.equal(output.trim(),'release consumer passed');
-    for(const [module,expected] of [['contract_consumer','release contract consumer passed'],['readme_names',expectedNames],['readme_boundaries',expectedBoundaries],['readme_user','README user passed'],['preferences_reference',expectedArticle]]){
+    for(const [module,expected] of [['contract_consumer','release contract consumer passed'],['readme_names',expectedNames],['readme_boundaries',expectedBoundaries],['readme_user','README user passed'],['preferences_reference',expectedArticle],...encodingConsumers]){
       const result=run('gleam',['run','--target',target,'--module',module],consumer,`release-${module}-${target}.log`);
       assert.equal(result.trim(),expected,`${module} output differs on ${target}`);
     }
@@ -100,10 +109,11 @@ pub fn main() {
   assert.equal(existsSync(join(library,'node_modules')),false);
   const modules=readdirSync(join(root,'build/dev/docs/gargamelle')).filter(name=>name.endsWith('.html'));
   assert.ok(modules.includes('gargamelle.html'));assert.ok(!modules.includes('schema_fixtures.html'));
+  assert.ok(existsSync(join(root,'build/dev/docs/gargamelle/gargamelle/encoding.html')));
   const config=readFileSync(join(root,'gleam.toml'),'utf8');
   const docs=join(root,'build/dev/docs/gargamelle');
   const pages=[...config.matchAll(/^path = "([^"]+\.html)"$/gm)].map(match=>match[1]);
-  for(const page of ['index.html','gargamelle.html',...pages]){
+  for(const page of ['index.html','gargamelle.html','gargamelle/encoding.html',...pages]){
     const html=readFileSync(join(docs,page),'utf8');
     assert.ok(!html.includes('https://github.com/vistuleB/gargamelle'),`Private source link in ${page}`);
     assert.match(html,/>Source archive<\/a>/,`Missing source archive label in ${page}`);

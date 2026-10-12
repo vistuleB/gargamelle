@@ -28,7 +28,7 @@ try {
     let migrated=original.replaceAll('../../../../../providers/cloze/normalization.js','./normalization.mjs');
     // Adapt only temporary legacy boundary callers. Contract adapters exercise
     // the real provider predicates before handlers, separately from these callers.
-    migrated=migrated.replace(/(schema|s)\.boundary\(([^\n]*?), fn/g,(_match,alias,definition)=>`${alias}.boundary(${alias}.contract(${definition}), fn`);
+    migrated=migrated.replace(/(schema|s)\.boundary\(([^\n]*?), fn/g,(match,alias,definition)=>/_definition\(/.test(definition)?`${alias}.boundary(${alias}.contract(${definition}), fn`:match);
     if(id==='cloze'){
       const combined='  use e <- result.try(validate_evidence(e))\n  case';
       assert.ok(migrated.includes(combined),'Cloze semantic split anchor changed');
@@ -45,13 +45,16 @@ try {
   sources['providers/cloze/normalization.js']=digest(normalization);
   writeFileSync(join(directory,'src/normalization.mjs'),normalization);
   cpSync(join(root,'verification/providers/contracts.gleam'),join(directory,'src/contract_adapters.gleam'));
+  cpSync(join(root,'verification/providers/encoding.gleam'),join(directory,'src/provider_encoding.gleam'));
   const build=spawnSync('gleam',['build'],{cwd:directory,encoding:'utf8',timeout:60000,maxBuffer:5*1024*1024});
   assert.equal(build.status,0,build.stdout+build.stderr);
   const modules=join(directory,'build/dev/javascript');
   const load=(pkg,path)=>import(pathToFileURL(join(modules,pkg,path+'.mjs')));
   const s=await load('gargamelle','gargamelle');
   const adapters=await load('provider_contract','contract_adapters');
-  const {toList}=await load('provider_contract','gleam');
+  const encoding=await load('gargamelle','gargamelle/encoding');
+  const producer=await load('provider_contract','provider_encoding');
+  const {toList,Ok}=await load('provider_contract','gleam');
   const compiled=Object.fromEntries(await Promise.all(providers.map(async id=>[id,await load('provider_contract','providers_'+id.replaceAll('-','_'))])));
   const unwrap=result=>{assert.ok(result.isOk(),JSON.stringify(result));return result[0];};
   const admitted=raw=>unwrap(s.parse(JSON.stringify(raw)));
@@ -108,6 +111,30 @@ try {
   // Ensure the independently split current checks are reported separately.
   const combined=s.forward_json(s.json_boundary(adapters.cloze_current(newCard),s.verified_json),admitted(inconsistent));
   assert.deepEqual([...combined[0][0]].map(failure=>failure.index),[0,1]);
+  const typedEvidence=new compiled.cloze.Evidence(toList([new compiled.cloze.Entry('a','old',toList(['old']),true)]),1,1);
+  const typedInconsistent=new compiled.cloze.Evidence(typedEvidence.entries,0,1);
+  let encoded=0,verified=0,stored=0;
+  const encoder=encoding.contramap(producer.cloze_encoder(),value=>{encoded++;return value;});
+  const receiving=s.require(compiled.cloze.evidence_for_contract(oldCard),'Observe verification',()=>{verified++;return new Ok(undefined);});
+  const output=encoding.output_boundary(encoder,s.json_boundary(receiving,certificate=>{stored++;return s.verified_json(certificate);}));
+  const emitted=unwrap(encoding.send(output,typedEvidence));
+  assert.deepEqual(JSON.parse(s.to_string(emitted,s.JsonFormat$Compact$const)),cloze);
+  assert.deepEqual([encoded,verified,stored],[1,1,1]);
+  const schema=JSON.parse(s.schema_string(s.contract_definition(encoding.output_contract(output)),s.JsonFormat$Compact$const));
+  for(const oracle of [compileOracle(schema),await compileSupplementary(schema)])assert.equal(oracle(cloze).accepted,true);
+  const rejected=encoding.send(output,typedInconsistent);
+  assert.equal(rejected.isOk(),false);assert.equal(rejected[0].constructor.name,'Contract');
+  assert.equal(rejected[0][0].constructor.name,'Semantic');
+  assert.deepEqual([encoded,verified,stored],[2,2,1]);
+  const changed=encoding.output_boundary(producer.cloze_encoder(),s.json_boundary(compiled.cloze.evidence_for_contract(newCard),()=>{throw Error('Changed-context output reached storage');}));
+  assert.equal(encoding.send(changed,typedEvidence).isOk(),false);
+  const historical=encoding.output_boundary(producer.cloze_encoder(),s.json_boundary(compiled.cloze.evidence_contract(),s.verified_json));
+  assert.equal(encoding.send(historical,typedEvidence).isOk(),true);
+  const unsafe=new compiled.cloze.Evidence(typedEvidence.entries,9007199254740992,1);
+  const primitive=encoding.send(output,unsafe);
+  assert.equal(primitive.isOk(),false);assert.equal(primitive[0].path,'/data/correct');
+  assert.deepEqual([encoded,verified,stored],[3,2,1]);
+  checks.push({name:'typed cloze output',cases:5,requirements:[...s.contract_requirements(receiving)],encodingCallsPerSubmission:1,contractChecksPerAdmittedSubmission:1,rejectionSkipsStorage:true});
   for(const [path,hash] of Object.entries(sources))assert.equal(digest(readFileSync(join(app,path),'utf8')),hash,'Consumer source changed: '+path);
   const report={status:'passed',sources,checks,certificateRechecks:4,consumerChanged:false,limitations:['JavaScript consumer; provider sources are migrated in a temporary copy','Provider adapters are integration evidence, not shipped Gargamelle API']};
   mkdirSync(join(root,'reports'),{recursive:true});

@@ -7,7 +7,8 @@
 //// original JSON and the accepting contract; semantic requirements decode once.
 //// Converters are trusted application code: exceptions are operational failures.
 //// JavaScript and Erlang targets are supported on the
-//// [tested runtimes](https://hexdocs.pm/gargamelle/0.5.0/native-erlang.html).
+//// [tested runtimes](https://hexdocs.pm/gargamelle/0.6.0/native-erlang.html).
+//// Explicit typed encoders are provided by `gargamelle/encoding`.
 //// The Erlang target requires a separately compiled C regex helper.
 
 import gleam/bit_array

@@ -73,3 +73,8 @@ source = "./docs/migration-0.5.md"
 title = "Typed JSON encoding"
 path = "encoding.html"
 source = "./docs/encoding.md"
+
+[[documentation.pages]]
+title = "Migrating to 0.6.0"
+path = "migration-0.6.html"
+source = "./docs/migration-0.6.md"
