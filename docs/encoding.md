@@ -100,10 +100,49 @@ Mutually recursive encoder pairs are not provided.
 
 ## Errors and limits
 
-`EncodingError` distinguishes encoding failures, JSON admission failures, and
-receiving `ContractError` values. Contract structural failures retain JSON Pointer
-attribution; semantic failures retain their requirement indices and supplied
-paths. Primitive encoding and admission errors currently lack a field path.
+`EncodingError` distinguishes primitive failures, field construction failures,
+final JSON admission failures, and receiving `ContractError` values.
+
+| Error | Attribution | Reason |
+| --- | --- | --- |
+| `InvalidValue(path, problem)` | JSON Pointer into the would-be encoded JSON | `NonFiniteNumber`, `UnsafeInteger`, or `NonScalarString` |
+| `InvalidField(name, problem)` | Supplied field name during construction | `DuplicateKey` or `NonScalarKey` |
+| `Admission(path, error)` | Root for final admission failures | Underlying admission diagnostic |
+| `Contract(error)` | Receiving Contract's existing diagnostics | Structural or semantic rejection |
+
+Runtime paths refer to the output representation, not the source Gleam record.
+For example, an invalid score in the third answer is attributed to
+`/answers/2/score`. The root is `""`; an empty field name is `/`. Field-name tokens
+escape `~` as `~0` and `/` as `~1`. Nullable, choice and projection wrappers do not
+add artificial path segments. Recursive encoders retain the complete nested path.
+
+String-domain checks run at the leaf before serialization, so invalid string
+admission retains that location. Field construction identifies a rejected key
+separately because an unfinished builder has no known containing JSON location.
+The final whole-document admission remains a defensive check; failures there use
+the root rather than an invented field attribution. Encoding stops at its first
+failure and does not run later element encoders or field getters.
+
+```gleam
+import gargamelle/encoding as e
+import gleam/io
+
+pub fn main() {
+  let encoder = e.array(e.safe_integer())
+  let assert Error(e.InvalidValue(path, e.UnsafeInteger)) =
+    e.encode_json(encoder, [42, 9_007_199_254_740_991 + 1])
+  io.println(path)
+}
+```
+
+Output:
+
+```text
+/1
+```
+
+Contract structural failures retain their existing JSON Pointer attribution;
+semantic failures retain requirement indices and supplied paths.
 Getters, projections, converters, requirements and handlers are trusted application
 code. Exceptions and resource failures remain operational failures.
 
@@ -114,5 +153,5 @@ It creates temporary text and does not claim single-pass encoding and certificat
 Safe-integer encoders reject values outside the common safe range. General numeric
 encoding uses `Float`; nonfinite values are rejected before serialization.
 
-Direct JSON construction, additional collection helpers, structured encoding
-paths and automatic encoder derivation are not provided.
+Direct JSON construction, additional collection helpers and
+automatic encoder derivation are not provided.

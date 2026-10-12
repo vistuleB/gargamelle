@@ -27,7 +27,11 @@ for the agent. Decoding-only definitions retain their existing API and behavior.
   work; correctness does not depend on them.
 - Primitive and field failures stop encoding at the first rejection; callback
   exceptions are operational failures. Structural receiving errors keep JSON
-  Pointer attribution; primitive/admission encoding errors lack a field path.
+  Pointer attribution. Primitive failures use InvalidValue with an output JSON
+  Pointer and typed reason. Compositions prepend escaped key/index tokens.
+  String scalar checks run before serialization so invalid strings keep their
+  leaf path. InvalidField identifies a bad declaration key separately because
+  an unfinished record has no containing path. Final admission uses the root.
 - Self-recursion uses a builder executed once and a completed immutable body.
   No registry, mutable cells, casts or release obligation is added. Lift adapts
   completed encoders to construction environments. Mutual pairs are deferred.
@@ -38,7 +42,8 @@ for the agent. Decoding-only definitions retain their existing API and behavior.
 ## Remaining integration work
 
 Measure serialization/admission overhead on representative provider payloads;
-review direct JSON constructors, encoding diagnostics and record ergonomics.
+review direct JSON constructors and further collection coverage. Record ergonomics
+is lower priority than diagnostics, per the maintainer.
 Exercise the public module against independent schema validators, compile-negative
 programs, native transfer and fresh package consumers. The initial integration
 is not a 0.6.0 release handoff.
@@ -53,3 +58,15 @@ These are observations on one machine, not thresholds or native performance clai
 The reference stringify/admit path is a cost comparison, not a substitute typed
 encoder. Direct construction remains a useful optimization candidate; the measured
 cost does not justify weakening admission or repeating receiving verification.
+
+
+## Diagnostics checkpoint
+
+The maintainer requested diagnostics before the 0.6.0 release. The prior bare
+EncodingError(String) constructor is replaced with typed InvalidValue/InvalidField
+reasons and locations; Admission now also carries a path. This API is unreleased,
+so no compatibility aliases are added. Scalar checks use small target-specific
+adapters; malformed native UTF-8 and JavaScript lone surrogates reject at the leaf.
+Operational exceptions propagate. Index token strings are constructed only when
+an error occurs. The array runner preserves first-failure order and stops before
+later getters. Contract errors are not prefixed or reinterpreted.

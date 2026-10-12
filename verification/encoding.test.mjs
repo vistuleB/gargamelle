@@ -43,6 +43,39 @@ test('encoding admission rejects nonfinite numbers and non-scalar strings and ke
   assert.equal(raw.__proto__,'safe');
 });
 
+test('primitive failures retain nested field and index locations with typed reasons',()=>{
+  const child=unwrap(e.field(e.record(),'score',e.number(),value=>value));
+  const root=unwrap(e.field(e.record(),'answers',e.array(e.finish(child)),value=>value));
+  const encoder=e.finish(root);
+  for(const value of [Infinity,-Infinity,NaN]){
+    const result=e.encode_json(encoder,toList([1,2,value]));
+    assert.equal(result.isOk(),false);
+    assert.ok(result[0] instanceof e.InvalidValue);
+    assert.equal(result[0].path,'/answers/2/score');
+    assert.equal(result[0].problem,e.ValueProblem$NonFiniteNumber$const);
+  }
+  assert.equal(e.encode_json(encoder,toList([1,2,3])).isOk(),true);
+  const strings=e.array(e.text());
+  const result=e.encode_json(strings,toList(['Brainy','\ud800']));
+  assert.equal(result[0].path,'/1');
+  assert.equal(result[0].problem,e.ValueProblem$NonScalarString$const);
+  const key=e.field(e.record(),'\ud800',e.text(),value=>value);
+  assert.ok(key[0] instanceof e.InvalidField);
+  assert.equal(key[0].name,'\ud800');
+  assert.equal(key[0].problem,e.FieldProblem$NonScalarKey$const);
+  assert.equal(e.encode_json(strings,toList(['😀',''])).isOk(),true);
+});
+
+test('nested getter exceptions preserve their identity and stop later callbacks',()=>{
+  const failure=new Error('getter failed');
+  let later=0;
+  let fields=unwrap(e.field(e.record(),'first',e.text(),()=>{throw failure;}));
+  fields=unwrap(e.field(fields,'later',e.text(),()=>{later++;return 'never';}));
+  const root=unwrap(e.field(e.record(),'items',e.array(e.finish(fields)),value=>value));
+  assert.throws(()=>e.encode_json(e.finish(root),toList(['Brainy'])),error=>error===failure);
+  assert.equal(later,0);
+});
+
 test('getter, requirement and handler exceptions remain operational failures',()=>{
   const failure=new Error('callback failed');
   assert.throws(()=>e.encode_json(e.contramap(e.text(),()=>{throw failure;}),'Brainy'),error=>error===failure);
@@ -72,13 +105,16 @@ test('public encoding guide compiles and runs on both targets',()=>{
     mkdirSync(join(directory,'src'));
     writeFileSync(join(directory,'gleam.toml'),`name = "encoding_guide"\nversion = "0.1.0"\n[dependencies]\ngargamelle = { path = ${JSON.stringify(root)} }\ngleam_stdlib = { path = ${JSON.stringify(join(root,'build/packages/gleam_stdlib'))} }\ngleam_json = { path = ${JSON.stringify(join(root,'build/packages/gleam_json'))} }\n`);
     const guide=readFileSync(join(root,'docs/encoding.md'),'utf8');
-    const code=guide.match(/```gleam\n([\s\S]*?)\n```/)[1];
-    const output=guide.match(/```text\n([\s\S]*?)\n```/)[1]+'\n';
+    const codes=[...guide.matchAll(/```gleam\n([\s\S]*?)\n```/g)].map(match=>match[1]);
+    const outputs=[...guide.matchAll(/```text\n([\s\S]*?)\n```/g)].map(match=>match[1]+'\n');
+    assert.equal(codes.length,outputs.length);
+    for(const [index,code] of codes.entries()){
     writeFileSync(join(directory,'src/encoding_guide.gleam'),code+'\n');
     for(const target of ['javascript','erlang']){
       const run=spawnSync('gleam',['run','--target',target],{cwd:directory,encoding:'utf8',timeout:60000});
       assert.equal(run.status,0,run.stdout+run.stderr);
-      assert.equal(run.stdout,output,target);
+      assert.equal(run.stdout,outputs[index],target);
+    }
     }
   }finally{rmSync(directory,{recursive:true,force:true});}
 });

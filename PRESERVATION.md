@@ -38,7 +38,14 @@ and projections. Primitive numeric guards reject nonfinite Floats and unsafe
 Ints before serialization; final public admission is the only route to the
 opaque Gargamelle Json result. This retains the existing JSON domain invariant.
 Field constructors reject duplicate and non-scalar names without invoking getters.
-Encoding uses declaration order and stops at its first failure.
+Encoding uses declaration order and stops at its first failure. Primitive errors
+start with a root-relative path; array and record composition prepend decimal
+indices and escaped field names. Nullable, choice, contramap, lift and recursive
+runners preserve child error paths without executing the failed encoder again.
+Scalar text is checked at each leaf before serialization, preserving attribution
+for admission-domain failures. Construction identifies invalid/duplicate keys
+separately; final admission retains a root fallback. Operational exceptions remain
+uncaught and Contract diagnostics remain unchanged.
 
 Codec encoding uses plain encoding followed by verify of the exact stored
 Contract. OutputBoundary stores only an Encoder and receiving JsonBoundary;

@@ -106,9 +106,9 @@ pub fn record_shape_mismatch_rejected_test() {
 
 pub fn duplicate_fields_rejected_test() {
   let assert Ok(record) = e.field(e.record(), "name", e.text(), fn(x) { x })
-  let assert Error(e.EncodingError(reason)) =
+  let assert Error(e.InvalidField(name, e.DuplicateKey)) =
     e.field(record, "name", e.text(), fn(x) { x })
-  reason |> should.equal("duplicate record key: name")
+  name |> should.equal("name")
 }
 
 pub fn unsafe_integer_rejected_test() {

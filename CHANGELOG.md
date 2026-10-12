@@ -2,6 +2,10 @@
 
 ## 0.6.0 — Unreleased
 
+- Add typed encoding failures with output JSON Pointer attribution, including
+  nested records, arrays, recursion and string-domain rejection. Invalid field
+  declarations identify the supplied key and construction reason.
+
 - Add `gargamelle/encoding` with explicit typed encoders, record getters, nullable
   and list composition, sum projections and self-recursive construction.
 - Add checked `Codec` encoding against a full Contract and typed output through

@@ -10,8 +10,10 @@ pre-verify. Semantic checks inspect decoded emitted output, not encoder input.
 
 Decisions and remaining work are in `docs/encoding-design.md`. The initial
 implementation retains serialize-then-admit; assess direct JSON construction and
-cost before final integration. Field ergonomics, structured encoding errors,
-additional collection helpers and mutual recursion remain review candidates.
+cost before final integration. Structured encoding diagnostics now include typed reasons and output JSON
+Pointers; constructor errors identify invalid/duplicate field declarations.
+Field ergonomics is lower priority, per the maintainer. Additional collection
+helpers and mutual recursion remain review candidates.
 0.6.0 is not prepared for publication. The release script remains guarded for
 0.5.0 until its complete contents and qualification are established.
 

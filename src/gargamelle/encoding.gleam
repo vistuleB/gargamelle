@@ -6,18 +6,53 @@
 //// application functions: exceptions propagate as operational failures.
 
 import gargamelle as s
+import gleam/int
 import gleam/json
 import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/result
+import gleam/string
 
-/// Encoding or admission failure, or rejection by the receiving Contract.
-/// Encoding stops at its first failure. Contract errors retain structural paths
-/// and semantic requirement diagnostics. Callback exceptions are not caught.
+/// A rejected primitive encoding value.
+pub type ValueProblem {
+  NonFiniteNumber
+  UnsafeInteger
+  NonScalarString
+}
+
+/// A rejected record field declaration. Construction has no containing JSON path.
+pub type FieldProblem {
+  DuplicateKey
+  NonScalarKey
+}
+
+/// Encoding stops at its first failure. Runtime paths are JSON Pointers into
+/// the would-be encoded JSON, empty at the root. Field declaration errors identify
+/// the supplied key separately; their containing location is not yet known.
+/// Contract failures retain their own structural and semantic diagnostics.
+/// Callback exceptions and resource failures are not caught.
 pub type EncodingError {
-  EncodingError(String)
-  Admission(s.AdmissionError)
+  InvalidValue(path: String, problem: ValueProblem)
+  InvalidField(name: String, problem: FieldProblem)
+  Admission(path: String, error: s.AdmissionError)
   Contract(s.ContractError)
+}
+
+@external(erlang, "gargamelle_encoding_runtime", "scalar")
+@external(javascript, "./encoding_runtime.mjs", "scalar")
+fn scalar(text: String) -> Bool
+
+fn at_key(error: EncodingError, key: String) -> EncodingError {
+  let prefix = "/" <> escape_pointer(key)
+  case error {
+    InvalidValue(path, problem) -> InvalidValue(prefix <> path, problem)
+    Admission(path, cause) -> Admission(prefix <> path, cause)
+    InvalidField(_, _) | Contract(_) -> error
+  }
+}
+
+fn escape_pointer(key: String) -> String {
+  key |> string.replace("~", "~0") |> string.replace("/", "~1")
 }
 
 /// An encoding plan under recursion environment `r`. Only completed encoders,
@@ -55,7 +90,12 @@ pub opaque type OutputBoundary(a, response) {
 
 /// Encode a Gleam string. Admission rejects unpaired Unicode surrogates.
 pub fn text() -> Plan(String, r) {
-  Plan(fn(_, value) { Ok(json.string(value)) })
+  Plan(fn(_, value) {
+    case scalar(value) {
+      True -> Ok(json.string(value))
+      False -> Error(InvalidValue("", NonScalarString))
+    }
+  })
 }
 
 /// Encode Nil as JSON null.
@@ -73,7 +113,7 @@ pub fn number() -> Plan(Float, r) {
   Plan(fn(_, value) {
     case value >=. -1.7976931348623157e308 && value <=. 1.7976931348623157e308 {
       True -> Ok(json.float(value))
-      False -> Error(EncodingError("number must be finite"))
+      False -> Error(InvalidValue("", NonFiniteNumber))
     }
   })
 }
@@ -83,7 +123,7 @@ pub fn safe_integer() -> Plan(Int, r) {
   Plan(fn(_, value) {
     case value >= -9_007_199_254_740_991 && value <= 9_007_199_254_740_991 {
       True -> Ok(json.int(value))
-      False -> Error(EncodingError("integer outside the safe-integer range"))
+      False -> Error(InvalidValue("", UnsafeInteger))
     }
   })
 }
@@ -98,9 +138,22 @@ pub fn contramap(encoder: Plan(a, r), get: fn(b) -> a) -> Plan(b, r) {
 pub fn array(encoder: Plan(a, r)) -> Plan(List(a), r) {
   let Plan(run) = encoder
   Plan(fn(environment, values) {
-    use encoded <- result.try(list.try_map(values, run(environment, _)))
+    use encoded <- result.try(encode_elements(values, run, environment, 0, []))
     Ok(json.preprocessed_array(encoded))
   })
+}
+
+fn encode_elements(values, run, environment, index, encoded) {
+  case values {
+    [] -> Ok(list.reverse(encoded))
+    [value, ..rest] -> {
+      use item <- result.try(
+        run(environment, value)
+        |> result.map_error(fn(error) { at_key(error, int.to_string(index)) }),
+      )
+      encode_elements(rest, run, environment, index + 1, [item, ..encoded])
+    }
+  }
 }
 
 /// Encode None as JSON null and Some through the child encoder.
@@ -166,13 +219,10 @@ fn add_field(
   run: fn(r, a) -> Result(Option(json.Json), EncodingError),
 ) -> Result(Record(a, r), EncodingError) {
   let Record(fields) = record
-  use _ <- result.try(
-    s.parse(json.to_string(json.string(name)))
-    |> result.map_error(Admission),
-  )
-  case list.any(fields, fn(field) { field.0 == name }) {
-    True -> Error(EncodingError("duplicate record key: " <> name))
-    False -> Ok(Record(list.append(fields, [#(name, run)])))
+  case scalar(name), list.any(fields, fn(field) { field.0 == name }) {
+    False, _ -> Error(InvalidField(name, NonScalarKey))
+    True, True -> Error(InvalidField(name, DuplicateKey))
+    True, False -> Ok(Record(list.append(fields, [#(name, run)])))
   }
 }
 
@@ -183,7 +233,9 @@ pub fn finish(record: Record(a, r)) -> Plan(a, r) {
     use encoded <- result.try(
       list.try_map(fields, fn(field) {
         let #(name, run) = field
-        result.map(run(environment, value), fn(value) { #(name, value) })
+        run(environment, value)
+        |> result.map_error(at_key(_, name))
+        |> result.map(fn(value) { #(name, value) })
       }),
     )
     Ok(
@@ -231,7 +283,7 @@ pub fn encode_json(
 ) -> Result(s.Json, EncodingError) {
   let Plan(run) = encoder
   use json <- result.try(run(Nil, value))
-  s.parse(json.to_string(json)) |> result.map_error(Admission)
+  s.parse(json.to_string(json)) |> result.map_error(Admission("", _))
 }
 
 /// Pair an encoder with a Contract without running either. This is an explicit

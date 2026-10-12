@@ -421,8 +421,15 @@ Encoding currently serializes an intermediate gleam/json.Json representation
 and admits its text once. No fused single-pass encoding/certification or allocation
 bound is claimed. Nonfinite Float and unsafe Int inputs must fail rather than be
 silently normalized to null or rounded integer output. Encoding failures stop at
-the first failure and currently lack a field path. Contract failures retain their
-normal structural and semantic diagnostics. Construction must invoke no getters,
+the first failure. InvalidValue carries a JSON Pointer into the would-be output
+and a typed primitive reason. Compositions prepend escaped field names and decimal
+array indices; nullable, choice and projection wrappers add no segments. String
+scalar checks occur before leaf serialization so domain errors retain their
+location. InvalidField identifies a rejected declaration key separately; there
+is no containing output path until the builder is composed. Final admission
+failure uses the root. Contract failures retain their normal structural and
+semantic diagnostics. Subsequent getters and element encoders must not run after
+an encoding rejection. Construction must invoke no getters,
 projections, requirements or receiving handlers.
 See [Typed JSON encoding](encoding.html).
 

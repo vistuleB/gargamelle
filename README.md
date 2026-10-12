@@ -257,7 +257,8 @@ Other runtimes and platforms are unverified; Windows native support is unavailab
 - Encoders require explicit getters and projections; no automatic derivation,
   decode/encode inverse or migration API is provided. Defaults, projection and
   maps can lose information during decoding. Encoding creates temporary JSON
-  text for admission; primitive encoding failures currently lack field paths.
+  text for admission. Encoding failures identify the output field or array element
+  with a JSON Pointer and a typed reason.
 
 APIs may change before 1.0.
 
