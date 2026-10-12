@@ -20,6 +20,11 @@ path = "contract.html"
 source = "./docs/contract.md"
 
 [[documentation.pages]]
+title = "Verified JSON boundaries"
+path = "boundaries.html"
+source = "./docs/boundaries.md"
+
+[[documentation.pages]]
 title = "Browser compatibility"
 path = "browser-support.html"
 source = "./docs/browser-support.md"

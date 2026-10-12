@@ -1,5 +1,14 @@
 # Gargamelle handoff and next work
 
+## Active boundary work
+
+The maintainer authorized `VerifiedJson` and an opaque input boundary on
+2026-10-11. The implementation retains original JSON and decoded data, calling
+`decode` once before invoking the private handler. Usage is in
+`docs/boundaries.md`; decisions for review are in `docs/verified-json-design.md`.
+An encoder and output boundary are deferred. This work is unreleased and the
+earlier release archive fingerprints do not cover it.
+
 0.3.0 is published; its JSON formatting replacement preparation is tracked in `docs/release-0.3.0.md`. It introduces
 `schema_json` and `schema_string`, replacing `emit_json` and `emit_text`. `Json`, `RecordPolicy` and `to_string` replace `Value`,
 `Policy` and `value_text`. Previous API names are removed. Core semantics are unchanged.
@@ -27,10 +36,8 @@ all JSON Schema features. Verify external state before acting on it.
   is removed, limitations are explicit, app notes are removed, and the renderer
   recipe includes asset downloads, a complete HTML shell and a rendered sample.
   A HexDocs license page fixes the README license link.
-- The files are in `gargamelle/`, but Git metadata remains in `concord/.git`.
-  Until this is repaired, use explicit `--git-dir` and `--work-tree` arguments.
-  The unchanged `.gitignore` has been copied into `gargamelle/` so build outputs
-  remain ignored. Do not commit generated artifacts.
+- Git metadata was moved into `gargamelle/.git` on 2026-10-11. Normal Git
+  commands now work in this checkout. Do not commit generated artifacts.
 - The user reported republishing 0.1.0. A direct fetch of its HexDocs confirmed
   the earlier onboarding and lineage edits, but subsequent README edits were
   made locally afterward. Do not assume the published docs match `0d15a7a`.

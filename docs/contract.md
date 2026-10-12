@@ -12,6 +12,15 @@ are opaque and constructible only through library operations. The definition is
 authoritative: schema emission and decoding are derived interpretations of it.
 There is no independent schema/decoder override or arbitrary predicate escape hatch.
 
+`Boundary(a, response)` binds a completed definition to a private handler.
+`forward` decodes the submitted `Json` against that exact stored definition and
+invokes the handler only on success. The handler receives `VerifiedJson(a)` with
+the original JSON and decoded output; accessors do not repeat validation or
+conversion. Invalid inputs return `decode`'s errors, and callback exceptions
+remain operational failures. Responses are not checked. The generic parameter
+`a` does not identify a particular definition; the opaque boundary enforces the
+association between definition and handler. See [Verified JSON boundaries](boundaries.html).
+
 Constructors compose opaque `Plan(a, r)` values, where `r` is the recursion
 environment. A completed `Definition(a)` is the closed specialization
 `Plan(a, Nil)`. Only completed definitions can be validated, decoded, emitted or

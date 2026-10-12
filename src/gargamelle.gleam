@@ -155,6 +155,22 @@ pub opaque type Plan(a, r) {
 pub type Definition(a) =
   Plan(a, Nil)
 
+/// Original JSON and its decoded value, created together by `forward`.
+/// Access them with `verified_json` and `verified_data`; neither accessor decodes
+/// again. Both representations remain retained while this value is reachable.
+/// The parameter `a` identifies the output type, not a particular definition.
+/// Use a `Boundary` to enforce which definition checks a handler's input.
+pub opaque type VerifiedJson(a) {
+  VerifiedJson(Json, a)
+}
+
+/// A definition and a private handler invoked only after successful decoding
+/// against that definition. Construct with `boundary`, inspect the contract with
+/// `boundary_definition`, and submit JSON with `forward`.
+pub opaque type Boundary(a, response) {
+  Boundary(Definition(a), fn(VerifiedJson(a)) -> response)
+}
+
 /// The opaque recursion environment supplied to a self-recursive plan.
 /// User code cannot construct or execute this environment.
 pub opaque type Recursive(a) {
@@ -1471,6 +1487,50 @@ pub fn decode(def: Definition(a), value: Json) -> Result(a, List(DataError)) {
     }
     errors -> Error(errors)
   }
+}
+
+/// Bind a handler to its input definition. Construction does not validate input
+/// or invoke callbacks. The handler receives original JSON and decoded data.
+pub fn boundary(
+  definition: Definition(a),
+  handler: fn(VerifiedJson(a)) -> response,
+) -> Boundary(a, response) {
+  Boundary(definition, handler)
+}
+
+/// Return the exact definition used by `forward`, for schema emission or host
+/// review. This does not expose the handler or permit replacing its definition.
+pub fn boundary_definition(boundary: Boundary(a, response)) -> Definition(a) {
+  let Boundary(definition, _) = boundary
+  definition
+}
+
+/// Decode once against the boundary's definition, then invoke its handler once.
+/// Invalid input returns the same errors as `decode` and invokes no conversion
+/// callbacks or handler. Operational failures and callback exceptions propagate.
+/// A handler returning `Result` produces a nested `Result`; its errors remain
+/// distinct from input validation errors. Output is not checked by this function.
+pub fn forward(
+  boundary: Boundary(a, response),
+  json: Json,
+) -> Result(response, List(DataError)) {
+  let Boundary(definition, handler) = boundary
+  use data <- result.try(decode(definition, json))
+  Ok(handler(VerifiedJson(json, data)))
+}
+
+/// Return the original admitted JSON, including fields omitted from decoded
+/// output by `Open` records. This does not revalidate or serialize the value.
+pub fn verified_json(verified: VerifiedJson(a)) -> Json {
+  let VerifiedJson(json, _) = verified
+  json
+}
+
+/// Return the stored decoded value, including maps and applied defaults.
+/// Access does not rerun validation, constructors or conversion callbacks.
+pub fn verified_data(verified: VerifiedJson(a)) -> a {
+  let VerifiedJson(_, data) = verified
+  data
 }
 
 fn inspect_definition(def: Definition(a), value: Json) {

@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Add opaque `Boundary` and `VerifiedJson` types. `forward` decodes against the
+  boundary's stored definition before invoking its private handler, retaining
+  original JSON and decoded data for access without decoding again.
+
 ## 0.3.0 — 2026-10-11
 
 - Add `JsonFormat` (`Compact` / `Pretty`) as a required argument to `to_string`

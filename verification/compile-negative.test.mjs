@@ -7,6 +7,11 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 const root=fileURLToPath(new URL('../',import.meta.url));
 const cases=[
+ ['opaque_verified_json','pub fn main() { let assert Ok(v) = s.parse("null") s.VerifiedJson(v, Nil) }','Unknown module value'],
+ ['opaque_boundary','pub fn main() { s.Boundary(s.text(), fn(x) { x }) }','Unknown module value'],
+ ['verified_not_forward_input','pub fn main(v: s.VerifiedJson(String)) { s.forward(s.boundary(s.text(), s.verified_data), v) }','Type mismatch'],
+ ['boundary_handler_output_type','pub fn main() { s.boundary(s.text(), fn(v: s.VerifiedJson(Int)) { s.verified_data(v) }) }','Type mismatch'],
+ ['private_boundary_handler','pub fn main() { let b = s.boundary(s.text(), s.verified_data) b.handler }','Unknown record field'],
  ['missing_json_format','pub fn main() { let assert Ok(v) = s.parse("null") s.to_string(v) }','Incorrect arity'],
  ['missing_schema_format','pub fn main() { s.schema_string(s.text()) }','Incorrect arity'],
  ['removed_value_type','pub fn main(value: s.Value) { value }','Unknown module type'],
@@ -44,15 +49,17 @@ const cases=[
  ['optional_is_option','pub fn main() { s.optional(s.record(fn(x: String){x}),"x",s.text()) }','Type mismatch'],
  ['no_predicate_escape','pub fn main() { s.predicate(s.text(),fn(_){False}) }','Unknown module value'],
 ];
-test(`compile-time boundary: positive baseline and ${cases.length} forbidden API programs`,()=>{
+test(`compile-time boundary on both targets: positive baseline and ${cases.length} forbidden API programs`,()=>{
  const dir=mkdtempSync(join(tmpdir(),'schema-contract-negative-'));
  try{
  mkdirSync(join(dir,'src'));
  const q=p=>JSON.stringify(p);
  writeFileSync(join(dir,'gleam.toml'),`name = "negative_probe"\nversion = "0.1.0"\ntarget = "javascript"\n[dependencies]\ngargamelle = { path = ${q(root)} }\ngleam_stdlib = { path = ${q(resolve(root,'build/packages/gleam_stdlib'))} }\ngleam_json = { path = ${q(resolve(root,'build/packages/gleam_json'))} }\n`);
- const compile=body=>{writeFileSync(join(dir,'src/negative_probe.gleam'),'import gargamelle as s\nimport gargamelle/documentation\nimport gleam/option as gleam_option\n'+body+'\n');const run=spawnSync('gleam',['build'],{cwd:dir,encoding:'utf8',timeout:30000});if(run.error)throw run.error;return {status:run.status,output:run.stdout+run.stderr};};
- const positive=compile('pub fn main() { s.variant("x",s.record(Nil),s.Strict) }');
+ const compile=(body,target)=>{writeFileSync(join(dir,'src/negative_probe.gleam'),'import gargamelle as s\nimport gargamelle/documentation\nimport gleam/option as gleam_option\n'+body+'\n');const run=spawnSync('gleam',['build','--target',target],{cwd:dir,encoding:'utf8',timeout:30000});if(run.error)throw run.error;return {status:run.status,output:run.stdout+run.stderr};};
+ for(const target of ['javascript','erlang']){
+ const positive=compile('pub fn main() { s.variant("x",s.record(Nil),s.Strict) }',target);
  assert.equal(positive.status,0,positive.output);
- for(const [name,body,diagnostic] of cases){const result=compile(body);assert.notEqual(result.status,0,name);assert.match(result.output,new RegExp(diagnostic),name+'\n'+result.output);}
+ for(const [name,body,diagnostic] of cases){const result=compile(body,target);assert.notEqual(result.status,0,target+': '+name);assert.match(result.output,new RegExp(diagnostic),target+': '+name+'\n'+result.output);}
+ }
  }finally{rmSync(dir,{recursive:true,force:true});}
 });

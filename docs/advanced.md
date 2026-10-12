@@ -3,6 +3,9 @@
 These examples extend the core record and array workflows. Acceptance and output
 semantics are specified in the [technical contract](https://hexdocs.pm/gargamelle/0.3.0/contract.html).
 
+To bind a component handler to its input definition, see
+[Verified JSON boundaries](boundaries.html).
+
 ## Fractional numbers
 
 `number()` returns `Definition(Float)` and accepts every finite number admitted by
