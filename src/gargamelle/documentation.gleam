@@ -180,6 +180,18 @@ fn constraints(s: Value) {
       True -> "format: " <> text(get(s, "format")) <> " (annotation)"
       False -> ""
     },
+    case has(s, "dependentRequired") {
+      True ->
+        entries(get(s, "dependentRequired"))
+        |> list.map(fn(rule) {
+          "when "
+          <> show(Text(rule.0))
+          <> " is present, require "
+          <> show(rule.1)
+        })
+        |> string.join("; ")
+      False -> ""
+    },
     case text(get(s, "type")) {
       "object" ->
         case get(s, "additionalProperties") {

@@ -381,3 +381,8 @@ default, overriding any standalone default annotation on its child.
 `format` is annotation-only, including custom names. Schema/decoder agreement
 assumes external validators do not enable optional format assertions. A consumer
 that enables such assertions adds acceptance rules beyond this contract.
+
+`dependent_required` checks original own-key presence on object definitions.
+Null is present; decoded defaults do not create input presence. Repeated trigger
+rules merge their required keys. Failures use category `dependent_required`, the
+object JSON Pointer, and `missing_key` for each missing dependent key.

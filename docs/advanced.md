@@ -26,6 +26,17 @@ annotated as email. HTML documentation labels this metadata as an annotation.
 Schema consumers must leave format assertions disabled to use the same acceptance
 semantics. Asserted formats are not supplied by this operation.
 
+## Property dependencies
+
+`dependent_required(definition, "token", ["expires_at"])` constrains a record or
+dictionary: when the original input contains `token`, it must also contain
+`expires_at`. The dependency is one-way. Null counts as present, and defaults
+inserted during decoding do not trigger a dependency. Apply it before wrapping
+an object definition with `nullable` or a union. Repeated rules for a trigger
+merge their required keys, removing duplicates; empty lists and self-dependencies
+are allowed. Schema emission uses `dependentRequired`, and the HTML renderer
+lists the presence rules beneath the object heading.
+
 ## Fractional numbers
 
 `number()` returns `Definition(Float)` and accepts every finite number admitted by

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add `dependent_required` object presence constraints and HTML descriptions.
+
 - Add annotation-only `format` metadata with explicit non-assertion semantics.
 
 - Add standalone schema `default` annotations without decoded-value substitution.

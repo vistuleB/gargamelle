@@ -99,6 +99,7 @@ type Node {
   DictNode(Node, Option(Int), Option(Int))
   RecordNode(List(Field), RecordPolicy)
   PropertyNamesNode(Node, List(Node))
+  DependentRequiredNode(Node, List(#(String, List(String))))
   NullableNode(Node)
   UnionNode(List(Node), Bool)
   TaggedNode(String, List(#(String, Node, Option(String))))
@@ -829,8 +830,63 @@ fn object_node(node: Node) -> Bool {
     DictNode(_, _, _) | RecordNode(_, _) -> True
     NamedNode(_, child)
     | AnnotatedNode(child, _, _)
-    | PropertyNamesNode(child, _) -> object_node(child)
+    | PropertyNamesNode(child, _)
+    | DependentRequiredNode(child, _)
+    | ConditionalNode(child, _)
+    | ExcludeNode(child, _) -> object_node(child)
     _ -> False
+  }
+}
+
+/// When `trigger` is present in the original object, require every listed key.
+/// Null counts as present; decoded defaults do not create input presence.
+/// Repeated rules for the same trigger merge their keys. Duplicate keys are
+/// normalized, and empty lists and self-dependencies are allowed.
+pub fn dependent_required(
+  def: Plan(a, r),
+  trigger: String,
+  required: List(String),
+) -> Result(Plan(a, r), ConstructionError) {
+  use _ <- result.try(scalar_argument(trigger))
+  use _ <- result.try(list.try_each(required, scalar_argument))
+  let Plan(node, convert) = def
+  use next <- result.try(dependency_node(node, trigger, list.unique(required)))
+  Ok(definition(next, convert))
+}
+
+fn dependency_node(node: Node, trigger: String, required: List(String)) {
+  case node {
+    IdentifiedNode(_, child) ->
+      result.map(dependency_node(child, trigger, required), identified)
+    BoundNode(bindings, child) ->
+      result.map(dependency_node(child, trigger, required), BoundNode(
+        bindings,
+        _,
+      ))
+    AnnotatedNode(child, key, value) ->
+      result.map(dependency_node(child, trigger, required), AnnotatedNode(
+        _,
+        key,
+        value,
+      ))
+    DependentRequiredNode(child, rules) -> {
+      let existing = result.unwrap(list.key_find(rules, trigger), [])
+      Ok(DependentRequiredNode(
+        child,
+        list.append(list.filter(rules, fn(rule) { rule.0 != trigger }), [
+          #(trigger, list.unique(list.append(existing, required))),
+        ]),
+      ))
+    }
+    _ ->
+      case object_node(node) {
+        True ->
+          Ok(DependentRequiredNode(identified(node), [#(trigger, required)]))
+        False ->
+          Error(ConstructionError(
+            "dependent_required requires an object definition",
+          ))
+      }
   }
 }
 
@@ -1411,6 +1467,8 @@ fn bound_node(
       result.map(bound_node(child, lo, hi), ContainsNode(_, checks))
     PropertyNamesNode(child, keys) ->
       result.map(bound_node(child, lo, hi), PropertyNamesNode(_, keys))
+    DependentRequiredNode(child, rules) ->
+      result.map(bound_node(child, lo, hi), DependentRequiredNode(_, rules))
     IntegerNode(a, b) -> {
       let l = max_lower(Some(a), lo)
       let h = min_upper(Some(b), hi)
@@ -1729,6 +1787,26 @@ fn inspect(
         }),
       )
     }
+    DependentRequiredNode(child, rules), _ -> {
+      let outcome = inspect(child, v, p, bindings)
+      with_errors(outcome, case v {
+        JObject(_) ->
+          list.flat_map(rules, fn(rule) {
+            case member(v, rule.0) {
+              None -> []
+              Some(_) ->
+                list.filter_map(rule.1, fn(name) {
+                  case member(v, name) {
+                    Some(_) -> Error(Nil)
+                    None ->
+                      Ok(DataError("dependent_required", p, Some(name), [], []))
+                  }
+                })
+            }
+          })
+        _ -> []
+      })
+    }
     ContainsNode(child, checks), _ -> {
       let outcome = inspect(child, v, p, bindings)
       case v {
@@ -1942,6 +2020,7 @@ fn node_children(n: Node) -> Result(List(Node), ConstructionError) {
     | DictNode(child, _, _)
     | NullableNode(child)
     | AnnotatedNode(child, _, _)
+    | DependentRequiredNode(child, _)
     | UniqueNode(child) -> Ok([child])
     RecordNode(fields, _) ->
       Ok(
@@ -2003,8 +2082,9 @@ fn same_input_children_in(
   case n {
     IdentifiedNode(_, child) -> same_input_children_in(child, bindings)
     BoundNode(local, child) -> same_input_children_in(child, local)
-    ContainsNode(child, _) | PropertyNamesNode(child, _) ->
-      Ok([BoundNode(bindings, child)])
+    ContainsNode(child, _)
+    | PropertyNamesNode(child, _)
+    | DependentRequiredNode(child, _) -> Ok([BoundNode(bindings, child)])
     ArrayNode(_, _, _) | TupleNode(_) | DictNode(_, _, _) | RecordNode(_, _) ->
       Ok([])
     _ -> node_children_in(n, bindings)
@@ -2072,7 +2152,9 @@ fn same_input_children(n: Node) -> Result(List(Node), ConstructionError) {
   case n {
     IdentifiedNode(_, child) -> same_input_children(child)
     BoundNode(bindings, child) -> same_input_children_in(child, bindings)
-    ContainsNode(child, _) | PropertyNamesNode(child, _) -> Ok([child])
+    ContainsNode(child, _)
+    | PropertyNamesNode(child, _)
+    | DependentRequiredNode(child, _) -> Ok([child])
     ArrayNode(_, _, _) | TupleNode(_) | DictNode(_, _, _) | RecordNode(_, _) ->
       Ok([])
     _ -> node_children(n)
@@ -2176,6 +2258,16 @@ fn emit(n: Node) -> Json {
     NamedNode(name, _) | ReferenceNode(name, _) ->
       obj([#("$ref", JString("#/$defs/" <> name))])
     UniqueNode(c) -> put(emit(c), "uniqueItems", JBool(True))
+    DependentRequiredNode(child, rules) ->
+      put(
+        emit(child),
+        "dependentRequired",
+        obj(
+          list.map(rules, fn(rule) {
+            #(rule.0, JArray(list.map(rule.1, JString)))
+          }),
+        ),
+      )
     BooleanNode -> typ("boolean")
     NullNode -> typ("null")
     StringNode(lo, hi, patterns) -> {
