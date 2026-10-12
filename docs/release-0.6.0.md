@@ -31,3 +31,12 @@ with the prior archive. Runtime qualification is retained for identical source;
 no unchanged runtime suite is rerun for this editorial edit. The replacement
 record is `reports/readme-replacement-0.6.0.json`. Publication remains the
 maintainer's action with `gleam publish --replace`.
+
+## Fixture packaging correction
+
+Move schema_fixtures from src to test. It is verification code, not library API.
+Remove its now-unnecessary internal_modules entry. The historical benchmark copies
+the fixture into src only inside its isolated consumer, avoiding source imports
+of test modules and duplicate-module compilation. Archive checks now reject test
+fixtures and any additional top-level Gleam namespace. Full preparation exercises
+the fixture-dependent oracle/mutation suites and both fresh archive targets.

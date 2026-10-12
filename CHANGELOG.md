@@ -2,6 +2,9 @@
 
 ## 0.6.0 — 2026-10-12
 
+- Exclude verification fixtures from the package, leaving one top-level Gleam
+  namespace. Runtime APIs are unchanged.
+
 - Add typed encoding failures with output JSON Pointer attribution, including
   nested records, arrays, recursion and string-domain rejection. Invalid field
   declarations identify the supplied key and construction reason.

@@ -3,7 +3,6 @@ version = "0.6.0"
 licences = ["MIT"]
 description = "Typed JSON decoding and JSON Schema 2020-12 generation from one Gleam definition"
 links = [{ title = "Source archive", href = "https://repo.hex.pm/tarballs/gargamelle-0.6.0.tar" }]
-internal_modules = ["schema_fixtures"]
 target = "javascript"
 gleam = ">= 1.18.1"
 

@@ -58,6 +58,10 @@ try {
     assert.ok(!/(^|\/)\.env(?:\.|$)|(?:^|\/)(?:credentials|id_rsa|id_ed25519)$/.test(path),`Credential path: ${path}`);
   }
   for(const path of ['gleam.toml','README.md','LICENSE','src/gargamelle.gleam','src/gargamelle/encoding.gleam','src/gargamelle/encoding_runtime.mjs','src/gargamelle_encoding_runtime.erl','src/runtime.mjs','src/gargamelle_runtime.erl','src/gargamelle_regex.erl','priv/regex-src/Makefile','priv/regex-src/PROVENANCE.json','priv/regex-src/LICENSE.quickjs'])assert.ok(entries.includes(path),`Missing archive member: ${path}`);
+  assert.ok(!entries.includes('src/schema_fixtures.gleam'),'Verification fixtures must not ship');
+  assert.ok(!entries.some(path=>path.startsWith('test/')),'Test modules must not ship');
+  const topLevel=entries.flatMap(path=>/^src\/([^/]+)\.gleam$/.exec(path)?.slice(1)??[]);
+  assert.deepEqual(topLevel,['gargamelle'],'Package must expose only its own top-level namespace');
   run('tar',['-xzf',contents,'-C',library]);
   checkPackageReadme(readFileSync(join(root,'README.md')),readFileSync(join(library,'README.md')));
   // Consumers use only the extracted package and pinned dependency source copies.

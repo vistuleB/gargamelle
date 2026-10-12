@@ -17,6 +17,10 @@ test('main library preserves baseline behavior with immutable recursive plans',(
   try {
     for(const name of ['src','test','priv','build/packages']) cpSync(join(root,name),join(directory,name),{recursive:true});
     for(const name of ['gleam.toml','manifest.toml']) cpSync(join(root,name),join(directory,name));
+    // This isolated benchmark has source callers; copy only its test fixture into
+    // the temporary src tree. The actual package ships no verification fixture.
+    cpSync(join(root,'test/schema_fixtures.gleam'),join(directory,'src/schema_fixtures.gleam'));
+    rmSync(join(directory,'test/schema_fixtures.gleam'));
     for(const name of ['plan_support.erl','plan_support.mjs']) cpSync(join(root,'verification/portability/plans',name),join(directory,'src',name));
     cpSync(join(root,'verification/portability/integration/integration_probe.gleam'),join(directory,'src/integration_probe.gleam'));
     const basic=[null,false,true,-1,-0,0,1,2.5,9007199254740991,"", "x", "special", "blocked", "ab", "😀"];
@@ -70,6 +74,7 @@ test('main library preserves baseline behavior with immutable recursive plans',(
     writeFileSync(join(directory,'src/gargamelle/encoding.gleam'),encodingSource);
     writeFileSync(join(directory,'src/runtime.mjs'),currentRuntime);
     cpSync(join(root,'test'),join(directory,'test'),{recursive:true});
+    rmSync(join(directory,'test/schema_fixtures.gleam'));
     const ajv=new Ajv2020({strict:false,allErrors:true,ownProperties:true});
     for(const fixture of integrated) {
       const validate=ajv.compile(JSON.parse(fixture.schema));
