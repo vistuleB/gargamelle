@@ -2,6 +2,10 @@
 
 ## 0.7.0 — Unreleased
 
+- Add `anything()` to accept any admitted JSON and return its original opaque
+  representation unchanged. Nested metadata can remain unconstrained without
+  weakening surrounding fields.
+
 - Add public constructors for opaque admitted JSON, with typed errors for
   invalid numbers, strings, object keys and duplicate keys. Arrays and objects
   compose admitted children without reparsing.

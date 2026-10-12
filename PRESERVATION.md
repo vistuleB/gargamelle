@@ -337,3 +337,12 @@ Objects check scalar unique keys and retain the supplied children and ordering.
 Duplicate rejection differs deliberately from parser last-value replacement.
 Canonical serialization remains unchanged; these APIs do not establish any
 definition or Contract acceptance.
+
+## Accept-any-admitted-JSON definition
+
+AnyJsonNode accepts every opaque admitted Json, has no child edges, and performs
+identity conversion. Emission contributes no assertion keywords, so acceptance
+coincides with an empty schema within the admitted domain. Composition traversals
+treat it as a leaf; surrounding arrays, records, exclusions and semantic Contracts
+retain their independent checks. No admission bypass or arbitrary runtime cast is
+introduced. Named instances emit an empty definition with ordinary references.

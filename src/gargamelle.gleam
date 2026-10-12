@@ -126,6 +126,7 @@ type Bindings =
 type Node {
   IdentifiedNode(Identity, Node)
   BoundNode(Bindings, Node)
+  AnyJsonNode
   BooleanNode
   NullNode
   StringNode(Option(Int), Option(Int), List(String))
@@ -545,6 +546,14 @@ fn as_int(value: Float) -> Int
 @external(erlang, "gargamelle_runtime", "as_float")
 @external(javascript, "./runtime.mjs", "as_float")
 fn as_float(value: Int) -> Float
+
+/// Accept any admitted JSON and return the original opaque Json unchanged.
+/// No schema constraints or conversions are applied. Admission still excludes
+/// nonfinite numbers and non-scalar strings/keys; this is not arbitrary runtime data.
+/// The schema is unconstrained within the documented admitted JSON domain.
+pub fn anything() -> Plan(Json, r) {
+  definition(AnyJsonNode, fn(_, value, _) { value })
+}
 
 /// Accept JSON booleans.
 pub fn boolean() -> Plan(Bool, r) {
@@ -2044,6 +2053,7 @@ fn inspect(
       )
     }
     UniqueNode(child), _ -> inspect(child, v, p, bindings)
+    AnyJsonNode, _ -> atomic([])
     BooleanNode, JBool(_) | NullNode, JNull -> atomic([])
     StringNode(lo, hi, patterns), JString(s) ->
       atomic(
@@ -2646,6 +2656,7 @@ fn emit(n: Node) -> Json {
           }),
         ),
       )
+    AnyJsonNode -> obj([])
     BooleanNode -> typ("boolean")
     NullNode -> typ("null")
     StringNode(lo, hi, patterns) -> {

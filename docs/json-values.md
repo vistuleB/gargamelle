@@ -54,3 +54,16 @@ domain, not acceptance by any particular definition or Contract.
 Typed encoders remain a separate API: they describe how to convert a Gleam value
 into JSON. The current encoder implementation still serializes and reparses its
 intermediate representation; it does not yet use these direct constructors.
+
+## Arbitrary admitted JSON
+
+`anything()` defines an unconstrained admitted JSON value and decodes to `Json`,
+returning the original representation unchanged. It can describe arbitrary
+metadata inside an otherwise constrained record. The emitted subschema is `{}`;
+the root schema also contains the dialect annotation.
+
+Surrounding record fields, required presence and Strict policy remain enforced.
+An unconstrained subtree makes no application-specific acceptance claim, and
+semantic Contract requirements can still reject it. Nonfinite numbers and
+non-scalar strings/keys remain outside admission. This definition accepts JSON,
+not arbitrary runtime objects or a dynamically untyped Gleam value.

@@ -223,6 +223,7 @@ For input `{"name":"Brainy","active":true}`, `read_user` returns
 
 | Feature | Constructors |
 | --- | --- |
+| Arbitrary admitted JSON | `anything` |
 | Recursive structures | `recursive`, `recursive_pair` |
 | Tuples and array membership | `tuple`, `element`, `contains` |
 | Object key and presence constraints | `property_names`, `dependent_required` |

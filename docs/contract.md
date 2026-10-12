@@ -493,3 +493,11 @@ Object construction rejects repeated keys and attributes the first bad key.
 Children are already admitted and are not serialized or reparsed. Construction
 does not certify a structural definition or Contract.
 See [Constructing JSON values](json-values.html).
+
+## Unconstrained admitted JSON
+
+`anything()` accepts every admitted Json and returns that original Json unchanged.
+Its subschema is empty and the root contributes only the dialect annotation.
+Agreement is restricted to the documented admitted domain; arbitrary runtime
+objects, nonfinite numbers and non-scalar strings/keys remain excluded. Constraints
+on enclosing records or arrays and explicit semantic requirements still apply.
