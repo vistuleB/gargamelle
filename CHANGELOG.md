@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.6.0 — Unreleased
+## 0.6.0 — 2026-10-12
 
 - Add typed encoding failures with output JSON Pointer attribution, including
   nested records, arrays, recursion and string-domain rejection. Invalid field

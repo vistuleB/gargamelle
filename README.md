@@ -16,12 +16,6 @@ decoded Gleam values and original JSON, or verified JSON.
 Boundary APIs are optional; definitions, decoding and schema generation can be
 used directly.
 
-Definitions can also generate browsable HTML documentation.
-
-Explicit typed encoders are defined separately in `gargamelle/encoding`. They
-produce admitted JSON, checked output certificates, or submit encoded JSON through
-a receiving boundary.
-
 | Operation | API |
 | --- | --- |
 | JSON decoding into a Gleam value | `decode` |
