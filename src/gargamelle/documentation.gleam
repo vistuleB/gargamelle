@@ -180,6 +180,10 @@ fn constraints(s: Value) {
       True -> "format: " <> text(get(s, "format")) <> " (annotation)"
       False -> ""
     },
+    case has(s, "multipleOf") {
+      True -> "multiple of: " <> show(get(s, "multipleOf"))
+      False -> ""
+    },
     case has(s, "dependentRequired") {
       True ->
         entries(get(s, "dependentRequired"))

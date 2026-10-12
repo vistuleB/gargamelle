@@ -72,7 +72,12 @@ Nonfinite endpoints, inverted intervals, and exclusive equal endpoints are
 construction errors. An interval between adjacent representable numbers can be
 constructed even when it accepts no binary64 value; schema and decoder agree.
 `bounds` remains the integer/size API; use `number_bounds` for numbers.
-`multipleOf` and fractional-number constants are not supported.
+General fractional `multipleOf` and fractional-number constants are not supported.
+`integer_multiple_of(safe_integer(), 3)` adds divisibility by a positive safe
+integer. It uses exact integer remainders, rejects zero/negative/unsafe divisors,
+and emits `multipleOf`. It supports bounded or mapped safe-integer definitions;
+apply it before naming. Repeated divisors intersect without computing an
+overflow-prone least common multiple. It does not accept `number()` definitions.
 
 ## Recursive definitions
 

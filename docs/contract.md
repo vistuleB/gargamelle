@@ -356,7 +356,7 @@ example list has the ordinary rendering behavior.
 The contract does not claim full JSON Schema dialect support, arbitrary schema
 import, remote/dynamic references, arbitrary heterogeneous recursion groups,
 general public intersection, pattern properties, schema-constrained extra record
-fields, format assertions, multipleOf, fractional/general JSON constants, encoders,
+fields, general format assertions, fractional multipleOf, fractional/general JSON constants, encoders,
 migrations or reversible value conversion. Runtime qualification is limited to
 the documented JavaScript and native Erlang matrix. Machine-checked correctness,
 resource bounds and arbitrary
@@ -386,3 +386,9 @@ that enables such assertions adds acceptance rules beyond this contract.
 Null is present; decoded defaults do not create input presence. Repeated trigger
 rules merge their required keys. Failures use category `dependent_required`, the
 object JSON Pointer, and `missing_key` for each missing dependent key.
+
+`integer_multiple_of` requires a positive safe-integer divisor and a safe-integer
+definition. Acceptance uses exact integer remainders after the base definition
+accepts. Repeated divisors intersect; emission uses `multipleOf` and, when needed,
+additional conjunctive `allOf` constraints. Fractional divisors and unrestricted
+number definitions are excluded from this operation.

@@ -88,6 +88,7 @@ type Node {
   NullNode
   StringNode(Option(Int), Option(Int), List(String))
   IntegerNode(Int, Int)
+  IntegerMultiplesNode(Node, List(Int))
   NumberNode(Option(NumberBound), Option(NumberBound))
   ConstNode(Json, String)
   EnumNode(List(String))
@@ -463,6 +464,48 @@ pub fn number() -> Plan(Float, r) {
       _ -> panic as "validated number"
     }
   })
+}
+
+/// Require safe-integer inputs divisible by a positive safe-integer divisor.
+/// This exact integer policy does not accept fractional divisors or number()
+/// definitions. Apply before naming. Repeated constraints intersect.
+pub fn integer_multiple_of(
+  def: Plan(a, r),
+  divisor: Int,
+) -> Result(Plan(a, r), ConstructionError) {
+  case divisor > 0 && divisor <= 9_007_199_254_740_991 {
+    False -> Error(ConstructionError("divisor must be a positive safe integer"))
+    True -> {
+      let Plan(node, convert) = def
+      use next <- result.try(integer_multiple_node(node, divisor))
+      Ok(definition(next, convert))
+    }
+  }
+}
+
+fn integer_multiple_node(node: Node, divisor: Int) {
+  case node {
+    IdentifiedNode(_, child) ->
+      result.map(integer_multiple_node(child, divisor), identified)
+    BoundNode(bindings, child) ->
+      result.map(integer_multiple_node(child, divisor), BoundNode(bindings, _))
+    AnnotatedNode(child, key, value) ->
+      result.map(integer_multiple_node(child, divisor), AnnotatedNode(
+        _,
+        key,
+        value,
+      ))
+    IntegerMultiplesNode(child, divisors) ->
+      Ok(IntegerMultiplesNode(
+        child,
+        list.unique(list.append(divisors, [divisor])),
+      ))
+    IntegerNode(_, _) -> Ok(IntegerMultiplesNode(identified(node), [divisor]))
+    _ ->
+      Error(ConstructionError(
+        "integer_multiple_of requires a safe-integer definition",
+      ))
+  }
 }
 
 fn endpoint(bound: NumberBound) -> Float {
@@ -1469,6 +1512,8 @@ fn bound_node(
       result.map(bound_node(child, lo, hi), PropertyNamesNode(_, keys))
     DependentRequiredNode(child, rules) ->
       result.map(bound_node(child, lo, hi), DependentRequiredNode(_, rules))
+    IntegerMultiplesNode(child, divisors) ->
+      result.map(bound_node(child, lo, hi), IntegerMultiplesNode(_, divisors))
     IntegerNode(a, b) -> {
       let l = max_lower(Some(a), lo)
       let h = min_upper(Some(b), hi)
@@ -1734,6 +1779,20 @@ fn inspect(
         True -> []
         False -> err("integer_constraint", p)
       })
+    IntegerMultiplesNode(child, divisors), _ -> {
+      let outcome = inspect(child, v, p, bindings)
+      case v, outcome.0 {
+        JNumber(x), [] ->
+          with_errors(
+            outcome,
+            case list.all(divisors, fn(divisor) { as_int(x) % divisor == 0 }) {
+              True -> []
+              False -> err("integer_multiple_of", p)
+            },
+          )
+        _, _ -> outcome
+      }
+    }
     NumberNode(lo, hi), JNumber(x) ->
       atomic(case number_ok(x, lo, hi) {
         True -> []
@@ -2021,6 +2080,7 @@ fn node_children(n: Node) -> Result(List(Node), ConstructionError) {
     | NullableNode(child)
     | AnnotatedNode(child, _, _)
     | DependentRequiredNode(child, _)
+    | IntegerMultiplesNode(child, _)
     | UniqueNode(child) -> Ok([child])
     RecordNode(fields, _) ->
       Ok(
@@ -2258,6 +2318,23 @@ fn emit(n: Node) -> Json {
     NamedNode(name, _) | ReferenceNode(name, _) ->
       obj([#("$ref", JString("#/$defs/" <> name))])
     UniqueNode(c) -> put(emit(c), "uniqueItems", JBool(True))
+    IntegerMultiplesNode(child, divisors) -> {
+      let assert [first, ..rest] = divisors
+      let schema = put(emit(child), "multipleOf", JNumber(as_float(first)))
+      case rest {
+        [] -> schema
+        _ ->
+          put(
+            schema,
+            "allOf",
+            JArray(
+              list.map(rest, fn(divisor) {
+                obj([#("multipleOf", JNumber(as_float(divisor)))])
+              }),
+            ),
+          )
+      }
+    }
     DependentRequiredNode(child, rules) ->
       put(
         emit(child),

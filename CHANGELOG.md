@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add exact safe-integer `integer_multiple_of` constraints; fractional divisibility
+  remains outside the supported numeric policy.
+
 - Add `dependent_required` object presence constraints and HTML descriptions.
 
 - Add annotation-only `format` metadata with explicit non-assertion semantics.
