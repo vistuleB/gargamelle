@@ -1,5 +1,16 @@
 # Gargamelle handoff and next work
 
+## Active potential 0.8.0 OTP parser investigation
+
+The maintainer reports 0.7.0 released and authorized an isolated investigation on
+`codex/otp-parser-080`. Production parsing and the publication checkout remain
+unchanged. Callback-only and conservative-fallback prototypes are in
+`verification/otp-parser`; findings and decisions for review are in
+`docs/otp-parser-investigation.md`. Linux OTP 28/29 probe mode is separate from
+release qualification. No replacement or performance improvement is promised.
+
+The older sections below retain historical development checkpoints.
+
 ## Active 0.7.0 admitted JSON work
 
 Work was isolated on `codex/json-070` and promoted to main after qualification

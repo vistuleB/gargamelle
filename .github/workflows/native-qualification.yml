@@ -5,6 +5,11 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+    inputs:
+      parser_probe:
+        description: Run the isolated OTP parser investigation instead of release qualification
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -34,15 +39,21 @@ jobs:
           otp-version: ${{ matrix.otp }}
           gleam-version: '1.18.1'
       - name: Fetch pinned dependencies
+        if: ${{ !inputs.parser_probe }}
         run: |
           npm ci
           gleam deps download
       - name: Check native build tools
+        if: ${{ !inputs.parser_probe }}
         run: |
           cc --version
           make --version
       - name: Run both target gates and deployment/archive checks
+        if: ${{ !inputs.parser_probe }}
         run: npm run prepare:release
+      - name: Run isolated OTP parser investigation
+        if: ${{ inputs.parser_probe }}
+        run: node verification/otp-parser/investigate.mjs
       - name: Retain evidence and failure logs
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
