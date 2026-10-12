@@ -1,5 +1,12 @@
 # 0.4.0 release preparation
 
+The audit of `736466a` found that alternating object modifiers could overwrite
+emitted `dependentRequired` or `propertyNames` assertions. The replacement
+candidate preserves collisions as additional `allOf` clauses, including existing
+conjunctions. Regression checks cover both reported cases, repeated triggers and
+conditional composition against runtime validation, decoding, Ajv and Hyperjump.
+Evidence from `736466a` is superseded and must not qualify the corrected archive.
+
 The maintainer requested 0.4.0 preparation after JSON-only boundary integration.
 Only the maintainer publishes, using `gleam publish` for this new version.
 Current Hex metadata and the downloaded 0.3.0 archive were inspected on 2026-10-12;

@@ -2,6 +2,9 @@
 
 ## 0.4.0 — 2026-10-12
 
+- Preserve every object constraint when `property_names` and
+  `dependent_required` modifiers alternate; emitted schemas retain conjunctions.
+
 - Add opaque `JsonBoundary` receiving handlers with one contract check and no
   decoding, for JSON storage and transport.
 

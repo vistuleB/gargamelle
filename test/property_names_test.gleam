@@ -10,3 +10,20 @@ pub fn typed_keyed_dictionary_test() {
   let assert Error([error]) = s.decode(def, value)
   error.path |> should.equal("/a~1b~0")
 }
+
+pub fn alternating_object_modifiers_preserve_key_constraints_test() {
+  let assert Ok(keys) = s.pattern(s.text(), "^a")
+  let assert Ok(definition) = s.property_names(s.dictionary(s.text()), keys)
+  let assert Ok(definition) = s.dependent_required(definition, "a", [])
+  let assert Ok(definition) = s.property_names(definition, s.text())
+  let assert Ok(expected) =
+    s.parse(
+      "{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"type\":\"object\",\"additionalProperties\":{\"type\":\"string\"},\"propertyNames\":{\"type\":\"string\",\"pattern\":\"^a\"},\"dependentRequired\":{\"a\":[]},\"allOf\":[{\"type\":\"object\",\"propertyNames\":{\"type\":\"string\"}}]}",
+    )
+  s.schema_string(definition, s.Compact)
+  |> should.equal(s.to_string(expected, s.Compact))
+  let assert Ok(invalid) = s.parse("{\"z\":\"x\"}")
+  s.decode(definition, invalid) |> should.be_error
+  let assert Ok(valid) = s.parse("{\"a\":\"x\"}")
+  s.decode(definition, valid) |> should.be_ok
+}

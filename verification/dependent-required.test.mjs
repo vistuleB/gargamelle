@@ -5,6 +5,37 @@ import * as docs from '../build/dev/javascript/gargamelle/gargamelle/documentati
 import {compileOracle} from './oracle.mjs';
 import {compileSupplementary} from './supplementary-oracle.mjs';
 
+test('alternating object modifiers retain every conjunction across intervening wrappers',async()=>{
+  const dependency=(d,key,required)=>unwrap(s.dependent_required(d,key,toList(required)));
+  const keys=(d,k)=>unwrap(s.property_names(d,k));
+  const prefix=unwrap(s.pattern(s.text(),'^a'));
+  const cases=[
+    [dependency(keys(dependency(s.dictionary(s.text()),'a',['b']),s.text()),'c',['d']),
+      [[{},true],[{a:'x'},false],[{c:'x'},false],[{a:'x',b:'x'},true],[{a:'x',b:'x',c:'x'},false],[{a:'x',b:'x',c:'x',d:'x'},true]]],
+    [keys(dependency(keys(s.dictionary(s.text()),prefix),'a',[]),s.text()),
+      [[{},true],[{z:'x'},false],[{a:'x'},true]]],
+    [dependency(keys(dependency(s.dictionary(s.text()),'a',['b']),s.text()),'a',['c']),
+      [[{a:'x',b:'x'},false],[{a:'x',c:'x'},false],[{a:'x',b:'x',c:'x'},true]]],
+  ];
+  // Existing allOf clauses must survive both kinds of keyword collision.
+  const base=dependency(keys(s.dictionary(s.text()),prefix),'a',['ab']);
+  const conditional=s.if_then(base,s.dictionary(s.text()),dependency(s.dictionary(s.text()),'ab',['ac']));
+  const composed=dependency(keys(dependency(keys(conditional,s.text()),'a',['ad']),prefix),'a',['ae']);
+  cases.push([composed,[[{},true],[{z:'x'},false],[{a:'x',ad:'x',ae:'x'},false],[{a:'x',ab:'x',ad:'x',ae:'x'},false],[{a:'x',ab:'x',ac:'x',ad:'x'},false],[{a:'x',ab:'x',ac:'x',ad:'x',ae:'x'},true]]]);
+  for(const [definition,values] of cases){
+    let calls=0;
+    const mapped=s.map(definition,value=>{calls++;return value;});
+    const schema=emitted(mapped), checks=[compileOracle(schema),await compileSupplementary(schema)];
+    for(const [value,accepted] of values){
+      assert.equal(s.validate(mapped,unwrap(s.parse(JSON.stringify(value)))).isOk(),accepted,JSON.stringify(value));
+      for(const check of checks)assert.equal(check(value).accepted,accepted,JSON.stringify({value,schema}));
+      assert.equal(calls,0);
+    }
+    for(const [value,accepted] of values)assert.equal(evaluate(mapped,value).accepted,accepted);
+    assert.equal(calls,values.filter(([,accepted])=>accepted).length);
+  }
+});
+
 test('dependentRequired uses original own-key presence and agrees with both schema oracles',async()=>{
   let calls=0;
   let definition=unwrap(s.dependent_required(s.map(s.dictionary(s.nullable(s.text())),x=>{calls++;return x;}),'token',toList(['expires_at','expires_at'])));

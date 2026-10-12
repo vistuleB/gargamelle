@@ -66,3 +66,23 @@ pub fn construction_and_recursive_composition_test() {
   error.path |> should.equal("/children/0")
   s.schema_json(definition)
 }
+
+pub fn alternating_object_modifiers_preserve_dependencies_test() {
+  let assert Ok(definition) =
+    s.dependent_required(s.dictionary(s.text()), "a", ["b"])
+  let assert Ok(definition) = s.property_names(definition, s.text())
+  let assert Ok(definition) = s.dependent_required(definition, "c", ["d"])
+  let assert Ok(definition) = s.property_names(definition, s.text())
+  let assert Ok(definition) = s.dependent_required(definition, "a", ["e"])
+  let assert Ok(expected) =
+    s.parse(
+      "{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"type\":\"object\",\"additionalProperties\":{\"type\":\"string\"},\"dependentRequired\":{\"a\":[\"b\"]},\"propertyNames\":{\"type\":\"string\"},\"allOf\":[{\"type\":\"object\",\"dependentRequired\":{\"c\":[\"d\"]}},{\"type\":\"object\",\"propertyNames\":{\"type\":\"string\"}},{\"type\":\"object\",\"dependentRequired\":{\"a\":[\"e\"]}}]}",
+    )
+  s.schema_string(definition, s.Compact)
+  |> should.equal(s.to_string(expected, s.Compact))
+  let assert Ok(invalid) = s.parse("{\"a\":\"present\",\"e\":\"present\"}")
+  s.decode(definition, invalid) |> should.be_error
+  let assert Ok(valid) =
+    s.parse("{\"a\":\"x\",\"b\":\"x\",\"c\":\"x\",\"d\":\"x\",\"e\":\"x\"}")
+  s.decode(definition, valid) |> should.be_ok
+}

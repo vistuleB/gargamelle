@@ -2115,6 +2115,26 @@ fn put(v: Json, k: String, x: Json) -> Json {
   JObject(list.append(list.filter(xs, fn(p) { p.0 != k }), [#(k, x)]))
 }
 
+// Object modifiers may be separated by other wrappers. Preserve earlier
+// assertions and any existing conjunction instead of replacing a keyword.
+fn conjoin_object_keyword(schema: Json, key: String, value: Json) -> Json {
+  let assert JObject(fields) = schema
+  case list.key_find(fields, key) {
+    Error(_) -> schema |> put("type", JString("object")) |> put(key, value)
+    Ok(_) -> {
+      let clauses = case list.key_find(fields, "allOf") {
+        Ok(JArray(clauses)) -> clauses
+        _ -> []
+      }
+      put(
+        schema,
+        "allOf",
+        JArray(list.append(clauses, [typ("object") |> put(key, value)])),
+      )
+    }
+  }
+}
+
 fn obj(xs: List(#(String, Json))) -> Json {
   JObject(xs)
 }
@@ -2402,7 +2422,7 @@ fn emit(n: Node) -> Json {
       }
     }
     DependentRequiredNode(child, rules) ->
-      put(
+      conjoin_object_keyword(
         emit(child),
         "dependentRequired",
         obj(
@@ -2500,9 +2520,7 @@ fn emit(n: Node) -> Json {
         [key] -> emit(key)
         _ -> obj([#("allOf", JArray(list.map(keys, emit)))])
       }
-      emit(child)
-      |> put("type", JString("object"))
-      |> put("propertyNames", key_schema)
+      conjoin_object_keyword(emit(child), "propertyNames", key_schema)
     }
     TupleNode(children) -> {
       let schema =
