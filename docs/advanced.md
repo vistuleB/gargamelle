@@ -15,6 +15,11 @@ runs no conversion callbacks. Repeated calls replace the examples at that node.
 The HTML renderer displays these samples as metadata. For examples checked against
 an input contract before rendering, use `documentation.render_examples` instead.
 
+`default(definition, value)` adds a standalone default annotation. It neither
+checks the sample against the definition nor substitutes it during decoding.
+Use `defaulted` for a record field whose absence should supply a validated value;
+that field's actual default overrides any standalone annotation on its child.
+
 ## Fractional numbers
 
 `number()` returns `Definition(Float)` and accepts every finite number admitted by

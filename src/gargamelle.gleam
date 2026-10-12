@@ -1064,6 +1064,15 @@ pub fn examples(def: Plan(a, r), values: List(Json)) -> Plan(a, r) {
   definition(AnnotatedNode(node, "examples", JArray(values)), convert)
 }
 
+/// Attach a JSON Schema `default` annotation without inserting values during
+/// decoding or checking this sample against the definition. `defaulted` is the
+/// separate record-field operation for validated defaults applied on absence.
+/// A defaulted field's declared default takes precedence over child annotations.
+pub fn default(def: Plan(a, r), value: Json) -> Plan(a, r) {
+  let Plan(node, convert) = def
+  definition(AnnotatedNode(node, "default", value), convert)
+}
+
 /// Start a record with a curried constructor. Each field consumes one argument;
 /// call `finish` after supplying all fields. Multi-argument constructors need currying.
 pub fn record(constructor: a) -> Record(a, r) {

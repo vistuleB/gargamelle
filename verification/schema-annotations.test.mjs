@@ -19,3 +19,16 @@ test('schema examples are annotations, including invalid samples, and never conv
   assert.match(html,/&lt;script&gt;/);
   assert.equal(calls,0);
 });
+
+test('standalone default is unrestricted metadata and never inserts or converts',async()=>{
+  let calls=0;
+  const definition=s.default$(s.map(s.text(),()=>{calls++;throw new Error('must not convert');}),unwrap(s.parse('false')));
+  const schema=emitted(definition);
+  assert.equal(schema.default,false);
+  for(const check of [compileOracle(schema),await compileSupplementary(schema)]){
+    assert.equal(check('Brainy').accepted,true);
+    assert.equal(check(false).accepted,false);
+  }
+  assert.match(docs.render(definition,'default'),/default: false/);
+  assert.equal(calls,0);
+});

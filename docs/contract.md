@@ -373,3 +373,7 @@ both formats recovers the same admitted JSON value.
 `examples` attaches admitted JSON samples as metadata without checking their
 conformance or changing acceptance/conversion. Repeated annotations of the same
 keyword at the same emitted node use the outermost (last supplied) value.
+
+`default` attaches an admitted JSON annotation without checking conformance or
+changing conversion. A defaulted record field emits its validated declared
+default, overriding any standalone default annotation on its child.

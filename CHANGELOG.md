@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add standalone schema `default` annotations without decoded-value substitution.
+
 - Add schema `examples` annotations and display them in HTML documentation.
 
 - Add opaque `Boundary` and `VerifiedJson` types. `forward` decodes against the
