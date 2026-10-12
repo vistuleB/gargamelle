@@ -6,10 +6,13 @@
 Gargamelle generates a typed JSON decoder and a JSON Schema 2020-12 document
 from one Gleam definition.
 
-Receiving boundaries bind a definition to a handler. Incoming JSON is validated
-against that definition before the handler runs. Handlers receive either decoded
-Gleam values together with the original JSON, or verified JSON preserving the
-original admitted representation.
+See the [technical contract](https://hexdocs.pm/gargamelle/0.4.0/contract.html).
+
+Gargamelle also provides boundary APIs that bind a definition to a handler.
+Incoming JSON is validated against that definition before the handler runs.
+Handlers receive decoded Gleam values and the original JSON, or verified JSON
+without decoding. Boundary APIs are optional; definitions, decoding and schema
+generation can be used directly.
 
 Definitions can also generate browsable HTML documentation.
 
