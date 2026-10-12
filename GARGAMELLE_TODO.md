@@ -1,22 +1,21 @@
 # Gargamelle handoff and next work
 
-## Latest scope — bounded modifier composability
+## Latest scope — 0.8.0 preparation
 
-0.7.0 is published, as reported by the maintainer. The current follow-up is
-isolated on `codex/modifier-composability`: document wrapper/modifier support,
-remove unjustified naming/annotation restrictions, preserve all assertions in
-composition, and test accepted/rejected combinations on both targets and against
-independent emitted-schema validators. The published main checkout stays intact. Implementation and policy are complete;
-`docs/advanced.md#modifier-composition` defines supported bases, mapping behavior,
-reference limits and named-body reuse. Regression coverage includes both targets,
-independent schema validators, defaults, auxiliary callback suppression, guarded
-recursive bodies and two targeted destructive mutations. Final verification is
-recorded in ignored reports; no release preparation is included in this pass.
+0.7.0 is published. The bounded modifier-composability pass was completed at
+`7899183` and promoted to main for 0.8.0 preparation at the maintainer's request.
+The candidate changes modifier support through names, annotations and same-input
+assertions; it preserves every membership assertion in composed emitted schemas.
+Public signatures, admitted JSON, parsers and native deployment remain unchanged.
+Policy is in `docs/advanced.md#modifier-composition`; migration is in
+`docs/migration-0.8.md`. Release preparation and evidence are recorded in
+`docs/release-0.8.0.md` and ignored reports. The maintainer requests review and
+publishes; preparation does not publish or move tags.
 
-After this pass, pause library feature work. Typed extra properties, additional
-formats and parser/encoding optimization remain deferred pending concrete consumer
-demand and evidence from the provider playground/external trial. The OTP hybrid
-investigation remains on its separate research branch; no parser change is included.
+After qualification, pause library feature work pending consumer evidence from
+the provider playground/external trial. Typed extra properties, additional formats
+and parser/encoding optimization remain deferred. The OTP hybrid investigation
+stays on its separate research branch and is not part of 0.8.0.
 
 ## Active 0.7.0 admitted JSON work
 

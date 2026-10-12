@@ -22,7 +22,7 @@ let directory;
 writeFileSync(reportPath,JSON.stringify({status:'running',source:before.digest})+'\n');
 try {
   const version=readFileSync(join(root,'gleam.toml'),'utf8').match(/^version = "([^"]+)"$/m)[1];
-  assert.equal(version,'0.7.0');
+  assert.equal(version,'0.8.0');
   const pkg=JSON.parse(readFileSync(join(root,'package.json'))),lock=JSON.parse(readFileSync(join(root,'package-lock.json')));
   assert.equal(pkg.version,version);assert.equal(lock.version,version);assert.equal(lock.packages[''].version,version);
   assert.equal(pkg.private,true);
@@ -108,6 +108,8 @@ pub fn main() {
     return [module,jsonOutputs[index]];
   });
   cpSync(join(root,'verification/json_consumer.gleam'),join(consumer,'src/json_consumer.gleam'));
+  cpSync(join(root,'test/modifier_fixture.gleam'),join(consumer,'src/modifier_fixture.gleam'));
+  const modifierObservations=[];
   console.log('Checking fresh consumers of the exported archive…');
   for(const target of ['javascript','erlang']){
     if(target==='erlang')run('make',['-C','priv/regex-src'],library,'release-consumer-helper.log');
@@ -117,7 +119,16 @@ pub fn main() {
       const result=run('gleam',['run','--target',target,'--module',module],consumer,`release-${module}-${target}.log`);
       assert.equal(result.trim(),expected,`${module} output differs on ${target}`);
     }
+    const modifiers=JSON.parse(run('gleam',['run','--target',target,'--module','modifier_fixture'],consumer,`release-modifiers-${target}.log`));
+    assert.equal(modifiers.length,7);
+    const expectedAcceptance={counted:[true,false,false,false,true,false],text:[true,false,false,false],integer:[true,true,false,false,false],number:[true,false,true,false,false],array:[true,true,false,false,false,false,false,false],object:[true,true,false,false,false],asserted:[true,true,false,false,false]};
+    for(const group of modifiers){
+      assert.deepEqual(group.cases.map(row=>row.validated),expectedAcceptance[group.name]);
+      for(const row of group.cases)assert.equal(row.decoded.accepted,row.validated);
+    }
+    modifierObservations.push(modifiers);
   }
+  assert.deepEqual(modifierObservations[0],modifierObservations[1],'Archive modifier schemas/decoded outputs differ across targets');
   const provenance=JSON.parse(readFileSync(join(library,'priv/regex-src/PROVENANCE.json')));
   for(const [name,record] of Object.entries(provenance.files))assert.equal(sha256(readFileSync(join(library,'priv/regex-src',name))),record.vendoredSha256,name);
   assert.equal(existsSync(join(library,'node_modules')),false);
