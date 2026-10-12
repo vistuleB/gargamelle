@@ -3,29 +3,29 @@
 [![Package Version](https://img.shields.io/hexpm/v/gargamelle)](https://hex.pm/packages/gargamelle)
 [![Hex Docs](https://img.shields.io/badge/hex-docs-ffaff3)](https://hexdocs.pm/gargamelle/)
 
-Gargamelle defines which JSON your application accepts, how to decode it into
-Gleam values, and how to describe it with JSON Schema 2020-12—all from one
-Gleam definition.
+Gargamelle generates a typed JSON decoder and a JSON Schema 2020-12 document
+from one Gleam definition.
 
-Its receiving boundaries check that JSON satisfies the stored definition before
-invoking your handler. Handlers can receive decoded Gleam values or verified JSON
-for storage and transport.
+Receiving boundaries bind a definition to a handler. Incoming JSON is validated
+against that definition before the handler runs. Handlers receive either decoded
+Gleam values together with the original JSON, or verified JSON preserving the
+original admitted representation.
 
-Gargamelle can also generate browsable HTML documentation from those definitions.
+Definitions can also generate browsable HTML documentation.
 
-| You want to… | Use |
+| Operation | API |
 | --- | --- |
-| Decode JSON into a Gleam value | `decode` |
-| Generate the matching JSON Schema | `schema_json` / `schema_string` |
-| Invoke a handler with validated, decoded data | `boundary` → `Boundary` + `forward` |
-| Invoke a handler with validated JSON, without decoding | `json_boundary` → `JsonBoundary` + `forward_json` |
-| Retain JSON with the definition that accepted it | `verify` → `VerifiedJson` |
+| JSON decoding into a Gleam value | `decode` |
+| JSON Schema generation | `schema_json` / `schema_string` |
+| Validated handler invocation with decoded data | `boundary` → `Boundary` + `forward` |
+| Validated handler invocation without decoding | `json_boundary` → `JsonBoundary` + `forward_json` |
+| JSON retention with the accepting definition | `verify` → `VerifiedJson` |
 
 ## Getting started
 
 Requires Gleam 1.18.1 or later.
 
-Install Gargamelle:
+Package installation:
 
 ```sh
 gleam add gargamelle@0.4.0
@@ -33,7 +33,7 @@ gleam add gargamelle@0.4.0
 
 ### JavaScript
 
-Set the target in your project's `gleam.toml`:
+Target configuration in `gleam.toml`:
 
 ```toml
 target = "javascript"
@@ -41,21 +41,21 @@ target = "javascript"
 
 ### Erlang
 
-Set the target in your project's `gleam.toml`:
+Target configuration in `gleam.toml`:
 
 ```toml
 target = "erlang"
 ```
 
-Install `make` and a C compiler, then build the native regex helper:
+The native regex helper requires `make` and a C compiler. Helper compilation:
 
 ```sh
 gleam deps download
 make -C build/packages/gargamelle/priv/regex-src
 ```
 
-See [Native Erlang setup](https://hexdocs.pm/gargamelle/0.4.0/native-erlang.html)
-for tested runtimes and deployment instructions.
+[Native Erlang setup](https://hexdocs.pm/gargamelle/0.4.0/native-erlang.html)
+documents tested runtimes and deployment requirements.
 
 ## Basic example
 
@@ -91,19 +91,19 @@ Brainy, Jokey
 `Definition(List(String))` describes both accepted JSON and decoded output.
 `parse` returns opaque `Json`; `decode` produces `List(String)`. The `Result`
 annotations describe the whole `Ok(...)` pattern; `_` leaves the error type inferred.
-`schema_string` returns the schema as a `String`. Use `Pretty` for two-space
-indentation or `Compact` for canonical JSON. `to_string(json, format)` serializes
+`schema_string` returns the schema as a `String`. `Pretty` uses two-space
+indentation; `Compact` produces canonical JSON. `to_string(json, format)` serializes
 any Gargamelle `Json`, not just schemas.
 
-Handle parsing errors and decoding errors in application code; the assertions
-keep this example short. `validate` checks acceptance without constructing the
-decoded output.
+Parsing and decoding errors are separate results. The example uses assertions
+for brevity; application code handles those errors explicitly. `validate` checks
+acceptance without constructing the decoded output.
 
 ## Receiving boundaries
 
-Use a boundary when a handler must receive only input accepted by its declared
-definition. It keeps the handler and that definition together, so callers submit
-JSON through one operation instead of separately decoding and invoking the handler.
+A boundary binds a handler to its input definition. Submission validates JSON
+against the stored definition and invokes the handler only on success, combining
+validation and handler invocation in one operation.
 
 This complete example uses the same array-of-strings definition for two receivers:
 
@@ -152,9 +152,10 @@ definition's output type, not its particular constraints: two definitions produc
 `String` can accept different inputs. Receiving boundaries always check their own
 stored definition; a certificate from another definition cannot bypass that check.
 
-Use `boundary_definition` or `json_boundary_definition` to inspect the receiving
-definition or generate its schema. See [Verified JSON boundaries](https://hexdocs.pm/gargamelle/0.4.0/boundaries.html)
-for retaining certificates and handling application responses.
+`boundary_definition` and `json_boundary_definition` expose the receiving
+definition for inspection and schema generation.
+[Verified JSON boundaries](https://hexdocs.pm/gargamelle/0.4.0/boundaries.html)
+documents certificate retention and application responses.
 
 ## Guarantees and scope
 
@@ -169,8 +170,8 @@ for retaining certificates and handling application responses.
 - The opaque Gleam APIs enforce access through public operations. They are not a
   sandbox against hostile code in the same runtime.
 
-See the [technical contract](https://hexdocs.pm/gargamelle/0.4.0/contract.html)
-for the JSON domain, external validator settings, decoded-value semantics and limits.
+The [technical contract](https://hexdocs.pm/gargamelle/0.4.0/contract.html)
+specifies the JSON domain, external validator settings, decoded-value semantics and limits.
 
 ## Typed records
 
@@ -213,17 +214,17 @@ Metadata does not change acceptance. A schema `default` annotation does not inse
 a value; a defaulted record field is a separate decoding feature. `format` is an
 annotation, while `assert_format` adds validation constraints.
 
-See [Advanced definitions](https://hexdocs.pm/gargamelle/0.4.0/advanced.html)
-for these features and the HTML documentation recipe.
+[Advanced definitions](https://hexdocs.pm/gargamelle/0.4.0/advanced.html)
+documents these features and the HTML documentation recipe.
 
 ## Limitations
 
 JavaScript is tested on Node 24.10.0, Chrome 155, Firefox 157 and Safari 27.
 Native Erlang requires a C regex helper and is tested on macOS arm64 with OTP 29
 and Ubuntu 24.04 x86_64 with OTP 28.5.0.7 and 29.1.1.
-See [Browser compatibility](https://hexdocs.pm/gargamelle/0.4.0/browser-support.html)
+[Browser compatibility](https://hexdocs.pm/gargamelle/0.4.0/browser-support.html)
 and [Native Erlang setup](https://hexdocs.pm/gargamelle/0.4.0/native-erlang.html)
-for the compatibility matrix, regex Unicode differences and deployment requirements.
+document the compatibility matrix, regex Unicode differences and deployment requirements.
 Other runtimes and platforms are unverified; Windows native support is unavailable.
 
 - Gargamelle supports the JSON Schema features exposed by its constructors. It
@@ -270,5 +271,6 @@ available in the [Hex archive](https://repo.hex.pm/tarballs/gargamelle-0.4.0.tar
 
 ## License
 
-Gargamelle is distributed under the MIT License. See [Licenses](https://hexdocs.pm/gargamelle/0.4.0/license.html)
-for the library, native regex engine and retained JSON Schema test-suite notices.
+Gargamelle is distributed under the MIT License.
+[Licenses](https://hexdocs.pm/gargamelle/0.4.0/license.html) contains the library,
+native regex engine and retained JSON Schema test-suite notices.
