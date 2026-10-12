@@ -37,7 +37,7 @@ const typed=readdirSync(join(root,'test')).filter(n=>n.endsWith('_test.gleam')).
  const tests=[...source.matchAll(/export function (\w+_test)\(/g)].map(m=>m[1]);
  return {path,tests};
 });
-assert.equal(typed.reduce((n,m)=>n+m.tests.length,0),120);
+assert.equal(typed.reduce((n,m)=>n+m.tests.length,0),122);
 const {build,s}=await import('../generated-api.mjs');
 const {evaluate,regexCases,nativeJSRegex}=await import('./evaluate.mjs');
 let splits=0,accepted=0,pairs=0;
@@ -63,14 +63,14 @@ const modules={};
 function hashes(dir){for(const item of readdirSync(dir,{withFileTypes:true})){const path=join(dir,item.name);if(item.isDirectory())hashes(path);else modules[path.slice(workspace.length+1)]=sha256(readFileSync(path));}}
 hashes(workspace);
 const expectedRegex=regexCases.map(nativeJSRegex);
-const baselineReport={source:before,versions:{node:process.version,unicode:process.versions.unicode},typedTests:120,definitions:rows.length,pairs,decoded:accepted,classifiedAjvSplits:splits,fixtureSha256:sha256(fixtureText),artifactHashes:modules,
+const baselineReport={source:before,versions:{node:process.version,unicode:process.versions.unicode},typedTests:122,definitions:rows.length,pairs,decoded:accepted,classifiedAjvSplits:splits,fixtureSha256:sha256(fixtureText),artifactHashes:modules,
  adaptation:'Only gleeunit Node runner import and unused main removed from copied gargamelle_test.mjs; library and assertion bodies unchanged'};
 writeFileSync(join(directory,'baseline.json'),JSON.stringify(baselineReport,null,2)+'\n');
 const allowed=new Set(Object.keys(modules));
 let results=0;
 const server=createServer(async(req,res)=>{
  try{
-  const path=new URL(req.url,'http://128.0.0.1').pathname;
+  const path=new URL(req.url,'http://127.0.0.1').pathname;
   if(req.method==='POST'&&path==='/result'){
    // Decode UTF-8 across chunk boundaries, including supplementary characters.
    req.setEncoding('utf8');
@@ -85,7 +85,7 @@ const server=createServer(async(req,res)=>{
     for(const [index,entry] of report.regex.entries())if(JSON.stringify(entry)!==JSON.stringify(expectedRegex[index]))differences.push({index,...regexCases[index],node:expectedRegex[index],browser:entry});
     assert.ok(differences.every(knownUnicodeDifference),'Unclassified browser/Node regex difference');
    }catch(error){failure=String(error);}
-   const label=new URL(req.url,'http://128.0.0.1').searchParams.get('browser')??'run-'+(++results);
+   const label=new URL(req.url,'http://127.0.0.1').searchParams.get('browser')??'run-'+(++results);
    assert.ok(/^[a-zA-Z0-9_-]+$/.test(label));
    const record={...report,serverStatus:failure?'failed':'passed',serverFailure:failure,nodeRegexDifferences:differences,baselineSha256:sha256(readFileSync(join(directory,'baseline.json')))};
    writeFileSync(join(directory,label+'.json'),JSON.stringify(record)+'\n');
@@ -100,8 +100,8 @@ const server=createServer(async(req,res)=>{
   res.writeHead(200,{'content-type':type,'cache-control':'no-store'});res.end(file);
  }catch(error){res.writeHead(400,{'content-type':'application/json'});res.end(JSON.stringify({error:String(error)}));}
 });
-server.listen(0,'128.0.0.1',()=>{
- const url='http://128.0.0.1:'+server.address().port+'/';
+server.listen(0,'127.0.0.1',()=>{
+ const url='http://127.0.0.1:'+server.address().port+'/';
  writeFileSync(join(directory,'server.json'),JSON.stringify({url,source:before.digest})+'\n');
  console.log('BROWSER VERIFICATION READY '+url);
 });

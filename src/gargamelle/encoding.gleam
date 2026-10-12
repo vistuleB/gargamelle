@@ -88,6 +88,14 @@ pub opaque type OutputBoundary(a, response) {
   OutputBoundary(Encoder(a), s.JsonBoundary(a, response))
 }
 
+/// Encode an already admitted Gargamelle Json value. This composes arbitrary
+/// metadata with typed field encoders; it does not certify a Contract. The usual
+/// serialization/admission path applies, preserving canonical JSON rather than
+/// original source formatting or object declaration order.
+pub fn json() -> Plan(s.Json, r) {
+  Plan(fn(_, value) { Ok(s.to_gleam_json(value)) })
+}
+
 /// Encode a Gleam string. Admission rejects unpaired Unicode surrogates.
 pub fn text() -> Plan(String, r) {
   Plan(fn(_, value) {

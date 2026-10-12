@@ -7,6 +7,8 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 const root=fileURLToPath(new URL('../',import.meta.url));
 const cases=[
+ ['json_array_requires_admitted_children','pub fn main(values: List(String)) { s.json_array(values) }','Type mismatch'],
+ ['anything_decodes_json_not_string','pub fn main() { s.required(s.record(fn(value: String) { value }), "metadata", s.anything()) }','Type mismatch'],
  ['opaque_encoder','pub fn main() { e.Plan(fn(_,_) { Ok(Nil) }) }','Unknown module value'],
  ['open_encoder_not_executable','pub fn main() { e.recursive(fn(self) { e.encode_json(self,"x") Ok(self) }) }','Type mismatch'],
  ['wrong_codec_output_type','pub fn main() { e.codec(e.text(), s.contract(s.safe_integer())) }','Type mismatch'],

@@ -12,6 +12,10 @@ values instead of rounding. Direct encoder construction is a later optimization.
 
 The OTP parser compatibility/performance investigation is reserved for potential
 0.8.0 work. It is not a 0.7.0 release gate or a promised parser replacement.
+Constructors, anything(), JSON pass-through encoding and one-way standard JSON
+conversion are implemented. Shared tests, independent schema checks and guide
+compilation pass. Full evidence is being regenerated; 0.7.0 is not yet a prepared
+release, and its release-script guard will be updated during release preparation.
 The older sections below retain earlier checkpoints.
 
 ## Active 0.6.0 encoder work

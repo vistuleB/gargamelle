@@ -118,3 +118,13 @@ test('public encoding guide compiles and runs on both targets',()=>{
     }
   }finally{rmSync(directory,{recursive:true,force:true});}
 });
+
+test('JSON passthrough preserves canonical values and does not bypass a receiving contract',()=>{
+  for(const source of ['null','false','-0','1.25','1e308','"💜"','[]','{}','{"__proto__":"safe","a":[null,true,{}]}']){
+    const original=unwrap(s.parse(source));
+    const encoded=unwrap(e.encode_json(e.json(),original));
+    assert.equal(s.to_string(encoded,s.JsonFormat$Compact$const),s.to_string(original,s.JsonFormat$Compact$const));
+    const checked=e.encode(e.codec(e.json(),s.contract(s.text())),original);
+    assert.equal(checked.isOk(),typeof JSON.parse(source)==='string');
+  }
+});

@@ -81,6 +81,8 @@ Handler return values remain generic, including nested `Result` responses.
 ## Composition
 
 Primitive encoders cover strings, booleans, null, finite numbers and safe integers.
+`json()` composes already admitted Gargamelle JSON, including arbitrary metadata.
+It preserves canonical JSON rather than source formatting or declaration order.
 `array` preserves element order. `nullable` emits null for `None`; `optional_field`
 omits its property for `None`. Required fields may use a nullable encoder when
 absence and null need distinct treatment. Duplicate record keys fail construction.

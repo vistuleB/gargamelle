@@ -346,3 +346,12 @@ coincides with an empty schema within the admitted domain. Composition traversal
 treat it as a leaf; surrounding arrays, records, exclusions and semantic Contracts
 retain their independent checks. No admission bypass or arbitrary runtime cast is
 introduced. Named instances emit an empty definition with ordinary references.
+
+## JSON pass-through encoding
+
+The encoder converts already admitted Json recursively to gleam/json.Json using
+the same representation conversion as canonical serialization. No unadmitted
+value or callback is introduced. Its ordinary serialization/admission path then
+produces admitted output; checked encoding enforces its stored Contract as before.
+Canonical JSON is preserved, not source text or zero-sign representation. The
+public one-way conversion cannot construct or forge Gargamelle Json.

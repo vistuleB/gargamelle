@@ -67,3 +67,36 @@ An unconstrained subtree makes no application-specific acceptance claim, and
 semantic Contract requirements can still reject it. Nonfinite numbers and
 non-scalar strings/keys remain outside admission. This definition accepts JSON,
 not arbitrary runtime objects or a dynamically untyped Gleam value.
+
+## Encoding JSON metadata
+
+`encoding.json()` composes admitted JSON with typed field encoders. The usual
+encoding serialization/admission path applies. A receiving Contract is still
+needed to establish structural and semantic acceptance.
+
+```gleam
+import gargamelle as s
+import gargamelle/encoding as e
+import gleam/io
+
+pub fn main() {
+  let metadata = s.json_array([s.json_bool(True), s.json_null()])
+  let assert Ok(fields) = e.field(e.record(), "metadata", e.json(), fn(value: s.Json) { value })
+  let encoder = e.finish(fields)
+  let assert Ok(fields) = s.required(s.record(fn(value) { value }), "metadata", s.anything())
+  let codec = e.codec(encoder, s.contract(s.finish(fields, s.Strict)))
+  let assert Ok(verified) = e.encode(codec, metadata)
+  io.println(s.to_string(s.verified_json(verified), s.Compact))
+}
+```
+
+Output:
+
+```text
+{"metadata":[true,null]}
+```
+
+`to_gleam_json(json)` converts an admitted value to the standard `gleam/json.Json`
+representation without parsing text. It establishes no new certificate and does
+not admit values in the reverse direction. Standard serialization may normalize
+negative zero; original source formatting is not retained.

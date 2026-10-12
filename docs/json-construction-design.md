@@ -16,3 +16,10 @@ schema ConstructionError. Callback exceptions are not introduced or caught.
 
 Encoder optimization is deferred: this feature alone changes no encoding path.
 The potential OTP parser investigation is reserved for 0.8.0.
+
+The companion pass-through encoder uses a one-way to_gleam_json conversion of
+already admitted children into its existing intermediate representation. This
+does not expose opaque constructors or add a reverse admission path. Existing
+encoding serialization/admission remains intact. Canonical JSON is preserved;
+source text, declaration order and negative-zero sign are not promised by encoding.
+Anything decoding itself returns the original Json unchanged.

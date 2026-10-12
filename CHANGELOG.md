@@ -2,6 +2,9 @@
 
 ## 0.7.0 — Unreleased
 
+- Add JSON pass-through encoding and one-way conversion to the standard
+  `gleam/json.Json` representation.
+
 - Add `anything()` to accept any admitted JSON and return its original opaque
   representation unchanged. Nested metadata can remain unconstrained without
   weakening surrounding fields.

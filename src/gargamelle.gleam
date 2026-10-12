@@ -7,7 +7,7 @@
 //// original JSON and the accepting contract; semantic requirements decode once.
 //// Converters are trusted application code: exceptions are operational failures.
 //// JavaScript and Erlang targets are supported on the
-//// [tested runtimes](https://hexdocs.pm/gargamelle/0.6.0/native-erlang.html).
+//// [tested runtimes](https://hexdocs.pm/gargamelle/0.7.0/native-erlang.html).
 //// Explicit typed encoders are provided by `gargamelle/encoding`.
 //// The Erlang target requires a separately compiled C regex helper.
 
@@ -498,6 +498,13 @@ fn pretty_bytes(
     }
     _ -> panic as "Canonical JSON contains a partial byte"
   }
+}
+
+/// Convert already admitted JSON to the standard gleam/json representation.
+/// This is a one-way representation conversion, not validation or certification.
+/// Standard JSON serialization rules apply, including normalization of zero signs.
+pub fn to_gleam_json(value: Json) -> json.Json {
+  json_value(value)
 }
 
 fn json_value(v: Json) -> json.Json {
