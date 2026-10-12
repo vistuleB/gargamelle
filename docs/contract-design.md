@@ -40,8 +40,12 @@ Shared tests cover structural callback suppression, ordered checks and failures,
 empty rejection, original Open-record JSON, certificate authority, Erlang process
 transfer, typed/JSON receiver agreement, and callback-free documentation. JavaScript
 checks additionally distinguish semantic rejection from operational exceptions.
-An isolated cloze-provider probe uses the existing provider predicates and confirms
-that new card context cannot retroactively invalidate historical evidence. Its
-current-card adapter still calls the combined validator, so actual provider
-migration must split that predicate to avoid duplicate semantic work. Other
-providers and release qualification remain subsequent work.
+The isolated provider probe compiles all five production providers from their
+source-of-truth files. Temporary cloze and diagram sources split permanent
+historical checks from independent current-context predicates; each requirement
+runs once without repeating historical predicates. Both receiver types agree
+across accepted, semantic-rejected and structural-rejected samples. The probe
+also checks session context, verbatim versions 1–3 and foreign certificates.
+The app checkout and dependency pin remain unchanged. Production adoption belongs
+to the app maintainer. Fresh archive consumers exercise the Contract layer on
+both targets; platform release qualification remains a separate gate.

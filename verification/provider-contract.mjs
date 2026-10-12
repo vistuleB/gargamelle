@@ -1,18 +1,20 @@
-// Isolated integration with an explicitly supplied consumer checkout.
-// No consumer source, dependency pins or production artifacts are modified.
+// Isolated integration with explicitly supplied authoritative provider sources.
+// No consumer source, dependency pin or production artifact is modified.
 import assert from 'node:assert/strict';
 import {cpSync,mkdtempSync,mkdirSync,readFileSync,writeFileSync,rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join,resolve} from 'node:path';
-import {fileURLToPath} from 'node:url';
+import {fileURLToPath,pathToFileURL} from 'node:url';
 import {spawnSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
+import {compileOracle} from './oracle.mjs';
+import {compileSupplementary} from './supplementary-oracle.mjs';
 const root=fileURLToPath(new URL('../',import.meta.url));
 if(!process.argv[2])throw new Error('Usage: node verification/provider-contract.mjs /path/to/equation-flashcards');
-const app=resolve(process.argv[2]);
-const provider=readFileSync(join(app,'boundaries/src/providers_cloze.gleam'),'utf8');
-const normalization=readFileSync(join(app,'providers/cloze/normalization.js'),'utf8');
+const app=resolve(process.argv[2]),sources={};
+const digest=text=>createHash('sha256').update(text).digest('hex');
 const directory=mkdtempSync(join(tmpdir(),'gargamelle-provider-contract-'));
+const providers=['cloze','diagram-labeling','equation','verbatim','self-review'];
 try {
   const library=join(directory,'library');
   mkdirSync(library);
@@ -20,66 +22,95 @@ try {
   mkdirSync(join(directory,'src'));
   const dependency=(name,path)=>`${name} = { path = ${JSON.stringify(path)} }\n`;
   writeFileSync(join(directory,'gleam.toml'),'name = "provider_contract"\nversion = "0.1.0"\ntarget = "javascript"\n[dependencies]\n'+dependency('gargamelle',library)+dependency('gleam_stdlib',join(root,'build/packages/gleam_stdlib'))+dependency('gleam_json',join(root,'build/packages/gleam_json')));
-  // Migration in the temporary copy only: old boundary constructors receive a
-  // structural Contract. Probe contracts below move the real semantic checks
-  // before handler invocation instead of leaving them in legacy handlers.
-  let migrated=provider.replaceAll('../../../../../providers/cloze/normalization.js','./normalization.mjs');
-  migrated=migrated.replace(/schema\.boundary\(([^\n]*?), fn/g,(_match,definition)=>`schema.boundary(schema.contract(${definition}), fn`);
-  writeFileSync(join(directory,'src/providers_cloze.gleam'),migrated);
+  for(const id of providers){
+    const path=`providers/${id}/contracts.gleam`,original=readFileSync(join(app,path),'utf8');
+    sources[path]=digest(original);
+    let migrated=original.replaceAll('../../../../../providers/cloze/normalization.js','./normalization.mjs');
+    // Adapt only temporary legacy boundary callers. Contract adapters exercise
+    // the real provider predicates before handlers, separately from these callers.
+    migrated=migrated.replace(/(schema|s)\.boundary\(([^\n]*?), fn/g,(_match,alias,definition)=>`${alias}.boundary(${alias}.contract(${definition}), fn`);
+    if(id==='cloze'){
+      const combined='  use e <- result.try(validate_evidence(e))\n  case';
+      assert.ok(migrated.includes(combined),'Cloze semantic split anchor changed');
+      migrated=migrated.replace(combined,'  use e <- result.try(validate_evidence(e))\n  validate_evidence_context(e, card)\n}\n\npub fn validate_evidence_context(e: Evidence, card: Content) {\n  case');
+    }
+    if(id==='diagram-labeling'){
+      const combined='  use value <- result.try(validate_result(value))\n  case';
+      assert.ok(migrated.includes(combined),'Diagram semantic split anchor changed');
+      migrated=migrated.replace(combined,'  use value <- result.try(validate_result(value))\n  validate_result_context(value, targets, labels)\n}\n\npub fn validate_result_context(value: Evidence, targets: List(#(String, String)), labels: List(String)) {\n  case');
+    }
+    writeFileSync(join(directory,'src',`providers_${id.replaceAll('-','_')}.gleam`),migrated);
+  }
+  const normalization=readFileSync(join(app,'providers/cloze/normalization.js'),'utf8');
+  sources['providers/cloze/normalization.js']=digest(normalization);
   writeFileSync(join(directory,'src/normalization.mjs'),normalization);
-  writeFileSync(join(directory,'src/provider_contract.gleam'),`import gargamelle as s
-import gleam/io
-import gleam/result
-import providers_cloze as provider
-
-fn violations(error: String) { [s.Violation("", error)] }
-
-pub fn historical_contract() {
-  s.contract(provider.result_definition())
-  |> s.require("Historical evidence agrees with recorded alternatives and totals", fn(evidence) {
-    provider.validate_evidence(evidence)
-    |> result.map(fn(_) { Nil })
-    |> result.map_error(violations)
-  })
-}
-
-pub fn current_contract(card: provider.Content) {
-  historical_contract()
-  |> s.require("New evidence agrees with the current card", fn(evidence) {
-    // The current-card part is independent of historical acceptance. This
-    // adapter exercises the existing combined validator; provider migration
-    // should split its checks rather than repeat the historical predicate.
-    provider.validate_evidence_for(evidence, card)
-    |> result.map(fn(_) { Nil })
-    |> result.map_error(violations)
-  })
-}
-
-pub fn main() {
-  let original = "{\\\"type\\\":\\\"cloze\\\",\\\"version\\\":1,\\\"data\\\":{\\\"entries\\\":[{\\\"blankId\\\":\\\"a\\\",\\\"response\\\":\\\"old\\\",\\\"accepted\\\":[\\\"old\\\"],\\\"correct\\\":true}],\\\"correct\\\":1,\\\"total\\\":1}}"
-  let inconsistent = "{\\\"type\\\":\\\"cloze\\\",\\\"version\\\":1,\\\"data\\\":{\\\"entries\\\":[{\\\"blankId\\\":\\\"a\\\",\\\"response\\\":\\\"old\\\",\\\"accepted\\\":[\\\"old\\\"],\\\"correct\\\":true}],\\\"correct\\\":0,\\\"total\\\":1}}"
-  let assert Ok(json) = s.parse(original)
-  let assert Ok(bad) = s.parse(inconsistent)
-  let old_card = provider.Content("card", "Title", "Prompt", 1, [provider.BlankRef("a")], [provider.Blank("a", "A", ["old"])])
-  let new_card = provider.Content("card", "Title", "Prompt", 2, [provider.BlankRef("a")], [provider.Blank("a", "A", ["new"])])
-  let historical = historical_contract()
-  let historical_receiver = s.json_boundary(historical, fn(verified) { s.verified_json(verified) })
-  let assert Ok(accepted) = s.forward_json(historical_receiver, json)
-  let assert True = accepted == json
-  let assert Ok(_) = s.validate(provider.result_definition(), bad)
-  let assert Error(s.Semantic(_)) = s.forward_json(historical_receiver, bad)
-  let assert Ok(_) = s.forward_json(s.json_boundary(current_contract(old_card), s.verified_json), json)
-  let assert Error(s.Semantic(_)) = s.forward_json(s.json_boundary(current_contract(new_card), s.verified_json), json)
-  // Updated content does not change the permanent historical contract.
-  let assert Ok(certificate) = s.verify(historical, json)
-  let assert Error(s.Semantic(_)) = s.forward_json(s.json_boundary(current_contract(new_card), s.verified_json), s.verified_json(certificate))
-  let assert Ok(_) = s.forward(s.boundary(historical, fn(data, _) { data }), json)
-  io.println("provider contract integration passed")
-}
-`);
-  const run=spawnSync('gleam',['run'],{cwd:directory,encoding:'utf8',timeout:60000,maxBuffer:5*1024*1024});
-  assert.equal(run.status,0,run.stdout+run.stderr);
-  assert.equal(run.stdout,'provider contract integration passed\n');
-  const digest=text=>createHash('sha256').update(text).digest('hex');
-  console.log(JSON.stringify({status:'passed',consumer:app,providerSha256:digest(provider),normalizationSha256:digest(normalization),checks:['historical acceptance','semantic inconsistency rejected before handler','current context accepted','changed context rejected','historical context preserved','foreign certificate rechecked','typed receiver acceptance'],limitations:['JavaScript-only consumer','temporary API migration','combined current-card validator repeats historical predicate internally'],consumerChanged:false},null,2));
+  cpSync(join(root,'verification/providers/contracts.gleam'),join(directory,'src/contract_adapters.gleam'));
+  const build=spawnSync('gleam',['build'],{cwd:directory,encoding:'utf8',timeout:60000,maxBuffer:5*1024*1024});
+  assert.equal(build.status,0,build.stdout+build.stderr);
+  const modules=join(directory,'build/dev/javascript');
+  const load=(pkg,path)=>import(pathToFileURL(join(modules,pkg,path+'.mjs')));
+  const s=await load('gargamelle','gargamelle');
+  const adapters=await load('provider_contract','contract_adapters');
+  const {toList}=await load('provider_contract','gleam');
+  const compiled=Object.fromEntries(await Promise.all(providers.map(async id=>[id,await load('provider_contract','providers_'+id.replaceAll('-','_'))])));
+  const unwrap=result=>{assert.ok(result.isOk(),JSON.stringify(result));return result[0];};
+  const admitted=raw=>unwrap(s.parse(JSON.stringify(raw)));
+  const checks=[];
+  const run=async(name,contract,cases)=>{
+    const definition=s.contract_definition(contract);
+    const schema=JSON.parse(s.schema_string(definition,s.JsonFormat$Compact$const));
+    const oracles=[compileOracle(schema),await compileSupplementary(schema)];
+    let handled=0;
+    const receiver=s.json_boundary(contract,verified=>{handled++;return s.verified_json(verified);});
+    const typed=s.boundary(contract,(_value,json)=>json);
+    for(const {json:raw,accepted,structural=true} of cases){
+      const json=admitted(raw),before=handled;
+      for(const oracle of oracles)assert.equal(oracle(raw).accepted,structural,name+' schema acceptance');
+      const result=s.forward_json(receiver,json),data=s.forward(typed,json);
+      assert.equal(result.isOk(),accepted,name+' JSON receiver');
+      assert.equal(data.isOk(),accepted,name+' typed receiver');
+      assert.equal(handled-before,accepted?1:0,name+' handler count');
+      if(accepted){assert.equal(result[0],json);assert.equal(data[0],json);}
+      else assert.equal(result[0].constructor.name,structural?'Semantic':'Structural',name+' diagnostic class');
+    }
+    checks.push({name,cases:cases.length,requirements:[...s.contract_requirements(contract)]});
+  };
+  const cloze={type:'cloze',version:1,data:{entries:[{blankId:'a',response:'old',accepted:['old'],correct:true}],correct:1,total:1}};
+  const inconsistent=structuredClone(cloze);inconsistent.data.correct=0;
+  const oldCard=new compiled.cloze.Content('card','Title','Prompt',1,toList([new compiled.cloze.BlankRef('a')]),toList([new compiled.cloze.Blank('a','A',toList(['old']))]));
+  const newCard=new compiled.cloze.Content('card','Title','Prompt',2,toList([new compiled.cloze.BlankRef('a')]),toList([new compiled.cloze.Blank('a','A',toList(['new']))]));
+  await run('cloze historical',adapters.cloze_historical(),[{json:cloze,accepted:true},{json:inconsistent,accepted:false},{json:{},accepted:false,structural:false}]);
+  await run('cloze current',adapters.cloze_current(oldCard),[{json:cloze,accepted:true},{json:inconsistent,accepted:false}]);
+  await run('cloze changed context',adapters.cloze_current(newCard),[{json:cloze,accepted:false}]);
+  await run('cloze session',adapters.cloze_session('old',toList(['a'])),[{json:{clozeSignature:'old',responses:{a:'answer'}},accepted:true},{json:{clozeSignature:'new',responses:{a:'answer'}},accepted:false},{json:{clozeSignature:'old',responses:{unknown:'answer'}},accepted:false}]);
+  const diagram={type:'diagram-labeling',version:1,data:{entries:[{targetId:'t',expectedLabelId:'l',labelId:'l',correct:true}],correct:1,total:1}};
+  const badDiagram=structuredClone(diagram);badDiagram.data.correct=0;
+  await run('diagram historical',adapters.diagram_historical(),[{json:diagram,accepted:true},{json:badDiagram,accepted:false},{json:{},accepted:false,structural:false}]);
+  await run('diagram current',adapters.diagram_current(toList([['t','l']]),toList(['l'])),[{json:diagram,accepted:true},{json:badDiagram,accepted:false}]);
+  await run('diagram changed context',adapters.diagram_current(toList([['t','new']]),toList(['new'])),[{json:diagram,accepted:false}]);
+  await run('diagram session',adapters.diagram_session('old',toList(['t']),toList(['l'])),[{json:{diagramSignature:'old',placements:{t:'l'}},accepted:true},{json:{diagramSignature:'new',placements:{t:'l'}},accepted:false},{json:{diagramSignature:'old',placements:{unknown:'l'}},accepted:false}]);
+  for(const [id,raw] of [['equation',{type:'equation',version:1,data:{outcome:'solved'}}],['self-review',{type:'self-review',version:1,data:{rating:'good'}}]])
+    await run(id+' result',s.contract(compiled[id].result_definition()),[{json:raw,accepted:true},{json:{},accepted:false,structural:false}]);
+  for(const version of [1,2,3]){
+    const raw={type:'verbatim',version,data:{warnings:1,peeks:0,answerShown:false,...(version>1?{multiplier:3}:{}),...(version===3?{answerReveals:0}:{})}};
+    await run('verbatim v'+version,s.contract(compiled.verbatim.result_definition()),[{json:raw,accepted:true},{json:{},accepted:false,structural:false}]);
+  }
+  // Structural certificates and historical certificates cannot bypass current
+  // requirements. Neither changes the historical contract's captured authority.
+  for(const [raw,historical,current] of [[cloze,adapters.cloze_historical(),adapters.cloze_current(newCard)],[diagram,adapters.diagram_historical(),adapters.diagram_current(toList([['t','new']]),toList(['new']))]]){
+    const certificate=unwrap(s.verify(historical,admitted(raw)));
+    const receiver=s.json_boundary(current,()=>{throw Error('Rejected certificate reached handler');});
+    assert.equal(s.forward_json(receiver,s.verified_json(certificate)).isOk(),false);
+    assert.ok(s.verify(s.verified_contract(certificate),s.verified_json(certificate)).isOk());
+    const weak=unwrap(s.verify(s.contract(s.contract_definition(current)),admitted(raw)));
+    assert.equal(s.forward_json(receiver,s.verified_json(weak)).isOk(),false);
+  }
+  // Ensure the independently split current checks are reported separately.
+  const combined=s.forward_json(s.json_boundary(adapters.cloze_current(newCard),s.verified_json),admitted(inconsistent));
+  assert.deepEqual([...combined[0][0]].map(failure=>failure.index),[0,1]);
+  for(const [path,hash] of Object.entries(sources))assert.equal(digest(readFileSync(join(app,path),'utf8')),hash,'Consumer source changed: '+path);
+  const report={status:'passed',sources,checks,certificateRechecks:4,consumerChanged:false,limitations:['JavaScript consumer; provider sources are migrated in a temporary copy','Provider adapters are integration evidence, not shipped Gargamelle API']};
+  mkdirSync(join(root,'reports'),{recursive:true});
+  writeFileSync(join(root,'reports/provider-contract-integration.json'),JSON.stringify(report,null,2)+'\n');
+  console.log(JSON.stringify(report,null,2));
 } finally { rmSync(directory,{recursive:true,force:true}); }

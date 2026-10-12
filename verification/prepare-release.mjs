@@ -22,7 +22,7 @@ let directory;
 writeFileSync(reportPath,JSON.stringify({status:'running',source:before.digest})+'\n');
 try {
   const version=readFileSync(join(root,'gleam.toml'),'utf8').match(/^version = "([^"]+)"$/m)[1];
-  assert.equal(version,'0.4.0');
+  assert.equal(version,'0.5.0');
   const pkg=JSON.parse(readFileSync(join(root,'package.json'))),lock=JSON.parse(readFileSync(join(root,'package-lock.json')));
   assert.equal(pkg.version,version);assert.equal(lock.version,version);assert.equal(lock.packages[''].version,version);
   assert.equal(pkg.private,true);
@@ -65,6 +65,7 @@ try {
   writeFileSync(join(consumer,'gleam.toml'),`name = "release_consumer"\nversion = "0.1.0"\n[dependencies]\ngargamelle = { path = "../library" }\ngleam_stdlib = { path = "../vendor/gleam_stdlib" }\ngleam_json = { path = "../vendor/gleam_json" }\n`);
   const fixture=readFileSync(join(root,'verification/portability/deployment_consumer.gleam'),'utf8').replace('native deployment passed','release consumer passed');
   writeFileSync(join(consumer,'src/release_consumer.gleam'),fixture);
+  cpSync(join(root,'verification/contract_consumer.gleam'),join(consumer,'src/contract_consumer.gleam'));
   // Compile the actual public snippets rather than hand-maintained copies.
   const readme=readFileSync(join(root,'README.md'),'utf8');
   const snippets=[...readme.matchAll(/```gleam\n([\s\S]*?)\n```/g)].map(match=>match[1]);
@@ -89,7 +90,7 @@ pub fn main() {
     if(target==='erlang')run('make',['-C','priv/regex-src'],library,'release-consumer-helper.log');
     const output=run('gleam',['run','--target',target],consumer,`release-consumer-${target}.log`);
     assert.equal(output.trim(),'release consumer passed');
-    for(const [module,expected] of [['readme_names',expectedNames],['readme_boundaries',expectedBoundaries],['readme_user','README user passed'],['preferences_reference',expectedArticle]]){
+    for(const [module,expected] of [['contract_consumer','release contract consumer passed'],['readme_names',expectedNames],['readme_boundaries',expectedBoundaries],['readme_user','README user passed'],['preferences_reference',expectedArticle]]){
       const result=run('gleam',['run','--target',target,'--module',module],consumer,`release-${module}-${target}.log`);
       assert.equal(result.trim(),expected,`${module} output differs on ${target}`);
     }

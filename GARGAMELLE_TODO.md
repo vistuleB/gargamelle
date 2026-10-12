@@ -9,17 +9,26 @@ requirement rendering are implemented. Initial tests pass on both targets.
 Decisions for review are in `docs/contract-design.md`; migration guidance is in
 `docs/migration-0.5.md`.
 
+Integration checkpoint:
+
+- The isolated consumer builds the authoritative source of all five production
+  providers and tests historical/current cloze and diagram results and sessions,
+  equation/self-review results, and verbatim versions 1–3. Typed and JSON receivers
+  agree, normal rejections skip handlers, and certificates cannot bypass current
+  context. Both independent schema validators check the underlying definitions.
+- Historical/current predicates are split in the temporary cloze and diagram
+  sources. No historical predicate is repeated in their current-context adapters.
+- Run `node verification/provider-contract.mjs /path/to/equation-flashcards`.
+  Integration adapters are verification artifacts, not public Gargamelle API.
+  The application checkout and production dependency remain unchanged.
+- Release preparation now targets 0.5.0 and exercises Contract APIs in a fresh
+  archive consumer on both targets, alongside all prior structural gates.
+
 Remaining work:
 
-- Extend the isolated cloze-provider integration to the other providers before
-  updating the app's production dependency. The initial probe passes historical,
-  current-card, inconsistent-total and foreign-certificate checks; run
-  `node verification/provider-contract.mjs /path/to/equation-flashcards`.
-- Split the app's current-card validator into an independent requirement to avoid
-  repeating its permanent historical predicate.
-- Extend release evidence and run Linux qualification for the final candidate.
-- Update release preparation from its 0.4.0 guard only after integration is verified.
-- Prepare the release archive and handoff; the maintainer publishes.
+- Run local release preparation and Linux qualification for the final candidate.
+- Hand the provider migration to the app maintainer for production adoption.
+- Prepare the release handoff; the maintainer publishes.
 
 The older sections below retain historical checkpoints and should not be treated
 as the current release state.
