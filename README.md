@@ -177,7 +177,8 @@ documents certificate retention and application responses.
   definition only.
 - Application rules, such as whether a score agrees with its answers, are not
   inferred automatically. They require explicit semantic checks.
-- Conversion callbacks must be pure and total. Conversion or handler exceptions
+- Conversion callbacks and semantic requirements must be pure and total.
+  Callback or handler exceptions
   and resource failures remain operational failures, rather than validation errors.
 - The opaque Gleam APIs enforce access through public operations. They are not a
   sandbox against hostile code in the same runtime.
@@ -261,7 +262,7 @@ Gargamelle was inspired by [glon](https://hexdocs.pm/glon/).
 JSON Schema 2020-12 generation. Its `use`-based field API supports definitions whose
 later fields depend on earlier decoded values. Gargamelle uses static definitions
 and curried record constructors; its schema describes structural acceptance, while
-application rules are checked separately. Receiving boundaries bind those definitions
+application rules are checked separately. Receiving boundaries bind structural definitions and semantic requirements
 to handlers.
 
 ## Further documentation
@@ -269,7 +270,8 @@ to handlers.
 - [Technical contract](https://hexdocs.pm/gargamelle/0.5.0/contract.html): complete intended acceptance, output, emission and error semantics.
 - [Advanced definitions](https://hexdocs.pm/gargamelle/0.5.0/advanced.html): numeric constraints, recursion, tuples, key constraints, membership, conditionals, exclusion and HTML documentation.
 - [Verified JSON boundaries](https://hexdocs.pm/gargamelle/0.5.0/boundaries.html): typed ingress and JSON-only receiving handlers.
-- [Migrating to 0.5.0](https://hexdocs.pm/gargamelle/0.5.0/migration-0.4.html): boundary APIs and added schema constraints.
+- [Migrating to 0.5.0](https://hexdocs.pm/gargamelle/0.5.0/migration-0.5.html): semantic contracts, boundary arguments and rejection diagnostics.
+- [Migrating to 0.4.0](https://hexdocs.pm/gargamelle/0.5.0/migration-0.4.html): boundary APIs and added schema constraints.
 - [Migrating to 0.3.0](https://hexdocs.pm/gargamelle/0.5.0/migration-0.3.html): required API renames.
 - [Migrating to 0.2.0](https://hexdocs.pm/gargamelle/0.5.0/migration-0.2.html): string requirements and changes to recursive construction.
 
