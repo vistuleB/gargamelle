@@ -31,8 +31,10 @@ pub fn construction_and_inspection_run_no_callbacks_test() {
       text
     })
   let pair =
-    paired.pair(contract, encoder, fn(_, _) { tick() }, fn(_) { tick() })
-  let inspected = paired.contract(pair)
+    paired.paired_boundary(contract, encoder, fn(_, _) { tick() }, fn(_) {
+      tick()
+    })
+  let inspected = paired.paired_boundary_contract(pair)
   s.contract_requirements(inspected) |> should.equal(["Registered check"])
   s.schema_string(s.contract_definition(inspected), s.Compact)
   |> should.equal(s.schema_string(definition, s.Compact))
@@ -50,7 +52,7 @@ pub fn one_registered_contract_rejects_before_either_handler_test() {
       Ok(Nil)
     })
   let pair =
-    paired.pair(
+    paired.paired_boundary(
       contract,
       provider.evidence_encoder(),
       fn(data, _) {
@@ -89,7 +91,7 @@ pub fn one_registered_contract_rejects_before_either_handler_test() {
 
 pub fn independent_responses_preserve_nested_application_results_test() {
   let pair =
-    paired.pair(
+    paired.paired_boundary(
       s.contract(s.text()),
       e.text(),
       fn(_, _) { Error("load application failure") },
@@ -110,7 +112,7 @@ pub fn same_contract_does_not_imply_inverse_conversion_test() {
       }
     })
   let pair =
-    paired.pair(
+    paired.paired_boundary(
       contract,
       e.text(),
       fn(value, original) { #(value, s.to_string(original, s.Compact)) },
@@ -125,7 +127,7 @@ pub fn same_contract_does_not_imply_inverse_conversion_test() {
 pub fn pair_survives_transfer_and_creator_exit_test() {
   let pair =
     handoff(fn() {
-      paired.pair(
+      paired.paired_boundary(
         provider.evidence_contract(),
         provider.evidence_encoder(),
         fn(data, _) { data },

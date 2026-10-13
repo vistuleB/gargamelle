@@ -2,39 +2,44 @@
 import gargamelle
 import gargamelle/encoding
 
-pub opaque type Pair(a, loaded, saved) {
-  Pair(gargamelle.Boundary(a, loaded), encoding.OutputBoundary(a, saved))
+pub opaque type PairedBoundary(a, loaded, saved) {
+  PairedBoundary(
+    gargamelle.Boundary(a, loaded),
+    encoding.OutputBoundary(a, saved),
+  )
 }
 
-pub fn pair(
+pub fn paired_boundary(
   contract: gargamelle.Contract(a),
   encoder: encoding.Encoder(a),
   load_handler: fn(a, gargamelle.Json) -> loaded,
   save_handler: fn(gargamelle.VerifiedJson(a)) -> saved,
-) -> Pair(a, loaded, saved) {
+) -> PairedBoundary(a, loaded, saved) {
   let loader = gargamelle.boundary(contract, load_handler)
   let storage =
     gargamelle.json_boundary(gargamelle.boundary_contract(loader), save_handler)
-  Pair(loader, encoding.output_boundary(encoder, storage))
+  PairedBoundary(loader, encoding.output_boundary(encoder, storage))
 }
 
-pub fn contract(pair: Pair(a, loaded, saved)) -> gargamelle.Contract(a) {
-  let Pair(loader, _) = pair
+pub fn paired_boundary_contract(
+  pair: PairedBoundary(a, loaded, saved),
+) -> gargamelle.Contract(a) {
+  let PairedBoundary(loader, _) = pair
   gargamelle.boundary_contract(loader)
 }
 
 pub fn load(
-  pair: Pair(a, loaded, saved),
+  pair: PairedBoundary(a, loaded, saved),
   json: gargamelle.Json,
 ) -> Result(loaded, gargamelle.ContractError) {
-  let Pair(loader, _) = pair
+  let PairedBoundary(loader, _) = pair
   gargamelle.forward(loader, json)
 }
 
 pub fn save(
-  pair: Pair(a, loaded, saved),
+  pair: PairedBoundary(a, loaded, saved),
   value: a,
 ) -> Result(saved, encoding.EncodingError) {
-  let Pair(_, saver) = pair
+  let PairedBoundary(_, saver) = pair
   encoding.send(saver, value)
 }

@@ -6,7 +6,7 @@ import provider_roundtrip as provider
 
 pub fn main() {
   let registration =
-    paired.pair(
+    paired.paired_boundary(
       provider.evidence_contract(),
       provider.evidence_encoder(),
       fn(evidence, _) { evidence },

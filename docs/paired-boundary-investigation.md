@@ -12,13 +12,13 @@ existing contract and encoder; do not redefine acceptance for the trial.
 
 ## Construction and authority
 
-The opaque `Pair(a, loaded, saved)` stores a decoded receiving boundary and a typed
+The opaque `PairedBoundary(a, loaded, saved)` stores a decoded receiving boundary and a typed
 output boundary. Its constructor accepts one full contract, one encoder, and two
 handlers. The output receiver obtains the full contract from the decoded receiver;
 there is no second contract argument or mutation operation. The contract accessor
 returns the original full contract, including semantic requirements.
 
-The implementation is 40 formatted Gleam lines, with four functions: construction,
+The implementation is 45 formatted Gleam lines, with four functions: construction,
 contract inspection, load, and save. It introduces no validation engine, registry,
 certificate bypass, callback interception, or lifetime mechanism. It delegates to
 the existing public APIs.
@@ -34,7 +34,7 @@ let saver = encoding.output_boundary(encoder, storage)
 The prototype replaces these with:
 
 ```gleam
-let registration = paired.pair(contract, encoder, load_handler, save_handler)
+let registration = paired.paired_boundary(contract, encoder, load_handler, save_handler)
 ```
 
 Loading and saving remain distinct operations, not an automatic transaction:
@@ -56,9 +56,10 @@ let assert Ok(response) = paired.save(registration, value)
 - Sharing `a` does not guarantee that encoding and decoding are inverses. Output
   semantic checks inspect reconstruction from encoded JSON. The mapping test
   deliberately shows that saving a successfully decoded value can fail.
-- `Pair`, `pair`, `load`, and `save` are experimental names. `roundtrip` may suggest
-  an inverse-law guarantee or automatic load/save cycle that this API does not have.
-  Public placement and names remain undecided. No compatibility aliases were added.
+- `PairedBoundary`, `paired_boundary`, `paired_boundary_contract`, `load`, and `save`
+  are the selected names. The prototype remains in a private experimental module;
+  placement in the main module is deferred until adoption. No compatibility aliases
+  for `Pair`, `pair`, or `contract` were added.
 - The opaque pair currently returns no individual endpoints. Some consumers may
   need to hand only a saving capability to a provider while keeping loading at the
   host. Separate endpoint accessors or a different packaging shape would need a

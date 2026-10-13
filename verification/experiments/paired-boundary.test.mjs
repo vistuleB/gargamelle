@@ -34,18 +34,18 @@ test('private paired boundary compiles, preserves enforcement, and remains proce
     const [paired,s,e]=await Promise.all([compiled('paired_boundary.mjs'),compiled('gargamelle.mjs'),compiled('gargamelle/encoding.mjs')]);
     const contract=s.contract(s.text());
     let handled=0;
-    const receiver=paired.pair(contract,e.text(),x=>x,()=>{handled++;});
-    assert.equal(paired.contract(receiver),contract,'Inspector must return the original full contract');
+    const receiver=paired.paired_boundary(contract,e.text(),x=>x,()=>{handled++;});
+    assert.equal(paired.paired_boundary_contract(receiver),contract,'Inspector must return the original full contract');
 
     const failure=new Error('application failure');
     const converter=s.map(s.text(),()=>{throw failure;});
-    const loadFailure=paired.pair(s.contract(converter),e.text(),()=>{handled++;},()=>{handled++;});
+    const loadFailure=paired.paired_boundary(s.contract(converter),e.text(),()=>{handled++;},()=>{handled++;});
     assert.throws(()=>paired.load(loadFailure,s.parse('"Brainy"')[0]),error=>error===failure);
     const encoder=e.contramap(e.text(),()=>{throw failure;});
-    const saveFailure=paired.pair(contract,encoder,()=>{handled++;},()=>{handled++;});
+    const saveFailure=paired.paired_boundary(contract,encoder,()=>{handled++;},()=>{handled++;});
     assert.throws(()=>paired.save(saveFailure,'Brainy'),error=>error===failure);
     assert.equal(handled,0);
-    const handlerFailure=paired.pair(contract,e.text(),()=>{throw failure;},()=>{throw failure;});
+    const handlerFailure=paired.paired_boundary(contract,e.text(),()=>{throw failure;},()=>{throw failure;});
     assert.throws(()=>paired.save(handlerFailure,'Brainy'),error=>error===failure);
 
     // Challenge the exact failure this convenience wrapper is meant to prevent:
@@ -66,8 +66,10 @@ test('private paired boundary compiles, preserves enforcement, and remains proce
 
     const declarations=`import gargamelle as s\nimport gargamelle/encoding as e\nimport paired_boundary as paired\n`;
     const negatives=[
-      ['certificate',declarations+`pub fn main() {\n let contract = s.contract(s.text())\n let pair = paired.pair(contract, e.text(), fn(value, _) { value }, fn(_) { Nil })\n let assert Ok(json) = s.parse("\\\"Brainy\\\"")\n let assert Ok(verified) = s.verify(contract, json)\n paired.load(pair, verified)\n}\n`,/VerifiedJson/],
-      ['opaque',declarations+`pub fn main() { paired.Pair(Nil, Nil) }\n`,/Pair/],
+      ['certificate',declarations+`pub fn main() {\n let contract = s.contract(s.text())\n let pair = paired.paired_boundary(contract, e.text(), fn(value, _) { value }, fn(_) { Nil })\n let assert Ok(json) = s.parse("\\\"Brainy\\\"")\n let assert Ok(verified) = s.verify(contract, json)\n paired.load(pair, verified)\n}\n`,/VerifiedJson/],
+      ['opaque',declarations+`pub fn main() { paired.PairedBoundary(Nil, Nil) }\n`,/PairedBoundary/],
+      ['old-constructor',declarations+`pub fn main() { paired.pair(Nil, Nil, Nil, Nil) }\n`,/pair/],
+      ['old-inspector',declarations+`pub fn main() { paired.contract(Nil) }\n`,/contract/],
     ];
     for(const [name,source,expected] of negatives){
       const path=join(directory,'test/paired_negative.gleam');
@@ -76,11 +78,11 @@ test('private paired boundary compiles, preserves enforcement, and remains proce
         const result=spawnSync('gleam',['check','--target',target],{cwd:directory,encoding:'utf8',timeout:60000});
         assert.notEqual(result.status,0,`Negative ${name} compiled on ${target}`);
         assert.match(result.stderr,expected);
-        assert.match(result.stderr,name==='opaque'?/Unknown module value/:/Type mismatch/);
+        assert.match(result.stderr,name==='certificate'?/Type mismatch/:/Unknown module value/);
       }
       rmSync(path);
     }
     run(directory,['check','--target','javascript']);
-    assert.match(readFileSync(join(directory,'test/paired_boundary.gleam'),'utf8'),/pub opaque type Pair/);
+    assert.match(readFileSync(join(directory,'test/paired_boundary.gleam'),'utf8'),/pub opaque type PairedBoundary/);
   }finally{rmSync(directory,{recursive:true,force:true});}
 });
