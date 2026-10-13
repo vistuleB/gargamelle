@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Add `PairedBoundary`, `paired_boundary`, `paired_boundary_contract`, `load`, and
+  `save` in the main module, sharing one full contract for both directions.
+  Encoding callbacks retain typed failures through `SaveError`.
+
 - Add bounded summaries and complete JSON reports for structural and semantic
   contract failures in `gargamelle/diagnostics`.
 - Add a compiled provider loading/saving example sharing one stored contract,

@@ -1,6 +1,6 @@
 # Gargamelle technical contract
 
-This document specifies the intended public semantics of Gargamelle 0.8.0.
+This document specifies the intended public semantics of Gargamelle.
 “Must” denotes a requirement, not a claim that the implementation has been
 formally proved. Verification results and implementation history are separate.
 
@@ -45,6 +45,17 @@ decoded data and original JSON. `JsonBoundary(a, response)` instead uses `verify
 and passes a certificate. With semantic requirements this performs one decoding
 pass; without requirements no conversion callback runs. Either kind of rejection
 invokes no handler. Construction and inspection execute no callbacks.
+
+`PairedBoundary(a, loaded, saved, encoding_error)` binds decoded loading and
+JSON-only saving handlers to the same full contract. `load` delegates to `forward`.
+`save` invokes the supplied encoding function once, then delegates to `forward_json`
+once with its admitted JSON. Encoding rejection skips verification and the saving
+handler; receiving rejection skips that handler. `SaveError` preserves the encoding
+error in `EncodingFailed` or the contract error in `ContractRejected`. The encoder
+must return admitted JSON, not a certificate; additional work inside that trusted
+callback is separate from the boundary's verification. Loading and saving need not
+be inverses or occur together. Saving semantic checks inspect decoded emitted JSON,
+not the original encoder input. Construction and inspection run no callbacks.
 
 `boundary_contract`, `json_boundary_contract` and `verified_contract` expose the
 exact retained contract. The corresponding `*_definition` accessors expose only

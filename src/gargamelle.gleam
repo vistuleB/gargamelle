@@ -238,6 +238,25 @@ pub opaque type JsonBoundary(a, response) {
   JsonBoundary(Contract(a), fn(VerifiedJson(a)) -> response)
 }
 
+/// Loading and saving handlers bound to one full contract. The encoding function
+/// produces admitted JSON without contract verification, for example
+/// `encoding.encode_json(encoder, _)`. Its error type remains application-defined.
+/// This is not a transaction or a guarantee that encoding and decoding are inverses.
+pub opaque type PairedBoundary(a, loaded, saved, encoding_error) {
+  PairedBoundary(
+    Boundary(a, loaded),
+    JsonBoundary(a, saved),
+    fn(a) -> Result(Json, encoding_error),
+  )
+}
+
+/// Encoding rejection or rejection by the paired boundary's stored contract.
+/// Operational exceptions from callbacks and handlers are not caught.
+pub type SaveError(encoding_error) {
+  EncodingFailed(encoding_error)
+  ContractRejected(ContractError)
+}
+
 /// The opaque recursion environment supplied to a self-recursive plan.
 /// User code cannot construct or execute this environment.
 pub opaque type Recursive(a) {
@@ -1983,6 +2002,55 @@ pub fn forward_json(
   let JsonBoundary(contract, handler) = boundary
   use verified <- result.try(verify(contract, json))
   Ok(handler(verified))
+}
+
+/// Bind loading, encoding, and saving to one authoritative full contract.
+/// Construction executes no callbacks. The encoder must produce admitted JSON;
+/// saving verifies it against this contract before invoking the saving handler.
+/// Use unchecked `encoding.encode_json(encoder, _)` to avoid redundant verification.
+pub fn paired_boundary(
+  contract: Contract(a),
+  encode: fn(a) -> Result(Json, encoding_error),
+  load_handler: fn(a, Json) -> loaded,
+  save_handler: fn(VerifiedJson(a)) -> saved,
+) -> PairedBoundary(a, loaded, saved, encoding_error) {
+  PairedBoundary(
+    boundary(contract, load_handler),
+    json_boundary(contract, save_handler),
+    encode,
+  )
+}
+
+/// Inspect the exact full contract shared by loading and saving without callbacks.
+pub fn paired_boundary_contract(
+  pair: PairedBoundary(a, loaded, saved, encoding_error),
+) -> Contract(a) {
+  let PairedBoundary(loader, _, _) = pair
+  boundary_contract(loader)
+}
+
+/// Decode and check incoming JSON once, then invoke the loading handler once.
+/// The handler receives decoded data and the original JSON. Rejection invokes no
+/// handler. Handler Result values remain nested; operational exceptions propagate.
+pub fn load(
+  pair: PairedBoundary(a, loaded, saved, encoding_error),
+  json: Json,
+) -> Result(loaded, ContractError) {
+  let PairedBoundary(loader, _, _) = pair
+  forward(loader, json)
+}
+
+/// Encode once, then check the stored contract once before invoking the saving
+/// handler. Semantic checks inspect reconstruction from encoded JSON, not the
+/// encoder input directly. A check-free contract validates without conversion.
+/// Handler Result values remain nested; operational exceptions propagate.
+pub fn save(
+  pair: PairedBoundary(a, loaded, saved, encoding_error),
+  value: a,
+) -> Result(saved, SaveError(encoding_error)) {
+  let PairedBoundary(_, receiver, encode) = pair
+  use json <- result.try(encode(value) |> result.map_error(EncodingFailed))
+  forward_json(receiver, json) |> result.map_error(ContractRejected)
 }
 
 /// Verify a full contract and retain original JSON and that exact contract.

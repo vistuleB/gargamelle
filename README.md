@@ -6,7 +6,7 @@
 Gargamelle generates a typed JSON decoder and a JSON Schema 2020-12 document
 from one Gleam definition.
 
-See the [technical contract](https://hexdocs.pm/gargamelle/0.8.0/contract.html).
+[Technical contract](https://hexdocs.pm/gargamelle/0.8.0/contract.html).
 
 Gargamelle also provides boundary APIs that bind a contract to a handler.
 A contract combines a definition with optional semantic checks of decoded values.
@@ -28,6 +28,7 @@ used directly.
 | Typed JSON encoding | `encoding.encode_json` |
 | Encoding checked against a Contract | `encoding.encode` |
 | Typed output through a receiving boundary | `encoding.output_boundary` + `encoding.send` |
+| Loading and saving through one contract | `paired_boundary` → `PairedBoundary` + `load` / `save` |
 
 ## Getting started
 

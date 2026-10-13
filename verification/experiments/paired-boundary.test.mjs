@@ -20,13 +20,13 @@ test('private paired boundary compiles, preserves enforcement, and remains proce
     for(const name of ['src','test','priv','build/packages'])cpSync(join(root,name),join(directory,name),{recursive:true});
     for(const name of ['gleam.toml','manifest.toml'])cpSync(join(root,name),join(directory,name));
     for(const name of ['paired_boundary.gleam','paired_boundary_test.gleam','paired_boundary_example.gleam'])
-      cpSync(new URL(name,import.meta.url),join(directory,'test',name));
+      cpSync(new URL(name,import.meta.url),join(directory,'test',name==='paired_boundary.gleam'?name:'private_'+name));
     const helper=spawnSync('make',['-C','priv/regex-src'],{cwd:directory,encoding:'utf8',timeout:60000});
     assert.equal(helper.status,0,helper.stdout+'\n'+helper.stderr);
     for(const target of ['javascript','erlang']){
       const result=run(directory,['test','--target',target]);
-      assert.match(result.stdout,/142 passed, no failures/);
-      const example=run(directory,['run','--target',target,'--module','paired_boundary_example']);
+      assert.match(result.stdout,/149 passed, no failures/);
+      const example=run(directory,['run','--target',target,'--module','private_paired_boundary_example']);
       assert.equal(example.stdout.trim(),'{"answers":[true,false],"score":1}\nSave rejected: score does not match answers');
     }
 
@@ -60,9 +60,9 @@ test('private paired boundary compiles, preserves enforcement, and remains proce
     assert.notEqual(mutant.status,0,'Dropping egress semantic checks escaped tests');
     assert.match(mutant.stdout,/one_registered_contract_rejects_before_either_handler_test/);
     assert.match(mutant.stdout,/same_contract_does_not_imply_inverse_conversion_test/);
-    assert.match(mutant.stdout,/140 passed, 2 failures/);
+    assert.match(mutant.stdout,/147 passed, 2 failures/);
     writeFileSync(pairedPath,original);
-    assert.match(run(directory,['test','--target','javascript']).stdout,/142 passed, no failures/);
+    assert.match(run(directory,['test','--target','javascript']).stdout,/149 passed, no failures/);
 
     const declarations=`import gargamelle as s\nimport gargamelle/encoding as e\nimport paired_boundary as paired\n`;
     const negatives=[

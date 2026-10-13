@@ -56,14 +56,15 @@ test('JSON receiving boundary retains its exact contract and propagates handler 
 test('README and boundary guide examples compile and run on both targets',()=>{
   const root=fileURLToPath(new URL('../',import.meta.url));
   const guide=readFileSync(join(root,'docs/boundaries.md'),'utf8');
-  const examples=[...guide.matchAll(/```gleam\n([\s\S]*?)\n```/g)].map(match=>match[1]);
+  const providerDeclarations=readFileSync(join(root,'test/provider_roundtrip.gleam'),'utf8').split('pub fn main()')[0];
+  const examples=[...guide.matchAll(/```gleam\n([\s\S]*?)\n```/g)].map(match=>match[1].startsWith('pub fn main()')?providerDeclarations+match[1]:match[1]);
   const readme=readFileSync(join(root,'README.md'),'utf8');
   examples.push(readme.split('## Receiving boundaries')[1].match(/```gleam\n([\s\S]*?)\n```/)[1]);
   const directory=mkdtempSync(join(tmpdir(),'gargamelle-boundary-guide-'));
   try{
     mkdirSync(join(directory,'src'));
     writeFileSync(join(directory,'gleam.toml'),`name = "boundary_guide"\nversion = "0.1.0"\n[dependencies]\ngargamelle = { path = ${JSON.stringify(root)} }\ngleam_stdlib = { path = ${JSON.stringify(join(root,'build/packages/gleam_stdlib'))} }\ngleam_json = { path = ${JSON.stringify(join(root,'build/packages/gleam_json'))} }\n`);
-    const outputs=[s.schema_string(s.array(s.text()),s.JsonFormat$Pretty$const)+'\nBrainy, Jokey\n','["Brainy","Jokey"]\n','"Brainy"\n','Brainy, Jokey\n["Brainy","Jokey"]\n'];
+    const outputs=[s.schema_string(s.array(s.text()),s.JsonFormat$Pretty$const)+'\nBrainy, Jokey\n','["Brainy","Jokey"]\n','{"answers":[true,false],"score":1}\nSave rejected: score does not match answers\n','"Brainy"\n','Brainy, Jokey\n["Brainy","Jokey"]\n'];
     assert.equal(examples.length,outputs.length);
     for(const [index,code] of examples.entries()){
     writeFileSync(join(directory,'src/boundary_guide.gleam'),code+'\n');

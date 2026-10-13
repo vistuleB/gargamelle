@@ -55,6 +55,14 @@ Requirements inspect decoded emitted output, preserving receiving Contract
 semantics even when the original encoder input differs from reconstructed data.
 Rejection occurs before handler invocation; callback exceptions are not caught.
 
+PairedBoundary construction supplies the same immutable full Contract to its
+decoded and JSON receiving boundaries. Loading delegates to forward; saving calls
+the encoding function once, then forward_json once. Result mapping preserves the
+original typed encoding failure or full ContractError; it cannot turn rejection
+into acceptance. No callback executes during construction/inspection, no second
+contract can be substituted, and operational exceptions remain uncaught. This
+composition requires no dependency from the core module to the encoding module.
+
 Self-recursion closes over a completed immutable body using typed environments,
 with the builder executed once. Lift ignores the construction environment and
 executes a completed encoder with Nil. No mutable registry or casts are used.

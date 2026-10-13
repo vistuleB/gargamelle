@@ -82,6 +82,74 @@ authoritative; there is no separate codec contract to reconcile.
 See [Typed JSON encoding](encoding.html) and the complete
 [provider loading and saving example](provider-roundtrip.html).
 
+## Paired loading and saving
+
+`paired_boundary(contract, encode, load_handler, save_handler)` registers both
+handlers against one stored full contract. `load` decodes incoming JSON before
+calling the loading handler; `save` encodes a value and checks the resulting JSON
+before calling the saving handler. Each submission performs one contract check.
+This counts checks performed by the boundary; application encoding callbacks may
+perform additional work.
+
+The encoder argument is a function producing admitted, unchecked JSON. For a
+Gargamelle encoder, pass `encoding.encode_json(encoder, _)`. Checked `encoding.encode`
+produces a certificate instead of `Json` and cannot be supplied here. The main
+module accepts this function to remain independent of `gargamelle/encoding`.
+
+The following replaces `main` in the complete
+[provider loading and saving example](provider-roundtrip.html), using its
+`Evidence`, `evidence_contract`, and `evidence_encoder` declarations and imports:
+
+```gleam
+pub fn main() {
+  let registration =
+    gargamelle.paired_boundary(
+      evidence_contract(),
+      encoding.encode_json(evidence_encoder(), _),
+      fn(evidence, _) { evidence },
+      fn(verified) {
+        gargamelle.to_string(
+          gargamelle.verified_json(verified),
+          gargamelle.Compact,
+        )
+      },
+    )
+  let assert Ok(json) =
+    gargamelle.parse("{\"answers\":[true,false],\"score\":1}")
+  let assert Ok(evidence) = gargamelle.load(registration, json)
+  let assert Ok(stored) = gargamelle.save(registration, evidence)
+  io.println(stored)
+  let assert Error(gargamelle.ContractRejected(gargamelle.Semantic(_))) =
+    gargamelle.save(registration, Evidence([True, False], 2))
+  io.println("Save rejected: score does not match answers")
+}
+```
+
+Output:
+
+```text
+{"answers":[true,false],"score":1}
+Save rejected: score does not match answers
+```
+
+`PairedBoundary(a, loaded, saved, encoding_error)` retains independent handler
+response types and the encoding function's concrete error type. Type inference
+usually determines these parameters without annotations. `paired_boundary_contract`
+returns the exact full contract used at both sides, without invoking callbacks.
+
+`load` returns `Result(loaded, ContractError)`. `save` returns
+`Result(saved, SaveError(encoding_error))`, distinguishing `EncodingFailed(error)`
+from `ContractRejected(error)`. Structural or semantic rejection skips the saving
+handler. Encoding rejection also skips contract checks. Handler `Result` responses
+remain nested, and callback exceptions propagate as operational failures.
+
+The saving contract remains authoritative even for an application-supplied encoder.
+Without semantic requirements, saving validates without conversion. With requirements,
+it decodes the emitted JSON once and checks that reconstructed value. It does not
+check the encoder input directly. Loading and saving need not be inverses, are not
+a transaction, and need not occur together. No individual endpoint or handler can
+be extracted or replaced through the paired boundary's public API.
+
 ## Semantic requirements
 
 A contract can add checks that JSON Schema does not express. This complete
