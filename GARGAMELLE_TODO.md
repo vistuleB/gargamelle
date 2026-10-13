@@ -1,6 +1,20 @@
 # Gargamelle handoff and next work
 
-## Latest scope — 0.8.0 preparation
+## Latest scope — 0.9.0 preparation
+
+Main includes the boundary module split, PairedBoundary, bounded diagnostic
+summaries, complete diagnostic JSON, and the provider load/save example.
+Receiving and typed output APIs move to gargamelle/boundary without compatibility
+aliases. JSON, definitions, Contracts and verification remain in core; encoding
+retains encoders/codecs. The boundary guide contains 0.8.0 migration guidance.
+
+Private shared-record and generation/shrinking experiments are not shipped API.
+Uncommitted experimental follow-up remains in its separate development worktree.
+Release qualification is recorded in docs/release-0.9.0.md and ignored reports.
+Publication remains the maintainer's action; no existing tags are moved.
+The older sections below are historical checkpoints.
+
+## Previous scope — 0.8.0 preparation
 
 0.7.0 is published. The bounded modifier-composability pass was completed at
 `7899183` and promoted to main for 0.8.0 preparation at the maintainer's request.

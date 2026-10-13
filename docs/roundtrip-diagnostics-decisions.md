@@ -1,7 +1,8 @@
 # Roundtrip and diagnostic decisions
 
-This development branch leaves the 0.8.0 publication checkout unchanged. The
-example and formatting module are unreleased additions, not a qualified release.
+Historical decisions from the initial example/diagnostics investigation.
+PairedBoundary and the subsequent module split supersede the initial deferral
+below; the 0.9.0 release record describes the current candidate.
 
 - No paired-boundary constructor yet. The example uses `boundary_contract(loader)`
   to construct the saving receiver, sharing one authority without redeclaring a

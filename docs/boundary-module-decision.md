@@ -16,8 +16,7 @@ The paired implementation delegates to decoded receiving and typed output paths;
 it adds no alternative validation authority. This supersedes the four-parameter
 main-module experiment recorded in paired-boundary-main-integration.md.
 
-This is a breaking module/API change for a future release. The development package
-metadata remains at 0.8.0 until release preparation is requested; exported local
-archives are verification artifacts, not replacements for the published release.
-Generation and shrinking experiments remain outside shipped source and outside
-this refactor commit.
+The module move is the breaking API change in the 0.9.0 candidate. The shared
+record and generation/shrinking experiments remain outside shipped source.
+Release qualification and archive hashes are recorded separately in
+release-0.9.0.md and ignored reports.

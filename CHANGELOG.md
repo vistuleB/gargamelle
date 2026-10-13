@@ -1,8 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.9.0
 
-- Move receiving, typed output, and paired boundaries to `gargamelle/boundary`.
+- Move receiving and typed output boundaries to `gargamelle/boundary`.
   Keep JSON, definitions, contracts, and verification in core, and encoders/codecs
   in `gargamelle/encoding`. No compatibility aliases are retained.
 - Add `PairedBoundary`, `paired_boundary`, `paired_boundary_contract`, `load`, and

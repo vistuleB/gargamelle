@@ -22,7 +22,7 @@ let directory;
 writeFileSync(reportPath,JSON.stringify({status:'running',source:before.digest})+'\n');
 try {
   const version=readFileSync(join(root,'gleam.toml'),'utf8').match(/^version = "([^"]+)"$/m)[1];
-  assert.equal(version,'0.8.0');
+  assert.equal(version,'0.9.0');
   const pkg=JSON.parse(readFileSync(join(root,'package.json'))),lock=JSON.parse(readFileSync(join(root,'package-lock.json')));
   assert.equal(pkg.version,version);assert.equal(lock.version,version);assert.equal(lock.packages[''].version,version);
   assert.equal(pkg.private,true);
@@ -60,6 +60,7 @@ try {
   for(const path of ['gleam.toml','README.md','LICENSE','src/gargamelle.gleam','src/gargamelle/encoding.gleam','src/gargamelle/boundary.gleam','src/gargamelle/diagnostics.gleam','src/gargamelle/encoding_runtime.mjs','src/gargamelle_encoding_runtime.erl','src/runtime.mjs','src/gargamelle_runtime.erl','src/gargamelle_regex.erl','priv/regex-src/Makefile','priv/regex-src/PROVENANCE.json','priv/regex-src/LICENSE.quickjs'])assert.ok(entries.includes(path),`Missing archive member: ${path}`);
   assert.ok(!entries.includes('src/schema_fixtures.gleam'),'Verification fixtures must not ship');
   assert.ok(!entries.some(path=>path.startsWith('test/')),'Test modules must not ship');
+  assert.ok(!entries.some(path=>path.startsWith('verification/experiments/')),'Private experiments must not ship');
   const topLevel=entries.flatMap(path=>/^src\/([^/]+)\.gleam$/.exec(path)?.slice(1)??[]);
   assert.deepEqual(topLevel,['gargamelle'],'Package must expose only its own top-level namespace');
   run('tar',['-xzf',contents,'-C',library]);
@@ -109,13 +110,25 @@ pub fn main() {
   });
   cpSync(join(root,'verification/json_consumer.gleam'),join(consumer,'src/json_consumer.gleam'));
   cpSync(join(root,'test/modifier_fixture.gleam'),join(consumer,'src/modifier_fixture.gleam'));
+  // New public modules must also work when installed from the exported archive.
+  const diagnosticGuide=readFileSync(join(root,'docs/diagnostics.md'),'utf8');
+  const diagnosticSource=diagnosticGuide.match(/```gleam\n([\s\S]*?)\n```/)[1];
+  const diagnosticOutput=diagnosticGuide.match(/```text\n([\s\S]*?)\n```/)[1];
+  writeFileSync(join(consumer,'src/diagnostics_consumer.gleam'),diagnosticSource);
+  for(const name of ['provider_roundtrip.gleam','paired_boundary_example.gleam'])
+    cpSync(join(root,'test',name),join(consumer,'src',name));
+  const providerGuide=readFileSync(join(root,'docs/provider-roundtrip.md'),'utf8');
+  const providerOutput=providerGuide.match(/```text\n([\s\S]*?)\n```/)[1];
+  const pairedGuide=readFileSync(join(root,'docs/boundaries.md'),'utf8').split('## Paired loading and saving')[1];
+  const pairedOutput=pairedGuide.match(/```text\n([\s\S]*?)\n```/)[1];
+  const boundaryConsumers=[['diagnostics_consumer',diagnosticOutput],['provider_roundtrip',providerOutput],['paired_boundary_example',pairedOutput]];
   const modifierObservations=[];
   console.log('Checking fresh consumers of the exported archive…');
   for(const target of ['javascript','erlang']){
     if(target==='erlang')run('make',['-C','priv/regex-src'],library,'release-consumer-helper.log');
     const output=run('gleam',['run','--target',target],consumer,`release-consumer-${target}.log`);
     assert.equal(output.trim(),'release consumer passed');
-    for(const [module,expected] of [['contract_consumer','release contract consumer passed'],['readme_names',expectedNames],['readme_boundaries',expectedBoundaries],['readme_user','README user passed'],['preferences_reference',expectedArticle],...encodingConsumers,...jsonConsumers,['json_consumer','release JSON consumer passed']]){
+    for(const [module,expected] of [['contract_consumer','release contract consumer passed'],['readme_names',expectedNames],['readme_boundaries',expectedBoundaries],['readme_user','README user passed'],['preferences_reference',expectedArticle],...encodingConsumers,...jsonConsumers,...boundaryConsumers,['json_consumer','release JSON consumer passed']]){
       const result=run('gleam',['run','--target',target,'--module',module],consumer,`release-${module}-${target}.log`);
       assert.equal(result.trim(),expected,`${module} output differs on ${target}`);
     }
@@ -140,9 +153,10 @@ pub fn main() {
   const pages=[...config.matchAll(/^path = "([^"]+\.html)"$/gm)].map(match=>match[1]);
   for(const page of ['index.html','gargamelle.html','gargamelle/encoding.html','gargamelle/boundary.html','gargamelle/diagnostics.html',...pages]){
     const html=readFileSync(join(docs,page),'utf8');
-    assert.ok(!html.includes('https://github.com/vistuleB/gargamelle'),`Private source link in ${page}`);
+    assert.ok(html.includes('https://github.com/vistuleB/gargamelle'),`Missing public repository link in ${page}`);
+    assert.match(html,/>Repository<\/a>/,`Missing repository label in ${page}`);
     assert.match(html,/>Source archive<\/a>/,`Missing source archive label in ${page}`);
-    assert.doesNotMatch(html,/>Repository<\/a>/,`Mislabelled archive in ${page}`);
+
     for(const [,rawHref] of html.replace(/<pre\b[^>]*>[\s\S]*?<\/pre>/g,'').matchAll(/href="([^"]+)"/g)){
       const prefix=`https://hexdocs.pm/gargamelle/${version}/`;
       const href=rawHref.startsWith(prefix)?rawHref.slice(prefix.length)||'index.html':rawHref;
