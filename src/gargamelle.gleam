@@ -3,7 +3,8 @@
 //// Parse JSON with `parse`, then call `validate` or `decode`. Validation never
 //// invokes user converters; decoding invokes them only after structural success.
 //// `Contract` adds semantic requirements above a structural definition. Boundaries
-//// enforce their stored contract before invoking handlers. `verify` retains
+//// in `gargamelle/boundary` enforce their stored contract before invoking handlers.
+//// `verify` retains
 //// original JSON and the accepting contract; semantic requirements decode once.
 //// Converters are trusted application code: exceptions are operational failures.
 //// JavaScript and Erlang targets are supported on the
@@ -221,21 +222,6 @@ type Requirement(a) {
 /// Use a receiving boundary to enforce which contract checks a handler's input.
 pub opaque type VerifiedJson(a) {
   VerifiedJson(Json, Contract(a))
-}
-
-/// A contract and a private handler invoked only after successful decoding and
-/// semantic checks. Construct with `boundary`, inspect with `boundary_contract`,
-/// and submit JSON with `forward`.
-pub opaque type Boundary(a, response) {
-  Boundary(Contract(a), fn(a, Json) -> response)
-}
-
-/// A contract and a private handler receiving verified JSON. Semantic checks
-/// require decoding once; contracts without checks validate without conversion.
-/// Construct with `json_boundary`, inspect with `json_boundary_contract`, and
-/// submit admitted JSON with `forward_json`.
-pub opaque type JsonBoundary(a, response) {
-  JsonBoundary(Contract(a), fn(VerifiedJson(a)) -> response)
 }
 
 /// The opaque recursion environment supplied to a self-recursive plan.
@@ -1916,73 +1902,6 @@ pub fn validate_contract(
     [] -> validate(definition, json) |> result.map_error(Structural)
     _ -> decode_contract(contract, json) |> result.map(fn(_) { Nil })
   }
-}
-
-/// Bind a handler to its authoritative contract. Construction runs no callbacks.
-pub fn boundary(
-  contract: Contract(a),
-  handler: fn(a, Json) -> response,
-) -> Boundary(a, response) {
-  Boundary(contract, handler)
-}
-
-/// Return the receiving contract without exposing its handler.
-pub fn boundary_contract(boundary: Boundary(a, response)) -> Contract(a) {
-  let Boundary(contract, _) = boundary
-  contract
-}
-
-/// Return the receiving contract's structural definition for schema generation.
-pub fn boundary_definition(boundary: Boundary(a, response)) -> Definition(a) {
-  contract_definition(boundary_contract(boundary))
-}
-
-/// Decode and check the stored contract once, then invoke the handler once.
-/// Rejection invokes no handler. Callback exceptions propagate operationally.
-/// A Result response remains nested; output is not checked.
-pub fn forward(
-  boundary: Boundary(a, response),
-  json: Json,
-) -> Result(response, ContractError) {
-  let Boundary(contract, handler) = boundary
-  use data <- result.try(decode_contract(contract, json))
-  Ok(handler(data, json))
-}
-
-/// Bind a JSON receiving handler to its authoritative contract.
-pub fn json_boundary(
-  contract: Contract(a),
-  handler: fn(VerifiedJson(a)) -> response,
-) -> JsonBoundary(a, response) {
-  JsonBoundary(contract, handler)
-}
-
-/// Return the receiving contract without exposing its handler.
-pub fn json_boundary_contract(
-  boundary: JsonBoundary(a, response),
-) -> Contract(a) {
-  let JsonBoundary(contract, _) = boundary
-  contract
-}
-
-/// Return the receiving contract's structural definition for schema generation.
-pub fn json_boundary_definition(
-  boundary: JsonBoundary(a, response),
-) -> Definition(a) {
-  contract_definition(json_boundary_contract(boundary))
-}
-
-/// Verify the stored contract once, then invoke the handler once. Semantic
-/// requirements cause one decoding pass; without them no converter runs.
-/// Admission and application policy are separate. Certificates from other
-/// contracts cannot bypass this check. Exceptions propagate operationally.
-pub fn forward_json(
-  boundary: JsonBoundary(a, response),
-  json: Json,
-) -> Result(response, ContractError) {
-  let JsonBoundary(contract, handler) = boundary
-  use verified <- result.try(verify(contract, json))
-  Ok(handler(verified))
 }
 
 /// Verify a full contract and retain original JSON and that exact contract.

@@ -7,30 +7,45 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 const root=fileURLToPath(new URL('../',import.meta.url));
 const cases=[
+ ['moved_boundary','pub fn main() { s.boundary(Nil) }','Unknown module value'],
+ ['moved_forward','pub fn main() { s.forward(Nil) }','Unknown module value'],
+ ['moved_json_boundary','pub fn main() { s.json_boundary(Nil) }','Unknown module value'],
+ ['moved_forward_json','pub fn main() { s.forward_json(Nil) }','Unknown module value'],
+ ['moved_paired_boundary','pub fn main() { s.paired_boundary(Nil) }','Unknown module value'],
+ ['moved_load','pub fn main() { s.load(Nil) }','Unknown module value'],
+ ['moved_save','pub fn main() { s.save(Nil) }','Unknown module value'],
+ ['moved_Boundary_type','pub fn main(value: s.Boundary(String, String)) { value }','Unknown module type'],
+ ['moved_JsonBoundary_type','pub fn main(value: s.JsonBoundary(String, String)) { value }','Unknown module type'],
+ ['moved_PairedBoundary_type','pub fn main(value: s.PairedBoundary(String, String)) { value }','Unknown module type'],
+ ['moved_SaveError_type','pub fn main(value: s.SaveError(String, String)) { value }','Unknown module type'],
+ ['moved_encoding_output_boundary','pub fn main() { e.output_boundary(Nil) }','Unknown module value'],
+ ['moved_encoding_output_contract','pub fn main() { e.output_contract(Nil) }','Unknown module value'],
+ ['moved_encoding_send','pub fn main() { e.send(Nil) }','Unknown module value'],
+ ['moved_OutputBoundary_type','pub fn main(value: e.OutputBoundary(String, String)) { value }','Unknown module type'],
  ['json_array_requires_admitted_children','pub fn main(values: List(String)) { s.json_array(values) }','Type mismatch'],
  ['anything_decodes_json_not_string','pub fn main() { s.required(s.record(fn(value: String) { value }), "metadata", s.anything()) }','Type mismatch'],
  ['opaque_encoder','pub fn main() { e.Plan(fn(_,_) { Ok(Nil) }) }','Unknown module value'],
  ['open_encoder_not_executable','pub fn main() { e.recursive(fn(self) { e.encode_json(self,"x") Ok(self) }) }','Type mismatch'],
  ['wrong_codec_output_type','pub fn main() { e.codec(e.text(), s.contract(s.safe_integer())) }','Type mismatch'],
- ['wrong_output_receiver_type','pub fn main() { e.output_boundary(e.text(), s.json_boundary(s.contract(s.safe_integer()), fn(x) { x })) }','Type mismatch'],
- ['private_output_handler','pub fn main() { e.output_boundary(e.text(),s.json_boundary(s.contract(s.text()),fn(x) { x })).handler }','Unknown record field'],
+ ['wrong_output_receiver_type','pub fn main() { b.output_boundary(e.text(), b.json_boundary(s.contract(s.safe_integer()), fn(x) { x })) }','Type mismatch'],
+ ['private_output_handler','pub fn main() { b.output_boundary(e.text(),b.json_boundary(s.contract(s.text()),fn(x) { x })).handler }','Unknown record field'],
  ['wrong_encoder_getter','pub fn main() { e.field(e.record(),"count",e.safe_integer(),fn(_: String) { "wrong" }) }','Type mismatch'],
 
- ['opaque_json_boundary','pub fn main() { s.JsonBoundary(s.text(), fn(x) { x }) }','Unknown module value'],
+ ['opaque_json_boundary','pub fn main() { b.JsonBoundary(s.text(), fn(x) { x }) }','Unknown module value'],
  ['private_contract','pub fn main() { s.Contract(s.text(), []) }','Unknown module value'],
- ['definition_not_boundary_contract','pub fn main() { s.boundary(s.text(), fn(data, _) { data }) }','Type mismatch'],
+ ['definition_not_boundary_contract','pub fn main() { b.boundary(s.text(), fn(data, _) { data }) }','Type mismatch'],
  ['definition_not_verification_contract','pub fn main() { let assert Ok(json) = s.parse("null") s.verify(s.text(), json) }','Type mismatch'],
  ['requirement_cannot_transform','pub fn main() { s.require(s.contract(s.text()), "Transform", fn(text) { Ok(text) }) }','Type mismatch'],
- ['certificate_not_json_submission','pub fn main(v: s.VerifiedJson(String)) { s.forward_json(s.json_boundary(s.contract(s.text()), fn(x) { x }), v) }','Type mismatch'],
- ['json_boundary_handler_type','pub fn main() { s.json_boundary(s.contract(s.text()), fn(x: s.VerifiedJson(Int)) { x }) }','Type mismatch'],
- ['private_json_handler','pub fn main() { s.json_boundary(s.contract(s.text()), fn(x) { x }).handler }','Unknown record field'],
+ ['certificate_not_json_submission','pub fn main(v: s.VerifiedJson(String)) { b.forward_json(b.json_boundary(s.contract(s.text()), fn(x) { x }), v) }','Type mismatch'],
+ ['json_boundary_handler_type','pub fn main() { b.json_boundary(s.contract(s.text()), fn(x: s.VerifiedJson(Int)) { x }) }','Type mismatch'],
+ ['private_json_handler','pub fn main() { b.json_boundary(s.contract(s.text()), fn(x) { x }).handler }','Unknown record field'],
  ['opaque_verified_json','pub fn main() { let assert Ok(v) = s.parse("null") s.VerifiedJson(v, Nil) }','Unknown module value'],
- ['opaque_boundary','pub fn main() { s.Boundary(s.text(), fn(x, _) { x }) }','Unknown module value'],
- ['verified_not_forward_input','pub fn main(v: s.VerifiedJson(String)) { s.forward(s.boundary(s.contract(s.text()), fn(data, _) { data }), v) }','Type mismatch'],
- ['boundary_handler_output_type','pub fn main() { s.boundary(s.contract(s.text()), fn(v: Int, _) { v }) }','Type mismatch'],
- ['private_boundary_handler','pub fn main() { let b = s.boundary(s.contract(s.text()), fn(data, _) { data }) b.handler }','Unknown record field'],
+ ['opaque_boundary','pub fn main() { b.Boundary(s.text(), fn(x, _) { x }) }','Unknown module value'],
+ ['verified_not_forward_input','pub fn main(v: s.VerifiedJson(String)) { b.forward(b.boundary(s.contract(s.text()), fn(data, _) { data }), v) }','Type mismatch'],
+ ['boundary_handler_output_type','pub fn main() { b.boundary(s.contract(s.text()), fn(v: Int, _) { v }) }','Type mismatch'],
+ ['private_boundary_handler','pub fn main() { let b = b.boundary(s.contract(s.text()), fn(data, _) { data }) b.handler }','Unknown record field'],
  ['removed_verified_data','pub fn main(v: s.VerifiedJson(String)) { s.verified_data(v) }','Unknown module value'],
- ['old_boundary_handler','pub fn main() { s.boundary(s.contract(s.text()), fn(x) { x }) }','Type mismatch'],
+ ['old_boundary_handler','pub fn main() { b.boundary(s.contract(s.text()), fn(x) { x }) }','Type mismatch'],
  ['missing_json_format','pub fn main() { let assert Ok(v) = s.parse("null") s.to_string(v) }','Incorrect arity'],
  ['missing_schema_format','pub fn main() { s.schema_string(s.text()) }','Incorrect arity'],
  ['removed_value_type','pub fn main(value: s.Value) { value }','Unknown module type'],
@@ -75,7 +90,7 @@ test(`compile-time boundary on both targets: positive baseline and ${cases.lengt
  mkdirSync(join(dir,'src'));
  const q=p=>JSON.stringify(p);
  writeFileSync(join(dir,'gleam.toml'),`name = "negative_probe"\nversion = "0.1.0"\ntarget = "javascript"\n[dependencies]\ngargamelle = { path = ${q(root)} }\ngleam_stdlib = { path = ${q(resolve(root,'build/packages/gleam_stdlib'))} }\ngleam_json = { path = ${q(resolve(root,'build/packages/gleam_json'))} }\n`);
- const compile=(body,target)=>{writeFileSync(join(dir,'src/negative_probe.gleam'),'import gargamelle as s\nimport gargamelle/encoding as e\nimport gargamelle/documentation\nimport gleam/option as gleam_option\n'+body+'\n');const run=spawnSync('gleam',['build','--target',target],{cwd:dir,encoding:'utf8',timeout:30000});if(run.error)throw run.error;return {status:run.status,output:run.stdout+run.stderr};};
+ const compile=(body,target)=>{writeFileSync(join(dir,'src/negative_probe.gleam'),'import gargamelle as s\nimport gargamelle/boundary as b\nimport gargamelle/encoding as e\nimport gargamelle/documentation\nimport gleam/option as gleam_option\n'+body+'\n');const run=spawnSync('gleam',['build','--target',target],{cwd:dir,encoding:'utf8',timeout:30000});if(run.error)throw run.error;return {status:run.status,output:run.stdout+run.stderr};};
  for(const target of ['javascript','erlang']){
  const positive=compile('pub fn main() { s.variant("x",s.record(Nil),s.Strict) }',target);
  assert.equal(positive.status,0,positive.output);

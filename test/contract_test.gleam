@@ -1,4 +1,5 @@
 import gargamelle as s
+import gargamelle/boundary as gargamelle_boundary
 import gargamelle/documentation as docs
 import gleam/string
 import gleeunit/should
@@ -24,10 +25,11 @@ pub fn structural_rejection_skips_all_callbacks_test() {
       tick()
       Ok(Nil)
     })
-  let receiver = s.boundary(contract, fn(_, _) { tick() })
+  let receiver = gargamelle_boundary.boundary(contract, fn(_, _) { tick() })
   let assert Ok(json) = s.parse("false")
   let assert Error(errors) = s.validate(s.text(), json)
-  s.forward(receiver, json) |> should.equal(Error(s.Structural(errors)))
+  gargamelle_boundary.forward(receiver, json)
+  |> should.equal(Error(s.Structural(errors)))
   count() |> should.equal(0)
 }
 
@@ -53,13 +55,13 @@ pub fn conversion_checks_and_handler_run_once_in_order_test() {
       Ok(Nil)
     })
   let receiver =
-    s.boundary(contract, fn(text, _) {
+    gargamelle_boundary.boundary(contract, fn(text, _) {
       count() |> should.equal(3)
       tick()
       text
     })
   let assert Ok(json) = s.parse("\"Brainy\"")
-  s.forward(receiver, json) |> should.equal(Ok("Brainy"))
+  gargamelle_boundary.forward(receiver, json) |> should.equal(Ok("Brainy"))
   count() |> should.equal(4)
 }
 
@@ -79,9 +81,12 @@ pub fn semantic_failures_are_collected_and_skip_handler_test() {
       tick()
       Error([s.Violation("/field", "Third failure")])
     })
-  let receiver = s.boundary(contract, fn(_, _) { panic as "Rejected handler" })
+  let receiver =
+    gargamelle_boundary.boundary(contract, fn(_, _) {
+      panic as "Rejected handler"
+    })
   let assert Ok(json) = s.parse("\"Brainy\"")
-  s.forward(receiver, json)
+  gargamelle_boundary.forward(receiver, json)
   |> should.equal(
     Error(
       s.Semantic([
@@ -127,9 +132,10 @@ pub fn json_checks_decode_once_and_preserve_original_test() {
       name |> should.equal("Brainy")
       Ok(Nil)
     })
-  let receiver = s.json_boundary(contract, fn(verified) { verified })
+  let receiver =
+    gargamelle_boundary.json_boundary(contract, fn(verified) { verified })
   let assert Ok(json) = s.parse("{\"name\":\"Brainy\",\"extra\":42}")
-  let assert Ok(verified) = s.forward_json(receiver, json)
+  let assert Ok(verified) = gargamelle_boundary.forward_json(receiver, json)
   count() |> should.equal(1)
   s.verified_json(verified) |> should.equal(json)
   s.contract_requirements(s.verified_contract(verified))
@@ -150,13 +156,16 @@ pub fn semantic_contract_is_authoritative_and_transferable_test() {
             False -> Error([s.Violation("", "Unexpected name")])
           }
         })
-      s.json_boundary(contract, fn(verified) { s.verified_json(verified) })
+      gargamelle_boundary.json_boundary(contract, fn(verified) {
+        s.verified_json(verified)
+      })
     })
   let assert Ok(other_json) = s.parse("\"Jokey\"")
   let assert Ok(other) = s.verify(s.contract(s.text()), other_json)
-  s.forward_json(receiver, s.verified_json(other)) |> should.be_error
+  gargamelle_boundary.forward_json(receiver, s.verified_json(other))
+  |> should.be_error
   let assert Ok(json) = s.parse("\"Brainy\"")
-  s.forward_json(receiver, json) |> should.equal(Ok(json))
+  gargamelle_boundary.forward_json(receiver, json) |> should.equal(Ok(json))
 }
 
 pub fn typed_and_json_receivers_enforce_same_contract_test() {
@@ -168,16 +177,17 @@ pub fn typed_and_json_receivers_enforce_same_contract_test() {
         False -> Error([s.Violation("", "Unexpected name")])
       }
     })
-  let typed = s.boundary(contract, fn(_, json) { json })
-  let json_only = s.json_boundary(contract, s.verified_json)
+  let typed = gargamelle_boundary.boundary(contract, fn(_, json) { json })
+  let json_only = gargamelle_boundary.json_boundary(contract, s.verified_json)
   let assert Ok(accepted) = s.parse("\"Brainy\"")
   let assert Ok(rejected) = s.parse("\"Jokey\"")
   let assert Ok(invalid) = s.parse("false")
-  s.forward(typed, accepted)
-  |> should.equal(s.forward_json(json_only, accepted))
-  s.forward(typed, rejected)
-  |> should.equal(s.forward_json(json_only, rejected))
-  s.forward(typed, invalid) |> should.equal(s.forward_json(json_only, invalid))
+  gargamelle_boundary.forward(typed, accepted)
+  |> should.equal(gargamelle_boundary.forward_json(json_only, accepted))
+  gargamelle_boundary.forward(typed, rejected)
+  |> should.equal(gargamelle_boundary.forward_json(json_only, rejected))
+  gargamelle_boundary.forward(typed, invalid)
+  |> should.equal(gargamelle_boundary.forward_json(json_only, invalid))
 }
 
 pub fn contract_documentation_lists_every_requirement_without_callbacks_test() {

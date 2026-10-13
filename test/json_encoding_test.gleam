@@ -1,5 +1,6 @@
 import gargamelle as s
-import gargamelle/encoding as e
+import gargamelle/boundary as gargamelle_boundary
+import gargamelle/encoding as gargamelle_encoding
 import gleam/json
 import gleam/list
 import gleeunit/should
@@ -12,14 +13,21 @@ pub fn admitted_json_pass_through_test() {
     ],
     fn(source) {
       let assert Ok(input) = s.parse(source)
-      let assert Ok(output) = e.encode_json(e.json(), input)
+      let assert Ok(output) =
+        gargamelle_encoding.encode_json(gargamelle_encoding.json(), input)
       s.to_string(output, s.Compact)
       |> should.equal(s.to_string(input, s.Compact))
       let assert Ok(converted) = s.parse(json.to_string(s.to_gleam_json(input)))
       s.to_string(converted, s.Compact)
       |> should.equal(s.to_string(input, s.Compact))
       let assert Ok(verified) =
-        e.encode(e.codec(e.json(), s.contract(s.anything())), input)
+        gargamelle_encoding.encode(
+          gargamelle_encoding.codec(
+            gargamelle_encoding.json(),
+            s.contract(s.anything()),
+          ),
+          input,
+        )
       s.to_string(s.verified_json(verified), s.Compact)
       |> should.equal(s.to_string(input, s.Compact))
     },
@@ -29,19 +37,25 @@ pub fn admitted_json_pass_through_test() {
 pub fn metadata_encoding_still_obeys_receiving_contract_test() {
   let metadata = s.json_array([s.json_bool(True), s.json_null()])
   let assert Ok(fields) =
-    e.field(e.record(), "metadata", e.json(), fn(value: s.Json) { value })
-  let encoder = e.finish(fields)
+    gargamelle_encoding.field(
+      gargamelle_encoding.record(),
+      "metadata",
+      gargamelle_encoding.json(),
+      fn(value: s.Json) { value },
+    )
+  let encoder = gargamelle_encoding.finish(fields)
   let assert Ok(fields) =
     s.required(s.record(fn(value) { value }), "metadata", s.anything())
   let contract = s.contract(s.finish(fields, s.Strict))
   let output =
-    e.output_boundary(
+    gargamelle_boundary.output_boundary(
       encoder,
-      s.json_boundary(contract, fn(verified) {
+      gargamelle_boundary.json_boundary(contract, fn(verified) {
         s.to_string(s.verified_json(verified), s.Compact)
       }),
     )
-  e.send(output, metadata) |> should.equal(Ok("{\"metadata\":[true,null]}"))
+  gargamelle_boundary.send(output, metadata)
+  |> should.equal(Ok("{\"metadata\":[true,null]}"))
   let strict_contract =
     contract
     |> s.require("Metadata must be empty", fn(value) {
@@ -51,9 +65,12 @@ pub fn metadata_encoding_still_obeys_receiving_contract_test() {
       }
     })
   let strict_receiver =
-    s.json_boundary(strict_contract, fn(_) {
+    gargamelle_boundary.json_boundary(strict_contract, fn(_) {
       panic as "Rejected output invoked handler"
     })
-  e.send(e.output_boundary(encoder, strict_receiver), metadata)
+  gargamelle_boundary.send(
+    gargamelle_boundary.output_boundary(encoder, strict_receiver),
+    metadata,
+  )
   |> should.be_error()
 }

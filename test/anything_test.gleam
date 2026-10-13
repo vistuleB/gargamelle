@@ -1,4 +1,5 @@
 import gargamelle as s
+import gargamelle/boundary as gargamelle_boundary
 import gleam/list
 import gleeunit/should
 
@@ -75,10 +76,12 @@ pub fn anything_default_and_boundary_semantics_test() {
   let assert Ok(empty) = s.json_object([])
   s.decode(definition, empty) |> should.equal(Ok(default))
   let receiver =
-    s.boundary(s.contract(s.anything()), fn(decoded, original) {
-      #(decoded, original)
-    })
-  s.forward(receiver, default) |> should.equal(Ok(#(default, default)))
+    gargamelle_boundary.boundary(
+      s.contract(s.anything()),
+      fn(decoded, original) { #(decoded, original) },
+    )
+  gargamelle_boundary.forward(receiver, default)
+  |> should.equal(Ok(#(default, default)))
   let contract =
     s.contract(s.anything())
     |> s.require("Metadata must be null", fn(json) {

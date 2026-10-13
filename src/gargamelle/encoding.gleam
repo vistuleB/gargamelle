@@ -1,7 +1,7 @@
 //// Explicit typed JSON encoding, independently of structural definitions.
 ////
 //// `encode_json` produces admitted JSON. `encode` additionally checks a stored
-//// Contract, while `send` encodes through an authoritative JSON receiving boundary.
+//// Contract. Typed output boundaries are provided by `gargamelle/boundary`.
 //// Encoding and decoding need not be inverses. Getters and projections are trusted
 //// application functions: exceptions propagate as operational failures.
 
@@ -80,12 +80,6 @@ pub opaque type Record(a, r) {
 /// do not establish schema agreement; checked encoding enforces the Contract.
 pub opaque type Codec(a) {
   Codec(Encoder(a), s.Contract(a))
-}
-
-/// A typed producer path through an existing JSON receiving boundary. Its
-/// receiving Contract is authoritative; no second definition is stored.
-pub opaque type OutputBoundary(a, response) {
-  OutputBoundary(Encoder(a), s.JsonBoundary(a, response))
 }
 
 /// Encode an already admitted Gargamelle Json value. This composes arbitrary
@@ -316,34 +310,6 @@ pub fn encode(
   let Codec(encoder, contract) = codec
   use json <- result.try(encode_json(encoder, value))
   s.verify(contract, json) |> result.map_error(Contract)
-}
-
-/// Pair an encoder with an existing receiving boundary. Construction executes no
-/// callbacks. The receiver's Contract is the sole acceptance authority.
-pub fn output_boundary(
-  encoder: Encoder(a),
-  receiver: s.JsonBoundary(a, response),
-) -> OutputBoundary(a, response) {
-  OutputBoundary(encoder, receiver)
-}
-
-/// Inspect the exact receiving Contract without exposing its private handler.
-pub fn output_contract(output: OutputBoundary(a, response)) -> s.Contract(a) {
-  let OutputBoundary(_, receiver) = output
-  s.json_boundary_contract(receiver)
-}
-
-/// Encode once to unverified admitted JSON, then forward through the receiving
-/// boundary once. No checked encode is performed before forwarding. Invalid
-/// output invokes no handler; accepted output invokes it once. Handler Results
-/// remain nested, and callback exceptions remain operational failures.
-pub fn send(
-  output: OutputBoundary(a, response),
-  value: a,
-) -> Result(response, EncodingError) {
-  let OutputBoundary(encoder, receiver) = output
-  use json <- result.try(encode_json(encoder, value))
-  s.forward_json(receiver, json) |> result.map_error(Contract)
 }
 
 /// Use a completed encoder inside a plan with any recursion environment.

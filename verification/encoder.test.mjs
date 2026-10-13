@@ -70,7 +70,7 @@ test('isolated typed encoder prototype works on both targets',async(t)=>{
       ['wrong_getter','pub fn main() { e.field(e.record(), "age", e.safe_integer(), fn(_: String) { "x" }) }','Type mismatch'],
     ];
     for(const [name,body,diagnostic] of cases){
-      writeFileSync(join(directory,'src/negative.gleam'),'import encoder as e\nimport gargamelle as s\n'+body+'\n');
+      writeFileSync(join(directory,'src/negative.gleam'),'import encoder as e\nimport gargamelle as s\nimport gargamelle/boundary as b\n'+body+'\n');
       for(const target of ['javascript','erlang']){
         const result=run(['build','--target',target]);
         assert.notEqual(result.status,0,target+': '+name);

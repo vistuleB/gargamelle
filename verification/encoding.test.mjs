@@ -1,3 +1,4 @@
+import * as b from '../build/dev/javascript/gargamelle/gargamelle/boundary.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,rmSync} from 'node:fs';
@@ -81,11 +82,11 @@ test('getter, requirement and handler exceptions remain operational failures',()
   assert.throws(()=>e.encode_json(e.contramap(e.text(),()=>{throw failure;}),'Brainy'),error=>error===failure);
   let handled=0;
   const contract=s.require(s.contract(s.text()),'Throw',()=>{throw failure;});
-  const receiver=s.json_boundary(contract,()=>{handled++;});
-  assert.throws(()=>e.send(e.output_boundary(e.text(),receiver),'Brainy'),error=>error===failure);
+  const receiver=b.json_boundary(contract,()=>{handled++;});
+  assert.throws(()=>b.send(b.output_boundary(e.text(),receiver),'Brainy'),error=>error===failure);
   assert.equal(handled,0);
-  const storage=s.json_boundary(s.contract(s.text()),()=>{handled++;throw failure;});
-  assert.throws(()=>e.send(e.output_boundary(e.text(),storage),'Brainy'),error=>error===failure);
+  const storage=b.json_boundary(s.contract(s.text()),()=>{handled++;throw failure;});
+  assert.throws(()=>b.send(b.output_boundary(e.text(),storage),'Brainy'),error=>error===failure);
   assert.equal(handled,1);
 });
 
@@ -93,9 +94,9 @@ test('construction invokes no getters or receiving callbacks',()=>{
   const record=unwrap(e.field(e.record(),'name',e.text(),()=>{throw Error('Getter during construction');}));
   const encoder=e.finish(record);
   const contract=s.require(s.contract(fixtures.person_definition()),'Check',()=>{throw Error('Check during construction');});
-  const receiver=s.json_boundary(contract,()=>{throw Error('Handler during construction');});
+  const receiver=b.json_boundary(contract,()=>{throw Error('Handler during construction');});
   e.codec(encoder,contract);
-  e.output_boundary(encoder,receiver);
+  b.output_boundary(encoder,receiver);
 });
 
 test('public encoding guide compiles and runs on both targets',()=>{
