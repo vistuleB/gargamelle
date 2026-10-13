@@ -79,7 +79,8 @@ For typed output, `encoding.output_boundary(encoder, receiver)` pairs an explici
 encoder with this receiving boundary. `encoding.send` encodes to admitted
 unverified JSON and calls `forward_json` once. The receiving contract is
 authoritative; there is no separate codec contract to reconcile.
-See [Typed JSON encoding](encoding.html).
+See [Typed JSON encoding](encoding.html) and the complete
+[provider loading and saving example](provider-roundtrip.html).
 
 ## Semantic requirements
 

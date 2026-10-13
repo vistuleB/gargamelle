@@ -92,3 +92,8 @@ source = "./docs/migration-0.7.md"
 title = "Migrating to 0.8.0"
 path = "migration-0.8.html"
 source = "./docs/migration-0.8.md"
+
+[[documentation.pages]]
+title = "Provider loading and saving"
+path = "provider-roundtrip.html"
+source = "./docs/provider-roundtrip.md"
