@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Add bounded summaries and complete JSON reports for structural and semantic
+  contract failures in `gargamelle/diagnostics`.
+- Add a compiled provider loading/saving example sharing one stored contract,
+  with structural and semantic rejection tests in both directions.
+
 ## 0.8.0 — 2026-10-12
 
 - Preserve modifier support through naming, annotations and applicable same-input

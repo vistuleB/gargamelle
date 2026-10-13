@@ -97,3 +97,8 @@ source = "./docs/migration-0.8.md"
 title = "Provider loading and saving"
 path = "provider-roundtrip.html"
 source = "./docs/provider-roundtrip.md"
+
+[[documentation.pages]]
+title = "Diagnostic presentation"
+path = "diagnostics.html"
+source = "./docs/diagnostics.md"

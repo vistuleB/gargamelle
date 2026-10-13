@@ -157,6 +157,9 @@ checks. Conversion callbacks, requirements and handlers are trusted code.
 `ContractError.Structural` contains structural `DataError` values;
 `ContractError.Semantic` contains `RequirementFailure` values with zero-based
 requirement indices, descriptions and `Violation(path, message)` diagnostics.
+See [Diagnostic presentation](diagnostics.html) for bounded summaries and complete
+JSON reports.
+
 An empty rejection list is replaced with a root violation, so it cannot become
 acceptance. Paths are application-supplied JSON Pointers.
 
