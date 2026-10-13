@@ -153,6 +153,10 @@ pub fn main() {
   const pages=[...config.matchAll(/^path = "([^"]+\.html)"$/gm)].map(match=>match[1]);
   for(const page of ['index.html','gargamelle.html','gargamelle/encoding.html','gargamelle/boundary.html','gargamelle/diagnostics.html',...pages]){
     const html=readFileSync(join(docs,page),'utf8');
+    if(['index.html','gargamelle.html','gargamelle/encoding.html','gargamelle/boundary.html','gargamelle/diagnostics.html'].includes(page)){
+      for(const [,linkedVersion] of html.matchAll(/https:\/\/hexdocs\.pm\/gargamelle\/(\d+\.\d+\.\d+)\//g))
+        assert.equal(linkedVersion,version,`Stale versioned documentation link in ${page}`);
+    }
     assert.ok(html.includes('https://github.com/vistuleB/gargamelle'),`Missing public repository link in ${page}`);
     assert.match(html,/>Repository<\/a>/,`Missing repository label in ${page}`);
     assert.match(html,/>Source archive<\/a>/,`Missing source archive label in ${page}`);
