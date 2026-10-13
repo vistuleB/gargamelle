@@ -1,38 +1,81 @@
 // Explicit typed output for the real cloze provider's evidence type.
-import gargamelle/encoding as e
+import gargamelle/encoding as gargamelle_encoding
 import providers_cloze as cloze
 
 fn entry_encoder() {
   let assert Ok(fields) =
-    e.field(e.record(), "blankId", e.text(), fn(value: cloze.Entry) {
-      value.blank_id
-    })
+    gargamelle_encoding.field(
+      gargamelle_encoding.record(),
+      "blankId",
+      gargamelle_encoding.text(),
+      fn(value: cloze.Entry) { value.blank_id },
+    )
   let assert Ok(fields) =
-    e.field(fields, "response", e.text(), fn(value) { value.response })
+    gargamelle_encoding.field(
+      fields,
+      "response",
+      gargamelle_encoding.text(),
+      fn(value) { value.response },
+    )
   let assert Ok(fields) =
-    e.field(fields, "accepted", e.array(e.text()), fn(value) { value.accepted })
+    gargamelle_encoding.field(
+      fields,
+      "accepted",
+      gargamelle_encoding.array(gargamelle_encoding.text()),
+      fn(value) { value.accepted },
+    )
   let assert Ok(fields) =
-    e.field(fields, "correct", e.boolean(), fn(value) { value.correct })
-  e.finish(fields)
+    gargamelle_encoding.field(
+      fields,
+      "correct",
+      gargamelle_encoding.boolean(),
+      fn(value) { value.correct },
+    )
+  gargamelle_encoding.finish(fields)
 }
 
-pub fn cloze_encoder() -> e.Encoder(cloze.Evidence) {
+pub fn cloze_encoder() -> gargamelle_encoding.Encoder(cloze.Evidence) {
   let assert Ok(data) =
-    e.field(
-      e.record(),
+    gargamelle_encoding.field(
+      gargamelle_encoding.record(),
       "entries",
-      e.array(entry_encoder()),
+      gargamelle_encoding.array(entry_encoder()),
       fn(value: cloze.Evidence) { value.entries },
     )
   let assert Ok(data) =
-    e.field(data, "correct", e.safe_integer(), fn(value) { value.correct })
+    gargamelle_encoding.field(
+      data,
+      "correct",
+      gargamelle_encoding.safe_integer(),
+      fn(value) { value.correct },
+    )
   let assert Ok(data) =
-    e.field(data, "total", e.safe_integer(), fn(value) { value.total })
+    gargamelle_encoding.field(
+      data,
+      "total",
+      gargamelle_encoding.safe_integer(),
+      fn(value) { value.total },
+    )
   let assert Ok(fields) =
-    e.field(e.record(), "type", e.text(), fn(_: cloze.Evidence) { "cloze" })
+    gargamelle_encoding.field(
+      gargamelle_encoding.record(),
+      "type",
+      gargamelle_encoding.text(),
+      fn(_: cloze.Evidence) { "cloze" },
+    )
   let assert Ok(fields) =
-    e.field(fields, "version", e.safe_integer(), fn(_) { 1 })
+    gargamelle_encoding.field(
+      fields,
+      "version",
+      gargamelle_encoding.safe_integer(),
+      fn(_) { 1 },
+    )
   let assert Ok(fields) =
-    e.field(fields, "data", e.finish(data), fn(value) { value })
-  e.finish(fields)
+    gargamelle_encoding.field(
+      fields,
+      "data",
+      gargamelle_encoding.finish(data),
+      fn(value) { value },
+    )
+  gargamelle_encoding.finish(fields)
 }

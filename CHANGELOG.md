@@ -2,10 +2,12 @@
 
 ## Unreleased
 
+- Move receiving, typed output, and paired boundaries to `gargamelle/boundary`.
+  Keep JSON, definitions, contracts, and verification in core, and encoders/codecs
+  in `gargamelle/encoding`. No compatibility aliases are retained.
 - Add `PairedBoundary`, `paired_boundary`, `paired_boundary_contract`, `load`, and
-  `save` in the main module, sharing one full contract for both directions.
-  Encoding callbacks retain typed failures through `SaveError`.
-
+  `save` with a direct Encoder argument and existing encoding diagnostics.
+- Use `gargamelle_encoding` and `gargamelle_boundary` import aliases in examples.
 - Add bounded summaries and complete JSON reports for structural and semantic
   contract failures in `gargamelle/diagnostics`.
 - Add a compiled provider loading/saving example sharing one stored contract,

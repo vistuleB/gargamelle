@@ -1,3 +1,4 @@
+import * as b from '../build/dev/javascript/gargamelle/gargamelle/boundary.mjs';
 // Bounded measurements, no performance threshold or allocation claim.
 import {performance} from 'node:perf_hooks';
 import {writeFileSync,mkdirSync} from 'node:fs';
@@ -26,13 +27,13 @@ for(const length of [10,1000]){
   const encoded=unwrap(e.encode_json(encoder,value));
   assert.deepEqual(JSON.parse(s.to_string(encoded,s.JsonFormat$Compact$const)),raw);
   const plain=e.codec(encoder,structural),checked=e.codec(encoder,semantic);
-  const receiver=e.output_boundary(encoder,s.json_boundary(semantic,s.verified_json));
+  const receiver=b.output_boundary(encoder,b.json_boundary(semantic,s.verified_json));
   rows.push({kind:'array-of-text',items:length,bytes:Buffer.byteLength(JSON.stringify(raw)),costs:{
     hostStringifyThenAdmission:measure(()=>s.parse(JSON.stringify(raw))),
     encodeJson:measure(()=>e.encode_json(encoder,value)),
     structuralEncode:measure(()=>e.encode(plain,value)),
     semanticEncode:measure(()=>e.encode(checked,value)),
-    semanticSend:measure(()=>e.send(receiver,value)),
+    semanticSend:measure(()=>b.send(receiver,value)),
   }});
 }
 const report={status:'measured',source:fingerprint().digest,node:process.version,warmup:20,samples:5,iterationsPerSample:100,rows,

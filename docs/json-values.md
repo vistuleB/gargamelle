@@ -76,16 +76,16 @@ needed to establish structural and semantic acceptance.
 
 ```gleam
 import gargamelle as s
-import gargamelle/encoding as e
+import gargamelle/encoding as gargamelle_encoding
 import gleam/io
 
 pub fn main() {
   let metadata = s.json_array([s.json_bool(True), s.json_null()])
-  let assert Ok(fields) = e.field(e.record(), "metadata", e.json(), fn(value: s.Json) { value })
-  let encoder = e.finish(fields)
+  let assert Ok(fields) = gargamelle_encoding.field(gargamelle_encoding.record(), "metadata", gargamelle_encoding.json(), fn(value: s.Json) { value })
+  let encoder = gargamelle_encoding.finish(fields)
   let assert Ok(fields) = s.required(s.record(fn(value) { value }), "metadata", s.anything())
-  let codec = e.codec(encoder, s.contract(s.finish(fields, s.Strict)))
-  let assert Ok(verified) = e.encode(codec, metadata)
+  let codec = gargamelle_encoding.codec(encoder, s.contract(s.finish(fields, s.Strict)))
+  let assert Ok(verified) = gargamelle_encoding.encode(codec, metadata)
   io.println(s.to_string(s.verified_json(verified), s.Compact))
 }
 ```

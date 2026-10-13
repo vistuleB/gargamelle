@@ -31,7 +31,7 @@ test('private paired boundary compiles, preserves enforcement, and remains proce
     }
 
     const compiled=name=>import(pathToFileURL(join(directory,'build/dev/javascript/gargamelle',name)).href);
-    const [paired,s,e]=await Promise.all([compiled('paired_boundary.mjs'),compiled('gargamelle.mjs'),compiled('gargamelle/encoding.mjs')]);
+    const [paired,s,e,b]=await Promise.all([compiled('paired_boundary.mjs'),compiled('gargamelle.mjs'),compiled('gargamelle/encoding.mjs'),compiled('gargamelle/boundary.mjs')]);
     const contract=s.contract(s.text());
     let handled=0;
     const receiver=paired.paired_boundary(contract,e.text(),x=>x,()=>{handled++;});
@@ -52,8 +52,8 @@ test('private paired boundary compiles, preserves enforcement, and remains proce
     // accidentally registering egress with structural checks but no semantics.
     const pairedPath=join(directory,'test/paired_boundary.gleam');
     const original=readFileSync(pairedPath,'utf8');
-    const weakened=original.replace('gargamelle.boundary_contract(loader),',
-      'gargamelle.contract(gargamelle.contract_definition(gargamelle.boundary_contract(loader))),');
+    const weakened=original.replace('gargamelle_boundary.boundary_contract(loader),',
+      'gargamelle.contract(gargamelle.contract_definition(gargamelle_boundary.boundary_contract(loader))),' );
     assert.notEqual(weakened,original);
     writeFileSync(pairedPath,weakened);
     const mutant=spawnSync('gleam',['test','--target','javascript'],{cwd:directory,encoding:'utf8',timeout:60000});
@@ -64,7 +64,7 @@ test('private paired boundary compiles, preserves enforcement, and remains proce
     writeFileSync(pairedPath,original);
     assert.match(run(directory,['test','--target','javascript']).stdout,/149 passed, no failures/);
 
-    const declarations=`import gargamelle as s\nimport gargamelle/encoding as e\nimport paired_boundary as paired\n`;
+    const declarations=`import gargamelle as s\nimport gargamelle/boundary as b\nimport gargamelle/encoding as e\nimport paired_boundary as paired\n`;
     const negatives=[
       ['certificate',declarations+`pub fn main() {\n let contract = s.contract(s.text())\n let pair = paired.paired_boundary(contract, e.text(), fn(value, _) { value }, fn(_) { Nil })\n let assert Ok(json) = s.parse("\\\"Brainy\\\"")\n let assert Ok(verified) = s.verify(contract, json)\n paired.load(pair, verified)\n}\n`,/VerifiedJson/],
       ['opaque',declarations+`pub fn main() { paired.PairedBoundary(Nil, Nil) }\n`,/PairedBoundary/],

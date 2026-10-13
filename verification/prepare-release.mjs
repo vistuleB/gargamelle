@@ -57,7 +57,7 @@ try {
     assert.ok(!/(^|\/)(?:build|node_modules|reports|\.git|\.aws)(?:\/|$)|\.(?:beam|o|dylib|so|exe)$|(^|\/)gargamelle_regex_port$/.test(path),`Generated/private artifact: ${path}`);
     assert.ok(!/(^|\/)\.env(?:\.|$)|(?:^|\/)(?:credentials|id_rsa|id_ed25519)$/.test(path),`Credential path: ${path}`);
   }
-  for(const path of ['gleam.toml','README.md','LICENSE','src/gargamelle.gleam','src/gargamelle/encoding.gleam','src/gargamelle/encoding_runtime.mjs','src/gargamelle_encoding_runtime.erl','src/runtime.mjs','src/gargamelle_runtime.erl','src/gargamelle_regex.erl','priv/regex-src/Makefile','priv/regex-src/PROVENANCE.json','priv/regex-src/LICENSE.quickjs'])assert.ok(entries.includes(path),`Missing archive member: ${path}`);
+  for(const path of ['gleam.toml','README.md','LICENSE','src/gargamelle.gleam','src/gargamelle/encoding.gleam','src/gargamelle/boundary.gleam','src/gargamelle/diagnostics.gleam','src/gargamelle/encoding_runtime.mjs','src/gargamelle_encoding_runtime.erl','src/runtime.mjs','src/gargamelle_runtime.erl','src/gargamelle_regex.erl','priv/regex-src/Makefile','priv/regex-src/PROVENANCE.json','priv/regex-src/LICENSE.quickjs'])assert.ok(entries.includes(path),`Missing archive member: ${path}`);
   assert.ok(!entries.includes('src/schema_fixtures.gleam'),'Verification fixtures must not ship');
   assert.ok(!entries.some(path=>path.startsWith('test/')),'Test modules must not ship');
   const topLevel=entries.flatMap(path=>/^src\/([^/]+)\.gleam$/.exec(path)?.slice(1)??[]);
@@ -138,7 +138,7 @@ pub fn main() {
   const config=readFileSync(join(root,'gleam.toml'),'utf8');
   const docs=join(root,'build/dev/docs/gargamelle');
   const pages=[...config.matchAll(/^path = "([^"]+\.html)"$/gm)].map(match=>match[1]);
-  for(const page of ['index.html','gargamelle.html','gargamelle/encoding.html',...pages]){
+  for(const page of ['index.html','gargamelle.html','gargamelle/encoding.html','gargamelle/boundary.html','gargamelle/diagnostics.html',...pages]){
     const html=readFileSync(join(docs,page),'utf8');
     assert.ok(!html.includes('https://github.com/vistuleB/gargamelle'),`Private source link in ${page}`);
     assert.match(html,/>Source archive<\/a>/,`Missing source archive label in ${page}`);

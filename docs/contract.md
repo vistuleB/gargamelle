@@ -46,16 +46,15 @@ and passes a certificate. With semantic requirements this performs one decoding
 pass; without requirements no conversion callback runs. Either kind of rejection
 invokes no handler. Construction and inspection execute no callbacks.
 
-`PairedBoundary(a, loaded, saved, encoding_error)` binds decoded loading and
-JSON-only saving handlers to the same full contract. `load` delegates to `forward`.
-`save` invokes the supplied encoding function once, then delegates to `forward_json`
-once with its admitted JSON. Encoding rejection skips verification and the saving
-handler; receiving rejection skips that handler. `SaveError` preserves the encoding
-error in `EncodingFailed` or the contract error in `ContractRejected`. The encoder
-must return admitted JSON, not a certificate; additional work inside that trusted
-callback is separate from the boundary's verification. Loading and saving need not
-be inverses or occur together. Saving semantic checks inspect decoded emitted JSON,
-not the original encoder input. Construction and inspection run no callbacks.
+The receiving and paired APIs are provided by `gargamelle/boundary`.
+`PairedBoundary(a, loaded, saved)` binds decoded loading and typed saving handlers
+to the same full contract. `load` delegates to `forward`; `save` delegates to the
+module's typed output path, encoding once and forwarding once. Encoding rejection
+skips verification and the saving handler. `gargamelle_encoding.EncodingError`
+retains typed encoding failures or `Contract(error)` for receiving rejection.
+Loading and saving need not be inverses or occur together. Saving semantic checks
+inspect decoded emitted JSON, not the original encoder input. Construction and
+inspection execute no callbacks.
 
 `boundary_contract`, `json_boundary_contract` and `verified_contract` expose the
 exact retained contract. The corresponding `*_definition` accessors expose only

@@ -1,5 +1,5 @@
 import gargamelle
-import gargamelle/encoding
+import gargamelle/encoding as gargamelle_encoding
 import gleam/io
 import paired_boundary as paired
 import provider_roundtrip as provider
@@ -22,7 +22,7 @@ pub fn main() {
   let assert Ok(evidence) = paired.load(registration, json)
   let assert Ok(stored) = paired.save(registration, evidence)
   io.println(stored)
-  let assert Error(encoding.Contract(gargamelle.Semantic(_))) =
+  let assert Error(gargamelle_encoding.Contract(gargamelle.Semantic(_))) =
     paired.save(registration, provider.Evidence([True, False], 2))
   io.println("Save rejected: score does not match answers")
 }

@@ -1,5 +1,9 @@
 # PairedBoundary main-module integration
 
+Historical decision, superseded by the boundary module refactor. The current API
+uses `gargamelle/boundary`, a direct `Encoder(a)`, three type parameters, and
+`EncodingError` for saving.
+
 The development branch adds the paired API to `gargamelle`. It is additive and
 unreleased; no package version, publication archive, or tag was changed. The original
 prototype remains under `verification/experiments` as a preserved comparison.

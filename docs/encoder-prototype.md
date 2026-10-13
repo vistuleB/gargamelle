@@ -37,7 +37,7 @@ encoding invokes no decoding constructors or map callbacks.
 For example, a record encoder supplies a getter for each field:
 
 ```gleam
-import encoder as e
+import encoder as gargamelle_encoding
 import gargamelle as s
 
 pub type Named {
@@ -46,13 +46,13 @@ pub type Named {
 
 pub fn main() {
   let assert Ok(record) =
-    e.field(e.record(), "name", e.text(), fn(value: Named) { value.name })
-  let encoder = e.finish(record)
+    gargamelle_encoding.field(gargamelle_encoding.record(), "name", gargamelle_encoding.text(), fn(value: Named) { value.name })
+  let encoder = gargamelle_encoding.finish(record)
   let assert Ok(record) =
     s.required(s.record(Named), "name", s.text())
   let definition = s.finish(record, s.Strict)
-  let codec = e.codec(encoder, definition)
-  let assert Ok(verified) = e.encode(codec, Named("Brainy"))
+  let codec = gargamelle_encoding.codec(encoder, definition)
+  let assert Ok(verified) = gargamelle_encoding.encode(codec, Named("Brainy"))
   s.verified_json(verified)
 }
 ```

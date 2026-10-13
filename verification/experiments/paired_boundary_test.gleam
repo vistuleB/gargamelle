@@ -1,5 +1,5 @@
 import gargamelle as s
-import gargamelle/encoding as e
+import gargamelle/encoding as gargamelle_encoding
 import gleeunit/should
 import paired_boundary as paired
 import provider_roundtrip as provider
@@ -26,7 +26,7 @@ pub fn construction_and_inspection_run_no_callbacks_test() {
       Ok(Nil)
     })
   let encoder =
-    e.contramap(e.text(), fn(text) {
+    gargamelle_encoding.contramap(gargamelle_encoding.text(), fn(text) {
       tick()
       text
     })
@@ -67,7 +67,7 @@ pub fn one_registered_contract_rejects_before_either_handler_test() {
   let assert Ok(json) = s.parse("{\"answers\":[true,false],\"score\":2}")
   let assert Error(s.Semantic(failures)) = paired.load(pair, json)
   paired.save(pair, provider.Evidence([True, False], 2))
-  |> should.equal(Error(e.Contract(s.Semantic(failures))))
+  |> should.equal(Error(gargamelle_encoding.Contract(s.Semantic(failures))))
   checks() |> should.equal(2)
   loads() |> should.equal(0)
   saves() |> should.equal(0)
@@ -75,7 +75,7 @@ pub fn one_registered_contract_rejects_before_either_handler_test() {
   let assert Ok(json) = s.parse("{\"answers\":[true,false],\"score\":-1}")
   let assert Error(s.Structural(errors)) = paired.load(pair, json)
   paired.save(pair, provider.Evidence([True, False], -1))
-  |> should.equal(Error(e.Contract(s.Structural(errors))))
+  |> should.equal(Error(gargamelle_encoding.Contract(s.Structural(errors))))
   checks() |> should.equal(2)
   loads() |> should.equal(0)
   saves() |> should.equal(0)
@@ -93,7 +93,7 @@ pub fn independent_responses_preserve_nested_application_results_test() {
   let pair =
     paired.paired_boundary(
       s.contract(s.text()),
-      e.text(),
+      gargamelle_encoding.text(),
       fn(_, _) { Error("load application failure") },
       fn(_) { Error(42) },
     )
@@ -114,7 +114,7 @@ pub fn same_contract_does_not_imply_inverse_conversion_test() {
   let pair =
     paired.paired_boundary(
       contract,
-      e.text(),
+      gargamelle_encoding.text(),
       fn(value, original) { #(value, s.to_string(original, s.Compact)) },
       fn(verified) { s.to_string(s.verified_json(verified), s.Compact) },
     )

@@ -8,7 +8,7 @@ from one Gleam definition.
 
 [Technical contract](https://hexdocs.pm/gargamelle/0.8.0/contract.html).
 
-Gargamelle also provides boundary APIs that bind a contract to a handler.
+Gargamelle also provides `gargamelle/boundary` APIs that bind a contract to a handler.
 A contract combines a definition with optional semantic checks of decoded values.
 Incoming JSON must satisfy that contract before the handler runs. Handlers receive
 decoded Gleam values and original JSON, or verified JSON.
@@ -22,13 +22,13 @@ used directly.
 | JSON decoding into a Gleam value | `decode` |
 | Decoding or validation with semantic requirements | `decode_contract` / `validate_contract` |
 | JSON Schema generation | `schema_json` / `schema_string` |
-| Validated handler invocation with decoded data | `boundary` → `Boundary` + `forward` |
-| Validated handler invocation with original JSON | `json_boundary` → `JsonBoundary` + `forward_json` |
+| Validated handler invocation with decoded data | `gargamelle_boundary.boundary` → `Boundary` + `gargamelle_boundary.forward` |
+| Validated handler invocation with original JSON | `gargamelle_boundary.json_boundary` → `JsonBoundary` + `gargamelle_boundary.forward_json` |
 | JSON retention with the accepting contract | `verify` → `VerifiedJson` |
-| Typed JSON encoding | `encoding.encode_json` |
-| Encoding checked against a Contract | `encoding.encode` |
-| Typed output through a receiving boundary | `encoding.output_boundary` + `encoding.send` |
-| Loading and saving through one contract | `paired_boundary` → `PairedBoundary` + `load` / `save` |
+| Typed JSON encoding | `gargamelle_encoding.encode_json` |
+| Encoding checked against a Contract | `gargamelle_encoding.encode` |
+| Typed output through a receiving boundary | `gargamelle_boundary.output_boundary` + `gargamelle_boundary.send` |
+| Loading and saving through one contract | `gargamelle_boundary.paired_boundary` → `PairedBoundary` + `gargamelle_boundary.load` / `gargamelle_boundary.save` |
 
 ## Getting started
 
@@ -117,6 +117,7 @@ validation and handler invocation in one operation.
 This complete example uses the same array-of-strings definition for two receivers:
 
 ```gleam
+import gargamelle/boundary as gargamelle_boundary
 import gargamelle
 import gleam/io
 import gleam/string
@@ -125,20 +126,20 @@ pub fn main() {
   let names: gargamelle.Definition(List(String)) = gargamelle.array(gargamelle.text())
   let assert Ok(json): Result(gargamelle.Json, _) = gargamelle.parse("[\"Brainy\", \"Jokey\"]")
 
-  let receiver = gargamelle.boundary(
+  let receiver = gargamelle_boundary.boundary(
     gargamelle.contract(names),
     fn(decoded_names, _original_json) { string.join(decoded_names, ", ") },
   )
-  let assert Ok(response): Result(String, _) = gargamelle.forward(receiver, json)
+  let assert Ok(response): Result(String, _) = gargamelle_boundary.forward(receiver, json)
   io.println(response)
 
-  let json_receiver = gargamelle.json_boundary(
+  let json_receiver = gargamelle_boundary.json_boundary(
     gargamelle.contract(names),
     fn(verified) {
       gargamelle.to_string(gargamelle.verified_json(verified), gargamelle.Compact)
     },
   )
-  let assert Ok(response): Result(String, _) = gargamelle.forward_json(json_receiver, json)
+  let assert Ok(response): Result(String, _) = gargamelle_boundary.forward_json(json_receiver, json)
   io.println(response)
 }
 ```

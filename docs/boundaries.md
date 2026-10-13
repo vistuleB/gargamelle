@@ -1,5 +1,32 @@
 # Verified JSON boundaries
 
+These APIs are provided by `gargamelle/boundary`, imported in examples as
+`gargamelle_boundary`. Core JSON, definitions, and contracts remain in `gargamelle`.
+
+## Migrating module imports
+
+Use namespaced module paths with explicit aliases:
+
+```gleam
+import gargamelle
+import gargamelle/encoding as gargamelle_encoding
+import gargamelle/boundary as gargamelle_boundary
+```
+
+This import block is a declaration fragment; the runnable examples below include
+the imports needed by each program.
+
+| Previous location | Current location |
+| --- | --- |
+| Core `Boundary`, `JsonBoundary`, and receiving functions | `gargamelle_boundary` |
+| Encoding `OutputBoundary`, `output_boundary`, `output_contract`, `send` | `gargamelle_boundary` |
+| `Encoder`, encoder builders, `Codec`, `encode_json`, and `encode` | `gargamelle_encoding` |
+| JSON, definitions, contracts, verification, and schema generation | `gargamelle` |
+
+Moved entry points have no compatibility aliases. `PairedBoundary` is also provided
+by `gargamelle_boundary`; its constructor takes an `Encoder` directly and saving
+returns `gargamelle_encoding.EncodingError`.
+
 A `Boundary(a, response)` binds an input contract to a handler. The host calls
 `forward` with admitted JSON. Gargamelle decodes it and runs the boundary's stored semantic requirements
 before invoking the handler. Rejected input returns `ContractError`
@@ -11,13 +38,14 @@ once; it does not construct a certificate or retain either value after the call
 unless application code retains them.
 
 ```gleam
+import gargamelle/boundary as gargamelle_boundary
 import gargamelle
 import gleam/io
 import gleam/string
 
 // The component publishes a boundary; its handler stays private.
-pub fn names_boundary() -> gargamelle.Boundary(List(String), String) {
-  gargamelle.boundary(
+pub fn names_boundary() -> gargamelle_boundary.Boundary(List(String), String) {
+  gargamelle_boundary.boundary(
     gargamelle.contract(gargamelle.array(gargamelle.text())),
     fn(names, _) { string.join(names, ", ") },
   )
@@ -25,10 +53,10 @@ pub fn names_boundary() -> gargamelle.Boundary(List(String), String) {
 
 pub fn main() {
   let boundary = names_boundary()
-  let definition = gargamelle.boundary_definition(boundary)
+  let definition = gargamelle_boundary.boundary_definition(boundary)
   io.println(gargamelle.schema_string(definition, gargamelle.Pretty))
   let assert Ok(json) = gargamelle.parse("[\"Brainy\", \"Jokey\"]")
-  let assert Ok(response) = gargamelle.forward(boundary, json)
+  let assert Ok(response) = gargamelle_boundary.forward(boundary, json)
   io.println(response)
 }
 ```
@@ -51,18 +79,19 @@ once to supply the checks; the decoded value is then discarded.
 exposes its structural definition.
 
 ```gleam
+import gargamelle/boundary as gargamelle_boundary
 import gargamelle
 import gleam/io
 
 pub fn main() {
-  let receiver = gargamelle.json_boundary(
+  let receiver = gargamelle_boundary.json_boundary(
     gargamelle.contract(gargamelle.array(gargamelle.text())),
     fn(verified) {
       gargamelle.to_string(gargamelle.verified_json(verified), gargamelle.Compact)
     },
   )
   let assert Ok(json) = gargamelle.parse("[\"Brainy\", \"Jokey\"]")
-  let assert Ok(text) = gargamelle.forward_json(receiver, json)
+  let assert Ok(text) = gargamelle_boundary.forward_json(receiver, json)
   io.println(text)
 }
 ```
@@ -75,8 +104,8 @@ storage limits and other host policies are separate checks. Submission accepts
 the application result is nested inside the outer validation result. Handler
 exceptions and resource failures propagate as operational failures.
 
-For typed output, `encoding.output_boundary(encoder, receiver)` pairs an explicit
-encoder with this receiving boundary. `encoding.send` encodes to admitted
+For typed output, `gargamelle_boundary.output_boundary(encoder, receiver)` pairs an explicit
+encoder with this receiving boundary. `gargamelle_boundary.send` encodes to admitted
 unverified JSON and calls `forward_json` once. The receiving contract is
 authoritative; there is no separate codec contract to reconcile.
 See [Typed JSON encoding](encoding.html) and the complete
@@ -84,17 +113,17 @@ See [Typed JSON encoding](encoding.html) and the complete
 
 ## Paired loading and saving
 
-`paired_boundary(contract, encode, load_handler, save_handler)` registers both
+`paired_boundary(contract, encoder, load_handler, save_handler)` registers both
 handlers against one stored full contract. `load` decodes incoming JSON before
 calling the loading handler; `save` encodes a value and checks the resulting JSON
 before calling the saving handler. Each submission performs one contract check.
 This counts checks performed by the boundary; application encoding callbacks may
 perform additional work.
 
-The encoder argument is a function producing admitted, unchecked JSON. For a
-Gargamelle encoder, pass `encoding.encode_json(encoder, _)`. Checked `encoding.encode`
-produces a certificate instead of `Json` and cannot be supplied here. The main
-module accepts this function to remain independent of `gargamelle/encoding`.
+The encoder argument is a completed `gargamelle_encoding.Encoder(a)`. No encoding
+function adapter is needed. Saving uses unchecked encoding internally, followed by
+verification through the stored receiving contract; it does not pre-verify with a
+separate codec.
 
 The following replaces `main` in the complete
 [provider loading and saving example](provider-roundtrip.html), using its
@@ -103,9 +132,9 @@ The following replaces `main` in the complete
 ```gleam
 pub fn main() {
   let registration =
-    gargamelle.paired_boundary(
+    gargamelle_boundary.paired_boundary(
       evidence_contract(),
-      encoding.encode_json(evidence_encoder(), _),
+      evidence_encoder(),
       fn(evidence, _) { evidence },
       fn(verified) {
         gargamelle.to_string(
@@ -116,11 +145,11 @@ pub fn main() {
     )
   let assert Ok(json) =
     gargamelle.parse("{\"answers\":[true,false],\"score\":1}")
-  let assert Ok(evidence) = gargamelle.load(registration, json)
-  let assert Ok(stored) = gargamelle.save(registration, evidence)
+  let assert Ok(evidence) = gargamelle_boundary.load(registration, json)
+  let assert Ok(stored) = gargamelle_boundary.save(registration, evidence)
   io.println(stored)
-  let assert Error(gargamelle.ContractRejected(gargamelle.Semantic(_))) =
-    gargamelle.save(registration, Evidence([True, False], 2))
+  let assert Error(gargamelle_encoding.Contract(gargamelle.Semantic(_))) =
+    gargamelle_boundary.save(registration, Evidence([True, False], 2))
   io.println("Save rejected: score does not match answers")
 }
 ```
@@ -132,15 +161,15 @@ Output:
 Save rejected: score does not match answers
 ```
 
-`PairedBoundary(a, loaded, saved, encoding_error)` retains independent handler
-response types and the encoding function's concrete error type. Type inference
-usually determines these parameters without annotations. `paired_boundary_contract`
-returns the exact full contract used at both sides, without invoking callbacks.
+`PairedBoundary(a, loaded, saved)` retains independent handler response types.
+`paired_boundary_contract` returns the exact full contract used at both sides,
+without invoking callbacks.
 
-`load` returns `Result(loaded, ContractError)`. `save` returns
-`Result(saved, SaveError(encoding_error))`, distinguishing `EncodingFailed(error)`
-from `ContractRejected(error)`. Structural or semantic rejection skips the saving
-handler. Encoding rejection also skips contract checks. Handler `Result` responses
+`load` returns `Result(loaded, gargamelle.ContractError)`. `save` returns
+`Result(saved, gargamelle_encoding.EncodingError)`. Encoding failures retain their
+typed reasons and output paths; `gargamelle_encoding.Contract(error)` retains
+structural or semantic rejection. Encoding rejection skips contract checks and the
+saving handler. Contract rejection skips that handler. Handler `Result` responses
 remain nested, and callback exceptions propagate as operational failures.
 
 The saving contract remains authoritative even for an application-supplied encoder.
@@ -156,6 +185,7 @@ A contract can add checks that JSON Schema does not express. This complete
 example checks whether a decoded name agrees with immutable bound context:
 
 ```gleam
+import gargamelle/boundary as gargamelle_boundary
 import gargamelle
 import gleam/io
 
@@ -168,11 +198,11 @@ pub fn main() {
         False -> Error([gargamelle.Violation("", "Unexpected name")])
       }
     })
-  let receiver = gargamelle.json_boundary(contract, fn(verified) {
+  let receiver = gargamelle_boundary.json_boundary(contract, fn(verified) {
     gargamelle.to_string(gargamelle.verified_json(verified), gargamelle.Compact)
   })
   let assert Ok(json) = gargamelle.parse("\"Brainy\"")
-  let assert Ok(response) = gargamelle.forward_json(receiver, json)
+  let assert Ok(response) = gargamelle_boundary.forward_json(receiver, json)
   io.println(response)
 }
 ```

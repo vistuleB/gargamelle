@@ -70,7 +70,7 @@ export function compileRecipes(rows) {
     return name+'()';
   }
   const fixtures=rows.map((row,i)=>`#(${i}, fn() { ${build(row.recipe)} }, [${row.inputs.map(quote).join(',')}])`);
-  return `import gargamelle as s\nimport gleam/json\nimport gleam/option.{None, Some}\n
+  return `import gargamelle as s\nimport gargamelle/boundary as b\nimport gleam/json\nimport gleam/option.{None, Some}\n
 fn presence(value) { case value { Some(x) -> json.object([#("some", x)]) None -> json.object([#("none", json.bool(True))]) } }
 ${definitions.join('\n')}
 pub fn fixtures() { [${fixtures.join(',\n')}] }\n`;

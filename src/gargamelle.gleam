@@ -3,7 +3,8 @@
 //// Parse JSON with `parse`, then call `validate` or `decode`. Validation never
 //// invokes user converters; decoding invokes them only after structural success.
 //// `Contract` adds semantic requirements above a structural definition. Boundaries
-//// enforce their stored contract before invoking handlers. `verify` retains
+//// in `gargamelle/boundary` enforce their stored contract before invoking handlers.
+//// `verify` retains
 //// original JSON and the accepting contract; semantic requirements decode once.
 //// Converters are trusted application code: exceptions are operational failures.
 //// JavaScript and Erlang targets are supported on the
@@ -221,40 +222,6 @@ type Requirement(a) {
 /// Use a receiving boundary to enforce which contract checks a handler's input.
 pub opaque type VerifiedJson(a) {
   VerifiedJson(Json, Contract(a))
-}
-
-/// A contract and a private handler invoked only after successful decoding and
-/// semantic checks. Construct with `boundary`, inspect with `boundary_contract`,
-/// and submit JSON with `forward`.
-pub opaque type Boundary(a, response) {
-  Boundary(Contract(a), fn(a, Json) -> response)
-}
-
-/// A contract and a private handler receiving verified JSON. Semantic checks
-/// require decoding once; contracts without checks validate without conversion.
-/// Construct with `json_boundary`, inspect with `json_boundary_contract`, and
-/// submit admitted JSON with `forward_json`.
-pub opaque type JsonBoundary(a, response) {
-  JsonBoundary(Contract(a), fn(VerifiedJson(a)) -> response)
-}
-
-/// Loading and saving handlers bound to one full contract. The encoding function
-/// produces admitted JSON without contract verification, for example
-/// `encoding.encode_json(encoder, _)`. Its error type remains application-defined.
-/// This is not a transaction or a guarantee that encoding and decoding are inverses.
-pub opaque type PairedBoundary(a, loaded, saved, encoding_error) {
-  PairedBoundary(
-    Boundary(a, loaded),
-    JsonBoundary(a, saved),
-    fn(a) -> Result(Json, encoding_error),
-  )
-}
-
-/// Encoding rejection or rejection by the paired boundary's stored contract.
-/// Operational exceptions from callbacks and handlers are not caught.
-pub type SaveError(encoding_error) {
-  EncodingFailed(encoding_error)
-  ContractRejected(ContractError)
 }
 
 /// The opaque recursion environment supplied to a self-recursive plan.
@@ -1935,122 +1902,6 @@ pub fn validate_contract(
     [] -> validate(definition, json) |> result.map_error(Structural)
     _ -> decode_contract(contract, json) |> result.map(fn(_) { Nil })
   }
-}
-
-/// Bind a handler to its authoritative contract. Construction runs no callbacks.
-pub fn boundary(
-  contract: Contract(a),
-  handler: fn(a, Json) -> response,
-) -> Boundary(a, response) {
-  Boundary(contract, handler)
-}
-
-/// Return the receiving contract without exposing its handler.
-pub fn boundary_contract(boundary: Boundary(a, response)) -> Contract(a) {
-  let Boundary(contract, _) = boundary
-  contract
-}
-
-/// Return the receiving contract's structural definition for schema generation.
-pub fn boundary_definition(boundary: Boundary(a, response)) -> Definition(a) {
-  contract_definition(boundary_contract(boundary))
-}
-
-/// Decode and check the stored contract once, then invoke the handler once.
-/// Rejection invokes no handler. Callback exceptions propagate operationally.
-/// A Result response remains nested; output is not checked.
-pub fn forward(
-  boundary: Boundary(a, response),
-  json: Json,
-) -> Result(response, ContractError) {
-  let Boundary(contract, handler) = boundary
-  use data <- result.try(decode_contract(contract, json))
-  Ok(handler(data, json))
-}
-
-/// Bind a JSON receiving handler to its authoritative contract.
-pub fn json_boundary(
-  contract: Contract(a),
-  handler: fn(VerifiedJson(a)) -> response,
-) -> JsonBoundary(a, response) {
-  JsonBoundary(contract, handler)
-}
-
-/// Return the receiving contract without exposing its handler.
-pub fn json_boundary_contract(
-  boundary: JsonBoundary(a, response),
-) -> Contract(a) {
-  let JsonBoundary(contract, _) = boundary
-  contract
-}
-
-/// Return the receiving contract's structural definition for schema generation.
-pub fn json_boundary_definition(
-  boundary: JsonBoundary(a, response),
-) -> Definition(a) {
-  contract_definition(json_boundary_contract(boundary))
-}
-
-/// Verify the stored contract once, then invoke the handler once. Semantic
-/// requirements cause one decoding pass; without them no converter runs.
-/// Admission and application policy are separate. Certificates from other
-/// contracts cannot bypass this check. Exceptions propagate operationally.
-pub fn forward_json(
-  boundary: JsonBoundary(a, response),
-  json: Json,
-) -> Result(response, ContractError) {
-  let JsonBoundary(contract, handler) = boundary
-  use verified <- result.try(verify(contract, json))
-  Ok(handler(verified))
-}
-
-/// Bind loading, encoding, and saving to one authoritative full contract.
-/// Construction executes no callbacks. The encoder must produce admitted JSON;
-/// saving verifies it against this contract before invoking the saving handler.
-/// Use unchecked `encoding.encode_json(encoder, _)` to avoid redundant verification.
-pub fn paired_boundary(
-  contract: Contract(a),
-  encode: fn(a) -> Result(Json, encoding_error),
-  load_handler: fn(a, Json) -> loaded,
-  save_handler: fn(VerifiedJson(a)) -> saved,
-) -> PairedBoundary(a, loaded, saved, encoding_error) {
-  PairedBoundary(
-    boundary(contract, load_handler),
-    json_boundary(contract, save_handler),
-    encode,
-  )
-}
-
-/// Inspect the exact full contract shared by loading and saving without callbacks.
-pub fn paired_boundary_contract(
-  pair: PairedBoundary(a, loaded, saved, encoding_error),
-) -> Contract(a) {
-  let PairedBoundary(loader, _, _) = pair
-  boundary_contract(loader)
-}
-
-/// Decode and check incoming JSON once, then invoke the loading handler once.
-/// The handler receives decoded data and the original JSON. Rejection invokes no
-/// handler. Handler Result values remain nested; operational exceptions propagate.
-pub fn load(
-  pair: PairedBoundary(a, loaded, saved, encoding_error),
-  json: Json,
-) -> Result(loaded, ContractError) {
-  let PairedBoundary(loader, _, _) = pair
-  forward(loader, json)
-}
-
-/// Encode once, then check the stored contract once before invoking the saving
-/// handler. Semantic checks inspect reconstruction from encoded JSON, not the
-/// encoder input directly. A check-free contract validates without conversion.
-/// Handler Result values remain nested; operational exceptions propagate.
-pub fn save(
-  pair: PairedBoundary(a, loaded, saved, encoding_error),
-  value: a,
-) -> Result(saved, SaveError(encoding_error)) {
-  let PairedBoundary(_, receiver, encode) = pair
-  use json <- result.try(encode(value) |> result.map_error(EncodingFailed))
-  forward_json(receiver, json) |> result.map_error(ContractRejected)
 }
 
 /// Verify a full contract and retain original JSON and that exact contract.

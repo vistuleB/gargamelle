@@ -11,11 +11,16 @@ supply getters; the library does not inspect records, derive encoders from
 | Encoding checked against a stored Contract | `encode(codec, value)` | `VerifiedJson(a)` |
 | Typed output through a receiving boundary | `send(output, value)` | Handler response |
 
+Encoder construction and checked encoding are in `gargamelle/encoding`, imported
+as `gargamelle_encoding`. Output boundary construction, inspection, and `send` are
+in `gargamelle/boundary`, imported as `gargamelle_boundary`.
+
 ## Record example
 
 ```gleam
+import gargamelle/boundary as gargamelle_boundary
 import gargamelle as s
-import gargamelle/encoding as e
+import gargamelle/encoding as gargamelle_encoding
 import gleam/io
 
 pub type Named {
@@ -23,8 +28,8 @@ pub type Named {
 }
 
 pub fn main() {
-  let assert Ok(fields) = e.field(e.record(), "name", e.text(), fn(value: Named) { value.name })
-  let encoder: e.Encoder(Named) = e.finish(fields)
+  let assert Ok(fields) = gargamelle_encoding.field(gargamelle_encoding.record(), "name", gargamelle_encoding.text(), fn(value: Named) { value.name })
+  let encoder: gargamelle_encoding.Encoder(Named) = gargamelle_encoding.finish(fields)
   let assert Ok(fields) = s.required(s.record(Named), "name", s.text())
   let contract = s.contract(s.finish(fields, s.Strict))
     |> s.require("Name is nonempty", fn(value) {
@@ -34,18 +39,18 @@ pub fn main() {
       }
     })
 
-  let assert Ok(json) = e.encode_json(encoder, Named("Brainy"))
+  let assert Ok(json) = gargamelle_encoding.encode_json(encoder, Named("Brainy"))
   io.println(s.to_string(json, s.Compact))
 
-  let codec = e.codec(encoder, contract)
-  let assert Ok(verified) = e.encode(codec, Named("Brainy"))
+  let codec = gargamelle_encoding.codec(encoder, contract)
+  let assert Ok(verified) = gargamelle_encoding.encode(codec, Named("Brainy"))
   io.println(s.to_string(s.verified_json(verified), s.Compact))
 
-  let receiver = s.json_boundary(contract, fn(verified) {
+  let receiver = gargamelle_boundary.json_boundary(contract, fn(verified) {
     s.to_string(s.verified_json(verified), s.Compact)
   })
-  let output = e.output_boundary(encoder, receiver)
-  let assert Ok(response) = e.send(output, Named("Brainy"))
+  let output = gargamelle_boundary.output_boundary(encoder, receiver)
+  let assert Ok(response) = gargamelle_boundary.send(output, Named("Brainy"))
   io.println(response)
 }
 ```
@@ -126,13 +131,13 @@ the root rather than an invented field attribution. Encoding stops at its first
 failure and does not run later element encoders or field getters.
 
 ```gleam
-import gargamelle/encoding as e
+import gargamelle/encoding as gargamelle_encoding
 import gleam/io
 
 pub fn main() {
-  let encoder = e.array(e.safe_integer())
-  let assert Error(e.InvalidValue(path, e.UnsafeInteger)) =
-    e.encode_json(encoder, [42, 9_007_199_254_740_991 + 1])
+  let encoder = gargamelle_encoding.array(gargamelle_encoding.safe_integer())
+  let assert Error(gargamelle_encoding.InvalidValue(path, gargamelle_encoding.UnsafeInteger)) =
+    gargamelle_encoding.encode_json(encoder, [42, 9_007_199_254_740_991 + 1])
   io.println(path)
 }
 ```

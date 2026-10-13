@@ -12,7 +12,8 @@ reject inconsistent results before invoking their respective handlers.
 
 ```gleam
 import gargamelle
-import gargamelle/encoding
+import gargamelle/boundary as gargamelle_boundary
+import gargamelle/encoding as gargamelle_encoding
 import gleam/io
 import gleam/list
 import gleam/option.{None, Some}
@@ -47,46 +48,55 @@ pub fn evidence_contract() -> gargamelle.Contract(Evidence) {
   )
 }
 
-pub fn evidence_encoder() -> encoding.Encoder(Evidence) {
+pub fn evidence_encoder() -> gargamelle_encoding.Encoder(Evidence) {
   let assert Ok(fields) =
-    encoding.field(
-      encoding.record(),
+    gargamelle_encoding.field(
+      gargamelle_encoding.record(),
       "answers",
-      encoding.array(encoding.boolean()),
+      gargamelle_encoding.array(gargamelle_encoding.boolean()),
       fn(evidence: Evidence) { evidence.answers },
     )
   let assert Ok(fields) =
-    encoding.field(fields, "score", encoding.safe_integer(), fn(evidence) {
-      evidence.score
-    })
-  encoding.finish(fields)
+    gargamelle_encoding.field(
+      fields,
+      "score",
+      gargamelle_encoding.safe_integer(),
+      fn(evidence) { evidence.score },
+    )
+  gargamelle_encoding.finish(fields)
 }
 
 pub fn main() {
   // The provider supplies the contract and encoder; the host supplies handlers.
   let loader =
-    gargamelle.boundary(evidence_contract(), fn(evidence, _) { evidence })
-  let storage =
-    gargamelle.json_boundary(gargamelle.boundary_contract(loader), fn(verified) {
-      gargamelle.to_string(
-        gargamelle.verified_json(verified),
-        gargamelle.Compact,
-      )
+    gargamelle_boundary.boundary(evidence_contract(), fn(evidence, _) {
+      evidence
     })
-  let saver = encoding.output_boundary(evidence_encoder(), storage)
+  let storage =
+    gargamelle_boundary.json_boundary(
+      gargamelle_boundary.boundary_contract(loader),
+      fn(verified) {
+        gargamelle.to_string(
+          gargamelle.verified_json(verified),
+          gargamelle.Compact,
+        )
+      },
+    )
+  let saver = gargamelle_boundary.output_boundary(evidence_encoder(), storage)
 
   let assert Ok(json) =
     gargamelle.parse("{\"answers\":[true,false],\"score\":1}")
-  let assert Ok(evidence) = gargamelle.forward(loader, json)
-  let assert Ok(stored) = encoding.send(saver, evidence)
+  let assert Ok(evidence) = gargamelle_boundary.forward(loader, json)
+  let assert Ok(stored) = gargamelle_boundary.send(saver, evidence)
   io.println(stored)
 
   let assert Ok(json) =
     gargamelle.parse("{\"answers\":[true,false],\"score\":2}")
-  let assert Error(gargamelle.Semantic(_)) = gargamelle.forward(loader, json)
+  let assert Error(gargamelle.Semantic(_)) =
+    gargamelle_boundary.forward(loader, json)
   io.println("Load rejected: score does not match answers")
-  let assert Error(encoding.Contract(gargamelle.Semantic(_))) =
-    encoding.send(saver, Evidence([True, False], 2))
+  let assert Error(gargamelle_encoding.Contract(gargamelle.Semantic(_))) =
+    gargamelle_boundary.send(saver, Evidence([True, False], 2))
   io.println("Save rejected: score does not match answers")
 }
 ```
@@ -108,7 +118,7 @@ remain separate from contract rejection; handler exceptions propagate.
 | Operation | Order |
 | --- | --- |
 | Loading with `forward` | Validate original admitted JSON, decode once, run semantic requirements, invoke loading handler |
-| Saving with `encoding.send` | Encode to admitted JSON, validate encoded JSON, decode once when semantic requirements exist, run requirements, invoke storage handler |
+| Saving with `gargamelle_boundary.send` | Encode to admitted JSON, validate encoded JSON, decode once when semantic requirements exist, run requirements, invoke storage handler |
 | Generating JSON Schema | Emit structural acceptance rules; do not run conversions or semantic requirements |
 
 Structural rejection skips decoding, semantic requirements, and handlers. Semantic

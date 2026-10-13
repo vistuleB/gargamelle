@@ -57,12 +57,14 @@ test('main library preserves baseline behavior with immutable recursive plans',(
     benchmark('javascript');
     const encodingSource=readFileSync(join(directory,'src/gargamelle/encoding.gleam'));
     const diagnosticsSource=readFileSync(join(directory,'src/gargamelle/diagnostics.gleam'));
+    const boundarySource=readFileSync(join(directory,'src/gargamelle/boundary.gleam'));
     const integratedSource=readFileSync(join(directory,'src/gargamelle.gleam'));
     const currentRuntime=readFileSync(join(directory,'src/runtime.mjs'));
     // Old sources cannot compile migrated tests; a run also compiles test modules.
     rmSync(join(directory,'test'),{recursive:true});
     rmSync(join(directory,'src/gargamelle/encoding.gleam'));
     rmSync(join(directory,'src/gargamelle/diagnostics.gleam'));
+    rmSync(join(directory,'src/gargamelle/boundary.gleam'));
     cpSync(join(root,'verification/portability/integration/baseline.gleam'),join(directory,'src/gargamelle.gleam'));
     cpSync(join(root,'verification/portability/integration/baseline-runtime.mjs'),join(directory,'src/runtime.mjs'));
     // Adapt API names and omit the new Contract-only renderer in copied callers.
@@ -75,6 +77,7 @@ test('main library preserves baseline behavior with immutable recursive plans',(
     writeFileSync(join(directory,'src/gargamelle.gleam'),integratedSource);
     writeFileSync(join(directory,'src/gargamelle/encoding.gleam'),encodingSource);
     writeFileSync(join(directory,'src/gargamelle/diagnostics.gleam'),diagnosticsSource);
+    writeFileSync(join(directory,'src/gargamelle/boundary.gleam'),boundarySource);
     writeFileSync(join(directory,'src/runtime.mjs'),currentRuntime);
     cpSync(join(root,'test'),join(directory,'test'),{recursive:true});
     rmSync(join(directory,'test/schema_fixtures.gleam'));
@@ -120,16 +123,16 @@ pub fn forbidden() {
       }
     }
     for (const [name, source, message] of [
-      ['removed-value-type', 'import gargamelle as s\npub fn main(value: s.Value) { value }', /Unknown module type/],
-      ['removed-policy-type', 'import gargamelle as s\npub fn main(policy: s.Policy) { policy }', /Unknown module type/],
-      ['removed-closed', 'import gargamelle as s\npub fn main() { s.Closed }', /Unknown module value/],
-      ['removed-value-text', 'import gargamelle as s\npub fn main() { s.value_text(Nil) }', /Unknown module value/],
-      ['removed-emit-json', 'import gargamelle as s\npub fn main() { s.emit_json(s.text()) }', /Unknown module value/],
-      ['removed-emit-text', 'import gargamelle as s\npub fn main() { s.emit_text(s.text()) }', /Unknown module value/],
-      ['missing-json-format', 'import gargamelle as s\npub fn main() { let assert Ok(v) = s.parse("null") s.to_string(v) }', /Incorrect arity/],
-      ['missing-schema-format', 'import gargamelle as s\npub fn main() { s.schema_string(s.text()) }', /Incorrect arity/],
-      ['foreign-json', 'import gargamelle as s\nimport gleam/json\npub fn main() -> s.Json { json.string("not admitted") }', /Type mismatch/],
-      ['opaque-json', 'import gargamelle as s\npub fn main() { s.Json("unadmitted") }', /Unknown module value/],
+      ['removed-value-type', 'import gargamelle as s\nimport gargamelle/boundary as b\npub fn main(value: s.Value) { value }', /Unknown module type/],
+      ['removed-policy-type', 'import gargamelle as s\nimport gargamelle/boundary as b\npub fn main(policy: s.Policy) { policy }', /Unknown module type/],
+      ['removed-closed', 'import gargamelle as s\nimport gargamelle/boundary as b\npub fn main() { s.Closed }', /Unknown module value/],
+      ['removed-value-text', 'import gargamelle as s\nimport gargamelle/boundary as b\npub fn main() { s.value_text(Nil) }', /Unknown module value/],
+      ['removed-emit-json', 'import gargamelle as s\nimport gargamelle/boundary as b\npub fn main() { s.emit_json(s.text()) }', /Unknown module value/],
+      ['removed-emit-text', 'import gargamelle as s\nimport gargamelle/boundary as b\npub fn main() { s.emit_text(s.text()) }', /Unknown module value/],
+      ['missing-json-format', 'import gargamelle as s\nimport gargamelle/boundary as b\npub fn main() { let assert Ok(v) = s.parse("null") s.to_string(v) }', /Incorrect arity/],
+      ['missing-schema-format', 'import gargamelle as s\nimport gargamelle/boundary as b\npub fn main() { s.schema_string(s.text()) }', /Incorrect arity/],
+      ['foreign-json', 'import gargamelle as s\nimport gargamelle/boundary as b\nimport gleam/json\npub fn main() -> s.Json { json.string("not admitted") }', /Type mismatch/],
+      ['opaque-json', 'import gargamelle as s\nimport gargamelle/boundary as b\npub fn main() { s.Json("unadmitted") }', /Unknown module value/],
     ]) {
       writeFileSync(join(directory, 'src/negative.gleam'), source);
       for (const target of ['javascript', 'erlang']) {

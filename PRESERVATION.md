@@ -55,13 +55,14 @@ Requirements inspect decoded emitted output, preserving receiving Contract
 semantics even when the original encoder input differs from reconstructed data.
 Rejection occurs before handler invocation; callback exceptions are not caught.
 
-PairedBoundary construction supplies the same immutable full Contract to its
-decoded and JSON receiving boundaries. Loading delegates to forward; saving calls
-the encoding function once, then forward_json once. Result mapping preserves the
-original typed encoding failure or full ContractError; it cannot turn rejection
+PairedBoundary construction in `gargamelle/boundary` supplies the same immutable
+full Contract to its decoded and JSON receiving boundaries. Loading delegates to
+forward; saving delegates to the typed output path, encoding once and forwarding
+once. EncodingError preserves typed encoding failure or full ContractError; it cannot turn rejection
 into acceptance. No callback executes during construction/inspection, no second
 contract can be substituted, and operational exceptions remain uncaught. This
-composition requires no dependency from the core module to the encoding module.
+composition requires no dependency from core to encoding or boundary. Boundary
+imports encoding and core; encoding imports only core.
 
 Self-recursion closes over a completed immutable body using typed environments,
 with the builder executed once. Lift ignores the construction environment and
