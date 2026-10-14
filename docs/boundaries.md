@@ -3,7 +3,7 @@
 These APIs are provided by `gargamelle/boundary`, imported in examples as
 `gargamelle_boundary`. Core JSON, definitions, and contracts remain in `gargamelle`.
 
-## Migrating module imports
+## Imports
 
 Use namespaced module paths with explicit aliases:
 
@@ -16,16 +16,7 @@ import gargamelle/boundary as gargamelle_boundary
 This import block is a declaration fragment; the runnable examples below include
 the imports needed by each program.
 
-| Previous location | Current location |
-| --- | --- |
-| Core `Boundary`, `JsonBoundary`, and receiving functions | `gargamelle_boundary` |
-| Encoding `OutputBoundary`, `output_boundary`, `output_contract`, `send` | `gargamelle_boundary` |
-| `Encoder`, encoder builders, `Codec`, `encode_json`, and `encode` | `gargamelle_encoding` |
-| JSON, definitions, contracts, verification, and schema generation | `gargamelle` |
-
-Moved entry points have no compatibility aliases. `PairedBoundary` is also provided
-by `gargamelle_boundary`; its constructor takes an `Encoder` directly and saving
-returns `gargamelle_encoding.EncodingError`.
+## Decoded receiving boundaries
 
 A `Boundary(a, response)` binds an input contract to a handler. The host calls
 `forward` with admitted JSON. Gargamelle decodes it and runs the boundary's stored semantic requirements
@@ -108,8 +99,7 @@ For typed output, `gargamelle_boundary.output_boundary(encoder, receiver)` pairs
 encoder with this receiving boundary. `gargamelle_boundary.send` encodes to admitted
 unverified JSON and calls `forward_json` once. The receiving contract is
 authoritative; there is no separate codec contract to reconcile.
-See [Typed JSON encoding](encoding.html) and the complete
-[provider loading and saving example](provider-roundtrip.html).
+See [Typed JSON encoding](encoding.html).
 
 ## Paired loading and saving
 
@@ -125,41 +115,38 @@ function adapter is needed. Saving uses unchecked encoding internally, followed 
 verification through the stored receiving contract; it does not pre-verify with a
 separate codec.
 
-The following replaces `main` in the complete
-[provider loading and saving example](provider-roundtrip.html), using its
-`Evidence`, `evidence_contract`, and `evidence_encoder` declarations and imports:
-
 ```gleam
+import gargamelle
+import gargamelle/boundary as gargamelle_boundary
+import gargamelle/encoding as gargamelle_encoding
+import gleam/io
+
 pub fn main() {
-  let registration =
-    gargamelle_boundary.paired_boundary(
-      evidence_contract(),
-      evidence_encoder(),
-      fn(evidence, _) { evidence },
-      fn(verified) {
-        gargamelle.to_string(
-          gargamelle.verified_json(verified),
-          gargamelle.Compact,
-        )
-      },
-    )
-  let assert Ok(json) =
-    gargamelle.parse("{\"answers\":[true,false],\"score\":1}")
-  let assert Ok(evidence) = gargamelle_boundary.load(registration, json)
-  let assert Ok(stored) = gargamelle_boundary.save(registration, evidence)
+  let contract = gargamelle.contract(gargamelle.array(gargamelle.text()))
+  let encoder = gargamelle_encoding.array(gargamelle_encoding.text())
+  let registration = gargamelle_boundary.paired_boundary(
+    contract,
+    encoder,
+    fn(names, _) { names },
+    fn(verified) {
+      gargamelle.to_string(gargamelle.verified_json(verified), gargamelle.Compact)
+    },
+  )
+  let assert Ok(json) = gargamelle.parse("[\"Brainy\",\"Jokey\"]")
+  let assert Ok(names) = gargamelle_boundary.load(registration, json)
+  let assert Ok(stored) = gargamelle_boundary.save(registration, names)
   io.println(stored)
-  let assert Error(gargamelle_encoding.Contract(gargamelle.Semantic(_))) =
-    gargamelle_boundary.save(registration, Evidence([True, False], 2))
-  io.println("Save rejected: score does not match answers")
 }
 ```
 
 Output:
 
 ```text
-{"answers":[true,false],"score":1}
-Save rejected: score does not match answers
+["Brainy","Jokey"]
 ```
+
+Both directions enforce the stored contract; semantic requirements, when present,
+also apply in both directions.
 
 `PairedBoundary(a, loaded, saved)` retains independent handler response types.
 `paired_boundary_contract` returns the exact full contract used at both sides,

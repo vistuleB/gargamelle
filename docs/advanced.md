@@ -180,8 +180,7 @@ construction completes. Add defaults containing recursive values after their
 definitions are completed. Nested construction cannot close over an unfinished
 outer reference; use `recursive_pair` for that relationship. Use `lift(completed)`
 to compose an existing definition inside a builder. Generic helpers accept
-`Plan(a, r)` and return plans with the same `r`; see the
-[0.2.0 migration guide](migration-0.2.html) for annotated examples.
+`Plan(a, r)` and return plans with the same `r`.
 
 Schemas emit finite local `$defs`/`$ref` graphs. Decoding follows the same
 references, preserving typed values and nested error paths. Documentation renders

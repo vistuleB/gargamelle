@@ -117,11 +117,12 @@ pub fn main() {
   writeFileSync(join(consumer,'src/diagnostics_consumer.gleam'),diagnosticSource);
   for(const name of ['provider_roundtrip.gleam','paired_boundary_example.gleam'])
     cpSync(join(root,'test',name),join(consumer,'src',name));
-  const providerGuide=readFileSync(join(root,'docs/provider-roundtrip.md'),'utf8');
-  const providerOutput=providerGuide.match(/```text\n([\s\S]*?)\n```/)[1];
+  const providerOutput='{"answers":[true,false],"score":1}\nLoad rejected: score does not match answers\nSave rejected: score does not match answers';
   const pairedGuide=readFileSync(join(root,'docs/boundaries.md'),'utf8').split('## Paired loading and saving')[1];
+  const pairedSource=pairedGuide.match(/```gleam\n([\s\S]*?)\n```/)[1];
+  writeFileSync(join(consumer,'src/paired_guide.gleam'),pairedSource);
   const pairedOutput=pairedGuide.match(/```text\n([\s\S]*?)\n```/)[1];
-  const boundaryConsumers=[['diagnostics_consumer',diagnosticOutput],['provider_roundtrip',providerOutput],['paired_boundary_example',pairedOutput]];
+  const boundaryConsumers=[['diagnostics_consumer',diagnosticOutput],['provider_roundtrip',providerOutput],['paired_boundary_example','{"answers":[true,false],"score":1}\nSave rejected: score does not match answers'],['paired_guide',pairedOutput]];
   const modifierObservations=[];
   console.log('Checking fresh consumers of the exported archive…');
   for(const target of ['javascript','erlang']){

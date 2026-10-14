@@ -1,7 +1,7 @@
 name = "gargamelle"
 version = "0.9.0"
 licences = ["MIT"]
-description = "Typed JSON decoding and JSON Schema 2020-12 generation from one Gleam definition"
+description = "Generate typed JSON decoders and JSON Schema 2020-12 documents from the same Gleam definition."
 links = [{ title = "Repository", href = "https://github.com/vistuleB/gargamelle" }, { title = "Source archive", href = "https://repo.hex.pm/tarballs/gargamelle-0.9.0.tar" }]
 target = "javascript"
 gleam = ">= 1.18.1"
@@ -14,59 +14,9 @@ gleam_json = "== 3.1.0"
 gleeunit = "== 1.11.0"
 
 [[documentation.pages]]
-title = "Technical contract"
-path = "contract.html"
-source = "./docs/contract.md"
-
-[[documentation.pages]]
-title = "Verified JSON boundaries"
-path = "boundaries.html"
-source = "./docs/boundaries.md"
-
-[[documentation.pages]]
-title = "Browser compatibility"
-path = "browser-support.html"
-source = "./docs/browser-support.md"
-
-[[documentation.pages]]
-title = "Advanced definitions"
-path = "advanced.html"
-source = "./docs/advanced.md"
-
-[[documentation.pages]]
-title = "Migrating to 0.2.0"
-path = "migration-0.2.html"
-source = "./docs/migration-0.2.md"
-
-[[documentation.pages]]
-title = "Native Erlang setup"
-path = "native-erlang.html"
-source = "./docs/native-erlang.md"
-
-[[documentation.pages]]
-title = "Licenses"
-path = "license.html"
-source = "./docs/license.md"
-
-[[documentation.pages]]
-title = "Renderer assets"
-path = "renderer-assets.html"
-source = "./docs/renderer-assets.md"
-
-[[documentation.pages]]
-title = "Migrating to 0.3.0"
-path = "migration-0.3.html"
-source = "./docs/migration-0.3.md"
-
-[[documentation.pages]]
-title = "Migrating to 0.4.0"
-path = "migration-0.4.html"
-source = "./docs/migration-0.4.md"
-
-[[documentation.pages]]
-title = "Migrating to 0.5.0"
-path = "migration-0.5.html"
-source = "./docs/migration-0.5.md"
+title = "Constructing JSON values"
+path = "json-values.html"
+source = "./docs/json-values.md"
 
 [[documentation.pages]]
 title = "Typed JSON encoding"
@@ -74,31 +24,41 @@ path = "encoding.html"
 source = "./docs/encoding.md"
 
 [[documentation.pages]]
-title = "Migrating to 0.6.0"
-path = "migration-0.6.html"
-source = "./docs/migration-0.6.md"
+title = "Verified JSON boundaries"
+path = "boundaries.html"
+source = "./docs/boundaries.md"
 
 [[documentation.pages]]
-title = "Constructing JSON values"
-path = "json-values.html"
-source = "./docs/json-values.md"
+title = "Native Erlang setup"
+path = "native-erlang.html"
+source = "./docs/native-erlang.md"
 
 [[documentation.pages]]
-title = "Migrating to 0.7.0"
-path = "migration-0.7.html"
-source = "./docs/migration-0.7.md"
+title = "Advanced definitions"
+path = "advanced.html"
+source = "./docs/advanced.md"
 
 [[documentation.pages]]
-title = "Migrating to 0.8.0"
-path = "migration-0.8.html"
-source = "./docs/migration-0.8.md"
-
-[[documentation.pages]]
-title = "Provider loading and saving"
-path = "provider-roundtrip.html"
-source = "./docs/provider-roundtrip.md"
+title = "Technical contract"
+path = "contract.html"
+source = "./docs/contract.md"
 
 [[documentation.pages]]
 title = "Diagnostic presentation"
 path = "diagnostics.html"
 source = "./docs/diagnostics.md"
+
+[[documentation.pages]]
+title = "Browser compatibility"
+path = "browser-support.html"
+source = "./docs/browser-support.md"
+
+[[documentation.pages]]
+title = "Renderer assets"
+path = "renderer-assets.html"
+source = "./docs/renderer-assets.md"
+
+[[documentation.pages]]
+title = "Licenses"
+path = "license.html"
+source = "./docs/license.md"

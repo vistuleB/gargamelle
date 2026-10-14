@@ -66,6 +66,6 @@ or expose.
 For structural `decode` errors, wrap the list with `gargamelle.Structural(errors)`.
 For `gargamelle_encoding.Contract(error)` failures, format the enclosed contract error.
 Other encoding errors retain their typed reasons and output paths, described in
-[Typed JSON encoding](encoding.html). See the
-[provider loading and saving example](provider-roundtrip.html) for semantic
-rejection on both sides of a boundary.
+[Typed JSON encoding](encoding.html). The
+[boundary guide](boundaries.html#paired-loading-and-saving) describes semantic
+rejection during loading and saving.

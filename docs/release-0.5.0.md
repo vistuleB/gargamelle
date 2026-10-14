@@ -3,9 +3,8 @@
 0.5.0 adds semantic contracts above structural definitions. Requirements inspect
 decoded values, can only reject, and run once in declaration order. Structured
 errors distinguish structural rejection from collected semantic failures.
-Receiving boundaries and `verify` now require `Contract(a)`; migration guidance
-is in `migration-0.5.md`. Structural definitions and schema equivalence are
-unchanged. JSON-only verification decodes only when semantic requirements exist;
+Receiving boundaries and `verify` now require `Contract(a)`. Structural
+definitions and schema equivalence are unchanged. JSON-only verification decodes only when semantic requirements exist;
 certificates retain the full accepting contract and original admitted JSON.
 
 HTML contract rendering lists all requirement descriptions without callbacks.

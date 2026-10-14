@@ -12,8 +12,7 @@ credentials, or replace a release on the maintainer's behalf.
 
 Keep preparation status, unresolved decisions, commit IDs and archive checksums in
 internal release records such as `docs/release-<version>.md` and
-`GARGAMELLE_TODO.md`. Record user-facing changes in the changelog and migration
-guide. The README describes the library, its use and its limitations; it must not
+`GARGAMELLE_TODO.md`. Record user-facing changes, including API replacements, in the changelog. The README describes the library, its use and its limitations; it must not
 contain checkout status, publication plans, agent progress or instructions to
 install a version after it is published.
 
@@ -27,7 +26,7 @@ are separate work. Do not perform them as part of release preparation.
   that a replacement is possible.
 - [ ] Align `gleam.toml`, `package.json`, and both root version fields in
   `package-lock.json`. Keep the npm package private; it is verification tooling.
-- [ ] Review the changelog and migration guide against the actual changes,
+- [ ] Review the changelog against the actual changes,
   including breaking changes. Check version-specific assumptions in the
   preparation script, source/archive URLs and documentation links. The script
   explicitly checks the candidate version; update that guard for a new release.
@@ -56,8 +55,7 @@ not a substitute for tests and not a sequence of isolated wording fixes.
 - [ ] Read the API overview and packaged guides together with the README. Their
   target support, limitations, terminology and examples must agree.
 - [ ] Remove internal development commentary from reader-facing pages. Keep
-  migration differences in the migration guide and release history in the
-  changelog. Do not fix an internal note merely by changing its tense.
+  API changes and release history in the changelog. Do not fix an internal note merely by changing its tense.
 - [ ] Review the configured HexDocs sidebar for reader value. Contributor test
   instructions, release gates, harness findings and implementation review notes
   belong in the source tree, not as public guide pages.
