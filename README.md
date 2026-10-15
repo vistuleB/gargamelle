@@ -271,7 +271,7 @@ Other runtimes and platforms are unverified; Windows native support is unavailab
   text for admission. Encoding failures identify the output field or array element
   with a JSON Pointer and a typed reason.
 
-Compatibility commitments are specified in the [technical contract, section 18](https://hexdocs.pm/gargamelle/1.0.0/contract.html#18-compatibility-from-10).
+Compatibility commitments are specified in the [technical contract, section 18](https://hexdocs.pm/gargamelle/1.0.0/contract.html).
 
 ## Related libraries
 
