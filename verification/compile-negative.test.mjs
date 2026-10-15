@@ -7,6 +7,11 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 const root=fileURLToPath(new URL('../',import.meta.url));
 const cases=[
+ ['removed_boundary_contract','pub fn main() { b.boundary_contract(Nil) }','Unknown module value'],
+ ['removed_boundary_definition','pub fn main() { b.boundary_definition(Nil) }','Unknown module value'],
+ ['removed_json_boundary_contract','pub fn main() { b.json_boundary_contract(Nil) }','Unknown module value'],
+ ['removed_json_boundary_definition','pub fn main() { b.json_boundary_definition(Nil) }','Unknown module value'],
+ ['removed_paired_boundary_contract','pub fn main() { b.paired_boundary_contract(Nil) }','Unknown module value'],
  ['removed_boundary_constructor','pub fn main() { b.boundary(Nil) }','Unknown module value'],
  ['removed_json_boundary_constructor','pub fn main() { b.json_boundary(Nil) }','Unknown module value'],
  ['removed_output_boundary_constructor','pub fn main() { b.output_boundary(Nil) }','Unknown module value'],

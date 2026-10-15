@@ -58,8 +58,8 @@ Loading and saving need not be inverses or occur together. Saving semantic check
 inspect decoded emitted JSON, not the original encoder input. Construction and
 inspection execute no callbacks.
 
-`boundary_contract`, `json_boundary_contract` and `verified_contract` expose the
-exact retained contract. The corresponding `*_definition` accessors expose only
+The boundary module's `contract` and `json_contract`, and core `verified_contract`,
+expose the exact retained contract. The corresponding definition accessors expose only
 its structural definition for schema generation. Receiving boundaries always
 check their own stored contract; a foreign certificate cannot bypass a check.
 Handler responses remain generic, including nested `Result` values, and are not

@@ -58,15 +58,12 @@ pub fn main() {
   let loader =
     gargamelle_boundary.new(evidence_contract(), fn(evidence, _) { evidence })
   let storage =
-    gargamelle_boundary.json(
-      gargamelle_boundary.boundary_contract(loader),
-      fn(verified) {
-        gargamelle.to_string(
-          gargamelle.verified_json(verified),
-          gargamelle.Compact,
-        )
-      },
-    )
+    gargamelle_boundary.json(gargamelle_boundary.contract(loader), fn(verified) {
+      gargamelle.to_string(
+        gargamelle.verified_json(verified),
+        gargamelle.Compact,
+      )
+    })
   let saver = gargamelle_boundary.output(evidence_encoder(), storage)
 
   let assert Ok(json) =

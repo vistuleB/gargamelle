@@ -1,13 +1,15 @@
 # Changelog
 
-## 0.10.0 — Unreleased
+## 0.10.0
 
+- Rename boundary accessors to `contract`, `definition`, `json_contract`,
+  `json_definition`, and `paired_contract`; retain `output_contract`.
 - Document compatibility commitments effective from 1.0 in the technical contract.
 - Retain provider load/save regression checks independently of removed guide pages.
 - Rename boundary constructors in `gargamelle/boundary`: `boundary` → `new`,
   `json_boundary` → `json`, `output_boundary` → `output`, and
   `paired_boundary` → `paired`. The old constructor names are removed.
-  Type names, arguments, inspection functions and submission operations are unchanged.
+  Type names, argument types and submission operations are unchanged.
 
 ## 0.9.0
 

@@ -61,7 +61,7 @@ pub fn same_output_type_different_contract_test() {
   let assert Ok(json) = s.parse("\"Brainy\"")
   gargamelle_boundary.forward(first, json) |> should.equal(Ok("Brainy"))
   gargamelle_boundary.forward(second, json) |> should.be_error
-  s.schema_string(gargamelle_boundary.boundary_definition(first), s.Compact)
+  s.schema_string(gargamelle_boundary.definition(first), s.Compact)
   |> should.equal(s.schema_string(s.string_constant("Brainy"), s.Compact))
 }
 

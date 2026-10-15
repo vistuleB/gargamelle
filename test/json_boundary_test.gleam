@@ -23,7 +23,7 @@ pub fn receiver_verifies_without_conversion_test() {
   s.verified_json(verified) |> should.equal(json)
   s.schema_string(s.verified_definition(verified), s.Compact)
   |> should.equal(s.schema_string(
-    gargamelle_boundary.json_boundary_definition(receiver),
+    gargamelle_boundary.json_definition(receiver),
     s.Compact,
   ))
   count() |> should.equal(1)
@@ -51,10 +51,7 @@ pub fn receiver_contract_is_authoritative_test() {
     )
   gargamelle_boundary.forward_json(receiver, s.verified_json(other_certificate))
   |> should.be_error
-  s.schema_string(
-    gargamelle_boundary.json_boundary_definition(receiver),
-    s.Compact,
-  )
+  s.schema_string(gargamelle_boundary.json_definition(receiver), s.Compact)
   |> should.equal(s.schema_string(s.string_constant("Brainy"), s.Compact))
 }
 

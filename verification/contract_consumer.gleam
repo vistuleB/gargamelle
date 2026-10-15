@@ -56,12 +56,12 @@ pub fn main() {
     == s.schema_string(definition, s.Compact)
   let html =
     docs.render_contract(
-      gargamelle_boundary.boundary_contract(receiver),
+      gargamelle_boundary.contract(receiver),
       "contract",
     )
   let assert True = string.contains(html, "First name is &lt;Brainy&gt;")
   let assert True =
-    s.contract_requirements(gargamelle_boundary.json_boundary_contract(
+    s.contract_requirements(gargamelle_boundary.json_contract(
       json_receiver,
     ))
     == s.contract_requirements(contract)

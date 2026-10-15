@@ -13,7 +13,7 @@ test('boundary paired API retains contract identity and typed encoding diagnosti
   let checks=0,handled=0;
   const contract=s.require(s.contract(s.safe_integer()),'Observe checks',()=>{checks++;throw Error('must not check');});
   const pair=b.paired(contract,e.safe_integer(),()=>{handled++;},()=>{handled++;});
-  assert.equal(b.paired_boundary_contract(pair),contract);
+  assert.equal(b.paired_contract(pair),contract);
   const result=b.save(pair,9007199254740992);
   assert.equal(result.isOk(),false);
   assert.ok(result[0] instanceof e.InvalidValue);
@@ -53,8 +53,8 @@ test('paired guide runs on both targets and invalid constructions fail compilati
       assert.equal(run.status,0,run.output);assert.equal(run.stdout.trim(),expected);
     }
     const core=join(directory,'src/gargamelle/boundary.gleam'),original=readFileSync(core,'utf8');
-    const mutant=original.replace('json(boundary_contract(loader), save_handler)',
-      'json(gargamelle_contract_for_mutation(boundary_contract(loader)), save_handler)')+
+    const mutant=original.replace('json(contract(loader), save_handler)',
+      'json(gargamelle_contract_for_mutation(contract(loader)), save_handler)')+
       '\nfn gargamelle_contract_for_mutation(c) { gargamelle.contract(gargamelle.contract_definition(c)) }\n';
     assert.ok(mutant.includes('json(gargamelle_contract_for_mutation'));
     writeFileSync(core,mutant);

@@ -34,7 +34,7 @@ pub fn construction_and_inspection_run_no_callbacks_test() {
     paired.paired_boundary(contract, encoder, fn(_, _) { tick() }, fn(_) {
       tick()
     })
-  let inspected = paired.paired_boundary_contract(pair)
+  let inspected = paired.paired_contract(pair)
   s.contract_requirements(inspected) |> should.equal(["Registered check"])
   s.schema_string(s.contract_definition(inspected), s.Compact)
   |> should.equal(s.schema_string(definition, s.Compact))

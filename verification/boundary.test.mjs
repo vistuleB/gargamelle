@@ -46,7 +46,7 @@ test('JSON receiving boundary retains its exact contract and propagates handler 
     assert.equal(s.verified_definition(verified),definition);
     throw failure;
   });
-  assert.equal(b.json_boundary_definition(receiver),definition);
+  assert.equal(b.json_definition(receiver),definition);
   const other=unwrap(s.verify(s.contract(s.text()),unwrap(s.parse('"Jokey"'))));
   assert.equal(b.forward_json(receiver,s.verified_json(other)).isOk(),false);
   assert.equal(handled,0);

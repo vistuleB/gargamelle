@@ -44,7 +44,7 @@ pub fn names_boundary() -> gargamelle_boundary.Boundary(List(String), String) {
 
 pub fn main() {
   let boundary = names_boundary()
-  let definition = gargamelle_boundary.boundary_definition(boundary)
+  let definition = gargamelle_boundary.definition(boundary)
   io.println(gargamelle.schema_string(definition, gargamelle.Pretty))
   let assert Ok(json) = gargamelle.parse("[\"Brainy\", \"Jokey\"]")
   let assert Ok(response) = gargamelle_boundary.forward(boundary, json)
@@ -53,7 +53,7 @@ pub fn main() {
 ```
 
 This prints the array-of-strings schema followed by `Brainy, Jokey`.
-`boundary_definition` exposes the structural definition used for acceptance, so the
+`definition` exposes the structural definition used for acceptance, so the
 host can review its schema before accepting the boundary. Through the Gleam API,
 the host cannot extract the handler or replace the contract within an existing
 boundary.
@@ -66,7 +66,7 @@ The private handler receives `VerifiedJson(a)` after the receiver's stored
 contract accepts the input. With no semantic requirements, no decoded value is
 constructed and no conversion callback runs. With requirements, decoding runs
 once to supply the checks; the decoded value is then discarded.
-`json_boundary_contract` exposes the full contract; `json_boundary_definition`
+`json_contract` exposes the full contract; `json_definition`
 exposes its structural definition.
 
 ```gleam
@@ -151,7 +151,7 @@ Both directions enforce the stored contract; semantic requirements, when present
 also apply in both directions.
 
 `PairedBoundary(a, loaded, saved)` retains independent handler response types.
-`paired_boundary_contract` returns the exact full contract used at both sides,
+`paired_contract` returns the exact full contract used at both sides,
 without invoking callbacks.
 
 `load` returns `Result(loaded, gargamelle.ContractError)`. `save` returns

@@ -35,7 +35,7 @@ test('private paired boundary compiles, preserves enforcement, and remains proce
     const contract=s.contract(s.text());
     let handled=0;
     const receiver=paired.paired_boundary(contract,e.text(),x=>x,()=>{handled++;});
-    assert.equal(paired.paired_boundary_contract(receiver),contract,'Inspector must return the original full contract');
+    assert.equal(paired.paired_contract(receiver),contract,'Inspector must return the original full contract');
 
     const failure=new Error('application failure');
     const converter=s.map(s.text(),()=>{throw failure;});
@@ -52,8 +52,8 @@ test('private paired boundary compiles, preserves enforcement, and remains proce
     // accidentally registering egress with structural checks but no semantics.
     const pairedPath=join(directory,'test/paired_boundary.gleam');
     const original=readFileSync(pairedPath,'utf8');
-    const weakened=original.replace('gargamelle_boundary.boundary_contract(loader),',
-      'gargamelle.contract(gargamelle.contract_definition(gargamelle_boundary.boundary_contract(loader))),' );
+    const weakened=original.replace('gargamelle_boundary.contract(loader),',
+      'gargamelle.contract(gargamelle.contract_definition(gargamelle_boundary.contract(loader))),' );
     assert.notEqual(weakened,original);
     writeFileSync(pairedPath,weakened);
     const mutant=spawnSync('gleam',['test','--target','javascript'],{cwd:directory,encoding:'utf8',timeout:60000});
