@@ -55,7 +55,7 @@ scoped_lifetime(Ports) ->
         error(deliberate_scope_exception)
     end) end),
     true = Ports =:= length(erlang:ports()),
-    {ok, Probe} = gargamelle:pattern(gargamelle:text(), <<"a">>),
+    {ok, Probe} = gargamelle:pattern(gargamelle:string(), <<"a">>),
     {ok, Input} = gargamelle:parse(<<"\"a\"">>),
     Mapped = gargamelle:map(Probe, fun(Value) ->
         true = Ports =:= length(erlang:ports()), %% closed before user conversion
@@ -107,11 +107,11 @@ failures(Package) ->
     Text = <<(binary:copy(<<"a">>, 32))/binary, "!">>,
     true = raised(fun() -> gargamelle_regex:pattern_matches(<<"(a+)+$">>, Text) end),
     true = gargamelle_regex:pattern_matches(<<"a">>, <<"a">>),
-    {ok, Probe} = gargamelle:pattern(gargamelle:text(), <<"a">>),
-    Conditional = gargamelle:if_then(gargamelle:text(), Probe, gargamelle:text()),
-    Exclusion = gargamelle:exclude(gargamelle:text(), Probe),
-    {ok, Membership} = gargamelle:contains(gargamelle:array(gargamelle:text()), Probe, 1, none),
-    {ok, Keys} = gargamelle:property_names(gargamelle:dictionary(gargamelle:text()), Probe),
+    {ok, Probe} = gargamelle:pattern(gargamelle:string(), <<"a">>),
+    Conditional = gargamelle:if_then(gargamelle:string(), Probe, gargamelle:string()),
+    Exclusion = gargamelle:exclude(gargamelle:string(), Probe),
+    {ok, Membership} = gargamelle:contains(gargamelle:array(gargamelle:string()), Probe, 1, none),
+    {ok, Keys} = gargamelle:property_names(gargamelle:dictionary(gargamelle:string()), Probe),
     {ok, Input} = gargamelle:parse(<<"\"a\"">>),
     {ok, Array} = gargamelle:parse(<<"[\"a\"]">>),
     {ok, Object} = gargamelle:parse(<<"{\"a\":\"a\"}">>),
