@@ -16,7 +16,7 @@ test('tuple length, positional diagnostics, and closed emission mutants fail ass
  try{
  cpSync(join(root,'build/dev/javascript'),dir,{recursive:true});
  const target=join(dir,'gargamelle/gargamelle.mjs'),original=readFileSync(target,'utf8');
- const header=`import assert from 'node:assert/strict';import * as s from './gargamelle/gargamelle.mjs';import {Ok} from './gargamelle/gleam.mjs';const unwrap=r=>{assert.ok(r instanceof Ok);return r[0];};const d=s.finish_tuple(s.element(s.element(s.tuple(a=>b=>[a,b]),s.text()),s.boolean()));\n`;
+ const header=`import assert from 'node:assert/strict';import * as s from './gargamelle/gargamelle.mjs';import {Ok} from './gargamelle/gleam.mjs';const unwrap=r=>{assert.ok(r instanceof Ok);return r[0];};const d=s.finish_tuple(s.element(s.element(s.tuple(a=>b=>[a,b]),s.string()),s.boolean()));\n`;
  for(const [name,from,to,assertion] of mutations){
  assert.equal(original.split(from).length-1,1,name+' unique mutation');
  writeFileSync(join(dir,'check.mjs'),header+assertion);

@@ -16,13 +16,13 @@ pub type User {
 
 fn read_names(source: String) {
   let assert Ok(value) = s.parse(source)
-  s.decode(s.array(s.text()), value)
+  s.decode(s.array(s.string()), value)
 }
 
 fn user_definition() {
   let assert Ok(fields) =
     s.record(fn(name) { fn(active) { User(name, active) } })
-    |> s.required("name", s.text())
+    |> s.required("name", s.string())
   let assert Ok(fields) = s.required(fields, "active", s.boolean())
   s.finish(fields, s.Strict)
 }
@@ -48,12 +48,12 @@ pub fn main() {
     == s.schema_string(user_definition(), s.Compact)
   let assert Ok(["Ada", "Grace"]) = read_names("[\"Ada\",\"Grace\"]")
   let assert "{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"items\":{\"type\":\"string\"},\"type\":\"array\"}" =
-    s.schema_string(s.array(s.text()), s.Compact)
+    s.schema_string(s.array(s.string()), s.Compact)
   let assert Ok(user) = s.parse("{\"name\":\"Ada\",\"active\":true}")
   let assert Ok(User("Ada", True)) = s.decode(user_definition(), user)
   let html = documentation.render(user_definition(), "user")
   let assert True = string.contains(html, "strict</span>")
-  let assert Ok(leaf) = s.pattern(s.text(), "^\\p{L}+$")
+  let assert Ok(leaf) = s.pattern(s.string(), "^\\p{L}+$")
   let leaf = s.map(leaf, Leaf)
   let assert Ok(tree) =
     s.recursive("tree", fn(self) {
@@ -69,7 +69,7 @@ pub fn main() {
   let html = documentation.render(tree, "Tree")
   let assert True = string.contains(html, "each item")
   let assert False = string.contains(html, "Invalid schema JSON")
-  let assert Ok(duplicate) = s.pattern(s.text(), "(?:(?<x>a)|(?<x>b))\\k<x>")
+  let assert Ok(duplicate) = s.pattern(s.string(), "(?:(?<x>a)|(?<x>b))\\k<x>")
   let assert Ok(bb) = s.parse("\"bb\"")
   let assert Ok("bb") = s.decode(duplicate, bb)
   io.println("native deployment passed")

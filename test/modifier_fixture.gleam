@@ -44,7 +44,7 @@ fn observe(name, def, inputs, encode) {
 pub fn main() {
   let assert Ok(text) =
     s.bounds(
-      named(s.map(s.text(), fn(x) { "decoded:" <> x }), "text"),
+      named(s.map(s.string(), fn(x) { "decoded:" <> x }), "text"),
       Some(2),
       Some(4),
     )
@@ -71,22 +71,22 @@ pub fn main() {
   let assert Ok(array) = s.contains(array, two, 1, None)
   let assert Ok(array) = s.contains(array, three, 1, None)
   let assert Ok(array) = s.bounds(array, Some(3), Some(4))
-  let assert Ok(key) = s.pattern(s.text(), "^[ab]$")
+  let assert Ok(key) = s.pattern(s.string(), "^[ab]$")
   let assert Ok(object) =
-    s.property_names(named(s.dictionary(s.text()), "object"), key)
+    s.property_names(named(s.dictionary(s.string()), "object"), key)
   let assert Ok(object) = s.dependent_required(object, "a", ["b"])
   let assert Ok(object) = s.bounds(s.map(object, list.length), Some(1), Some(2))
   let asserted =
     s.if_then(
-      s.exclude(named(s.text(), "asserted"), s.string_constant("bad")),
-      s.text(),
-      s.text(),
+      s.exclude(named(s.string(), "asserted"), s.string_constant("bad")),
+      s.string(),
+      s.string(),
     )
   let assert Ok(asserted) = s.pattern(asserted, "^a")
   let assert Ok(asserted) = s.bounds(asserted, Some(2), Some(3))
-  let assert Ok(a) = s.pattern(s.text(), "^a")
-  let assert Ok(b) = s.pattern(s.text(), "^b")
-  let assert Ok(counted) = s.contains(s.array(s.text()), a, 1, Some(1))
+  let assert Ok(a) = s.pattern(s.string(), "^a")
+  let assert Ok(b) = s.pattern(s.string(), "^b")
+  let assert Ok(counted) = s.contains(s.array(s.string()), a, 1, Some(1))
   let assert Ok(counted) = s.unique_items(counted)
   let assert Ok(counted) = s.contains(counted, b, 1, None)
   [

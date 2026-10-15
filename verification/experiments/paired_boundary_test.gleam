@@ -15,7 +15,7 @@ fn handoff(build: fn() -> a) -> a
 pub fn construction_and_inspection_run_no_callbacks_test() {
   let #(tick, count) = counter(fn(tick, count) { #(tick, count) })
   let definition =
-    s.map(s.text(), fn(text) {
+    s.map(s.string(), fn(text) {
       tick()
       text
     })
@@ -26,7 +26,7 @@ pub fn construction_and_inspection_run_no_callbacks_test() {
       Ok(Nil)
     })
   let encoder =
-    gargamelle_encoding.contramap(gargamelle_encoding.text(), fn(text) {
+    gargamelle_encoding.contramap(gargamelle_encoding.string(), fn(text) {
       tick()
       text
     })
@@ -92,8 +92,8 @@ pub fn one_registered_contract_rejects_before_either_handler_test() {
 pub fn independent_responses_preserve_nested_application_results_test() {
   let pair =
     paired.paired_boundary(
-      s.contract(s.text()),
-      gargamelle_encoding.text(),
+      s.contract(s.string()),
+      gargamelle_encoding.string(),
       fn(_, _) { Error("load application failure") },
       fn(_) { Error(42) },
     )
@@ -104,7 +104,7 @@ pub fn independent_responses_preserve_nested_application_results_test() {
 
 pub fn same_contract_does_not_imply_inverse_conversion_test() {
   let contract =
-    s.contract(s.map(s.text(), fn(text) { text <> "!" }))
+    s.contract(s.map(s.string(), fn(text) { text <> "!" }))
     |> s.require("Decoded value", fn(text) {
       case text == "Brainy!" {
         True -> Ok(Nil)
@@ -114,7 +114,7 @@ pub fn same_contract_does_not_imply_inverse_conversion_test() {
   let pair =
     paired.paired_boundary(
       contract,
-      gargamelle_encoding.text(),
+      gargamelle_encoding.string(),
       fn(value, original) { #(value, s.to_string(original, s.Compact)) },
       fn(verified) { s.to_string(s.verified_json(verified), s.Compact) },
     )

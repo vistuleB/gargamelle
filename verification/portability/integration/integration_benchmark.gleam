@@ -21,7 +21,7 @@ fn nested(depth, text) {
 pub fn main() {
   let assert Ok(tree) =
     s.recursive("tree", fn(self) {
-      s.one_of([s.text(), s.map(s.array(self), fn(_) { "tree" })])
+      s.one_of([s.string(), s.map(s.array(self), fn(_) { "tree" })])
     })
   let decoding =
     list.map([8, 32, 64], fn(depth) {

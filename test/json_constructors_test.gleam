@@ -83,11 +83,11 @@ pub fn duplicate_and_first_rejected_key_test() {
 pub fn constructed_json_in_defaults_and_annotations_test() {
   let assert Ok(name) = s.json_string("Brainy")
   let assert Ok(fields) =
-    s.defaulted(s.record(fn(name) { name }), "name", s.text(), name)
+    s.defaulted(s.record(fn(name) { name }), "name", s.string(), name)
   let definition = s.finish(fields, s.Strict)
   let assert Ok(empty) = s.json_object([])
   s.decode(definition, empty) |> should.equal(Ok("Brainy"))
-  let annotated = s.text() |> s.default(name) |> s.examples([name])
+  let annotated = s.string() |> s.default_annotation(name) |> s.examples([name])
   s.schema_string(annotated, s.Compact)
   |> should.equal(
     "{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"default\":\"Brainy\",\"examples\":[\"Brainy\"],\"type\":\"string\"}",

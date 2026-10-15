@@ -61,7 +61,7 @@ pub type Tree {
 pub fn recursive_union_failure_is_bounded_without_losing_structured_details_test() {
   let assert Ok(definition) =
     s.recursive("diagnostic-tree", fn(self) {
-      s.any_of([s.map(s.text(), Leaf), s.map(s.array(self), Branch)])
+      s.any_of([s.map(s.string(), Leaf), s.map(s.array(self), Branch)])
     })
   let input =
     list.fold(list.repeat(Nil, 30), s.json_bool(False), fn(child, _) {

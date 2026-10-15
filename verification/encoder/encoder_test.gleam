@@ -24,7 +24,7 @@ fn decode_for_test(verified: s.VerifiedJson(a)) -> a {
 }
 
 pub fn primitive_roundtrips_test() {
-  let assert Ok(text) = e.encode(e.codec(e.text(), s.text()), "Brainy\n😀")
+  let assert Ok(text) = e.encode(e.codec(e.string(), s.string()), "Brainy\n😀")
   decode_for_test(text) |> should.equal("Brainy\n😀")
   let assert Ok(number) = e.encode(e.codec(e.number(), s.number()), 1.25)
   decode_for_test(number) |> should.equal(1.25)
@@ -37,7 +37,7 @@ pub fn primitive_roundtrips_test() {
 
 pub fn arrays_nullable_and_empty_test() {
   let codec =
-    e.codec(e.array(e.nullable(e.text())), s.array(s.nullable(s.text())))
+    e.codec(e.array(e.nullable(e.string())), s.array(s.nullable(s.string())))
   let assert Ok(value) = e.encode(codec, [Some("Brainy"), None])
   decode_for_test(value) |> should.equal([Some("Brainy"), None])
   s.to_string(s.verified_json(value), s.Compact)
@@ -52,11 +52,11 @@ pub type Person {
 
 pub fn person_encoder() {
   let assert Ok(record) =
-    e.field(e.record(), "name", e.text(), fn(p: Person) { p.name })
+    e.field(e.record(), "name", e.string(), fn(p: Person) { p.name })
   let assert Ok(record) =
     e.optional_field(record, "age", e.safe_integer(), fn(p) { p.age })
   let assert Ok(record) =
-    e.field(record, "nickname", e.nullable(e.text()), fn(p) { p.nickname })
+    e.field(record, "nickname", e.nullable(e.string()), fn(p) { p.nickname })
   e.finish(record)
 }
 
@@ -67,10 +67,10 @@ pub fn person_definition() {
         fn(age) { fn(nickname) { Person(name, age, nickname) } }
       }),
       "name",
-      s.text(),
+      s.string(),
     )
   let assert Ok(record) = s.optional(record, "age", s.safe_integer())
-  let assert Ok(record) = s.required(record, "nickname", s.nullable(s.text()))
+  let assert Ok(record) = s.required(record, "nickname", s.nullable(s.string()))
   s.finish(record, s.Strict)
 }
 
@@ -87,7 +87,7 @@ pub fn record_getters_optional_versus_null_test() {
 }
 
 pub fn constraints_reject_well_typed_output_test() {
-  let codec = e.codec(e.text(), s.string_constant("Brainy"))
+  let codec = e.codec(e.string(), s.string_constant("Brainy"))
   let assert Error(e.Contract(s.Structural(errors))) = e.encode(codec, "Jokey")
   let assert Ok(json) = s.parse("\"Jokey\"")
   s.decode(s.string_constant("Brainy"), json) |> should.equal(Error(errors))
@@ -95,15 +95,15 @@ pub fn constraints_reject_well_typed_output_test() {
 
 pub fn record_shape_mismatch_rejected_test() {
   let assert Ok(record) =
-    e.field(e.record(), "wrong", e.text(), fn(p: Person) { p.name })
+    e.field(e.record(), "wrong", e.string(), fn(p: Person) { p.name })
   let codec = e.codec(e.finish(record), person_definition())
   e.encode(codec, Person("Brainy", None, None)) |> should.be_error
 }
 
 pub fn duplicate_fields_rejected_test() {
-  let assert Ok(record) = e.field(e.record(), "name", e.text(), fn(x) { x })
+  let assert Ok(record) = e.field(e.record(), "name", e.string(), fn(x) { x })
   let assert Error(e.EncodingError(reason)) =
-    e.field(record, "name", e.text(), fn(x) { x })
+    e.field(record, "name", e.string(), fn(x) { x })
   reason |> should.equal("duplicate record key: name")
 }
 
@@ -113,7 +113,7 @@ pub fn unsafe_integer_rejected_test() {
 }
 
 pub fn encoded_and_decoded_values_need_not_be_equal_test() {
-  let codec = e.codec(e.text(), s.map(s.text(), fn(text) { text <> "!" }))
+  let codec = e.codec(e.string(), s.map(s.string(), fn(text) { text <> "!" }))
   let assert Ok(verified) = e.encode(codec, "Brainy")
   decode_for_test(verified) |> should.equal("Brainy!")
   s.to_string(s.verified_json(verified), s.Compact)
@@ -124,8 +124,8 @@ pub fn checked_encoding_does_not_convert_test() {
   let #(tick, count) = counter(fn(tick, count) { #(tick, count) })
   let codec =
     e.codec(
-      e.text(),
-      s.map(s.text(), fn(text) {
+      e.string(),
+      s.map(s.string(), fn(text) {
         tick()
         text
       }),
@@ -134,7 +134,7 @@ pub fn checked_encoding_does_not_convert_test() {
   s.to_string(s.verified_json(verified), s.Compact)
   |> should.equal("\"Brainy\"")
   s.schema_string(s.verified_definition(verified), s.Compact)
-  |> should.equal(s.schema_string(s.text(), s.Compact))
+  |> should.equal(s.schema_string(s.string(), s.Compact))
   count() |> should.equal(0)
   decode_for_test(verified) |> should.equal("Brainy")
   count() |> should.equal(1)
@@ -147,7 +147,7 @@ pub type Tree {
 pub fn tree_encoder() {
   e.recursive(fn(self) {
     let assert Ok(record) =
-      e.field(e.record(), "name", e.text(), fn(tree: Tree) { tree.name })
+      e.field(e.record(), "name", e.string(), fn(tree: Tree) { tree.name })
     let assert Ok(record) =
       e.field(record, "children", e.array(self), fn(tree) { tree.children })
     Ok(e.finish(record))
@@ -160,7 +160,7 @@ pub fn tree_definition() {
       s.required(
         s.record(fn(name) { fn(children) { Tree(name, children) } }),
         "name",
-        s.text(),
+        s.string(),
       )
     let assert Ok(record) = s.required(record, "children", s.array(self))
     Ok(s.finish(record, s.Strict))
@@ -194,7 +194,7 @@ pub fn recursive_choice_builder_once_test() {
     e.recursive(fn(self) {
       tick()
       Ok(
-        e.contramap(e.choice(e.number(), e.array(self)), fn(value) {
+        e.contramap(e.result(e.number(), e.array(self)), fn(value) {
           case value {
             Number(n) -> Ok(n)
             Numbers(ns) -> Error(ns)

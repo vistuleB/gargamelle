@@ -46,39 +46,39 @@ fn definition(name: String) -> s.Definition(String) {
           }
         }
       })
-      |> s.element(s.text())
+      |> s.element(s.string())
       |> s.element(s.boolean())
       |> s.finish_tuple
     "contains" -> {
       let assert Ok(d) =
-        s.contains(s.array(s.text()), s.string_constant("x"), 1, Some(2))
+        s.contains(s.array(s.string()), s.string_constant("x"), 1, Some(2))
       s.map(d, string.join(_, ","))
     }
     "keys" -> {
-      let assert Ok(keys) = s.pattern(s.text(), "^[a-z]+$")
+      let assert Ok(keys) = s.pattern(s.string(), "^[a-z]+$")
       let assert Ok(d) = s.property_names(s.dictionary(s.number()), keys)
       s.map(d, fn(entries) {
         list.map(entries, fn(entry) { entry.0 }) |> string.join(",")
       })
     }
     "condition" -> {
-      let assert Ok(yes) = s.bounds(s.array(s.text()), Some(1), Some(2))
+      let assert Ok(yes) = s.bounds(s.array(s.string()), Some(1), Some(2))
       let assert Ok(no) = s.bounds(s.array(s.boolean()), Some(1), Some(1))
       let assert Ok(base) =
         s.any_of([
-          s.map(s.array(s.text()), string.join(_, ",")),
+          s.map(s.array(s.string()), string.join(_, ",")),
           s.map(s.array(s.boolean()), fn(_) { "booleans" }),
         ])
-      s.if_then_else(base, s.array(s.text()), yes, no)
+      s.if_then_else(base, s.array(s.string()), yes, no)
     }
-    "exclude" -> s.exclude(s.text(), s.string_constant("blocked"))
+    "exclude" -> s.exclude(s.string(), s.string_constant("blocked"))
     "unique" -> {
       let assert Ok(d) = s.unique_items(s.array(s.nullable(s.number())))
       s.map(d, fn(_) { "unique" })
     }
     "named" -> {
-      let assert Ok(a) = s.named("common", s.text())
-      let assert Ok(b) = s.named("common", s.text())
+      let assert Ok(a) = s.named("common", s.string())
+      let assert Ok(b) = s.named("common", s.string())
       let assert Ok(d) = s.any_of([a, b])
       d
     }
@@ -86,7 +86,7 @@ fn definition(name: String) -> s.Definition(String) {
       let assert Ok(d) =
         s.recursive("tree", fn(self) {
           s.one_of([
-            s.text(),
+            s.string(),
             s.map(s.array(self), fn(xs) { "[" <> string.join(xs, ",") <> "]" }),
           ])
         })
@@ -96,7 +96,7 @@ fn definition(name: String) -> s.Definition(String) {
       let assert Ok(#(first, _)) =
         s.recursive_pair("first", "second", fn(a, b) {
           let assert Ok(second) =
-            s.any_of([s.text(), s.map(s.array(a), string.join(_, ","))])
+            s.any_of([s.string(), s.map(s.array(a), string.join(_, ","))])
           Ok(#(s.map(s.array(b), string.join(_, ";")), second))
         })
       first

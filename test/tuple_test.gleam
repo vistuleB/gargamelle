@@ -10,7 +10,7 @@ pub fn typed_tuple_test() {
     s.tuple(fn(name) {
       fn(weight) { fn(enabled) { Entry(name, weight, enabled) } }
     })
-    |> s.element(s.text())
+    |> s.element(s.string())
     |> s.element(s.number())
     |> s.element(s.boolean())
     |> s.finish_tuple

@@ -18,9 +18,9 @@ test('membership counts structural matches and preserves nonmatching items',asyn
 });
 
 test('verbatim answers require nonblank text or a formula reference',async()=>{
- const formula=s.finish(unwrap(s.required(s.record(id=>({id})),'id',s.text())),s.RecordPolicy$Strict$const);
- const part=unwrap(s.any_of(toList([s.text(),formula])));
- const meaningful=unwrap(s.any_of(toList([unwrap(s.pattern(s.text(),'\\S')),formula])));
+ const formula=s.finish(unwrap(s.required(s.record(id=>({id})),'id',s.string())),s.RecordPolicy$Strict$const);
+ const part=unwrap(s.any_of(toList([s.string(),formula])));
+ const meaningful=unwrap(s.any_of(toList([unwrap(s.pattern(s.string(),'\\S')),formula])));
  const d=contains(s.map(s.array(part),xs=>[...xs]),meaningful);
  await compare(d,[[['  ','word','\n'],true],[[{id:'formula1'}],true],[['',' \t\n','\u00a0','\ufeff'],false],[[],false],[[{id:0}],false]]);
  // Formula existence remains a provider check, separate from this shape.
@@ -36,7 +36,7 @@ test('repeated constraints intersect; match converters are never executed',async
  const bounded=unwrap(s.bounds(d,new Some(2),new Some(2)));
  await compare(bounded,[[[1,0.5],true],[[1,0.5,0.75],false]]);
  for(const [min,max] of [[-1,null],[2,1],[0,-1],[NaN,null],[0,Infinity],[1.5,null]])assert.equal(s.contains(numbers,s.number(),min,max==null?None:new Some(max)) instanceof Ok,false);
- for(const base of [s.text(),s.dictionary(s.number()),s.nullable(s.array(s.number()))])assert.equal(s.contains(base,s.number(),1,None) instanceof Ok,false);
+ for(const base of [s.string(),s.dictionary(s.number()),s.nullable(s.array(s.number()))])assert.equal(s.contains(base,s.number(),1,None) instanceof Ok,false);
 });
 
 test('membership composes with named arrays, tuples, uniqueness and recursive values',async()=>{

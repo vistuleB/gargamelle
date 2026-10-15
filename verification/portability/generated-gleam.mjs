@@ -24,7 +24,7 @@ export function compileRecipes(rows) {
       case 'boolean':expression=mapped('s.boolean()','json.bool');break;
       case 'null':expression=mapped('s.null()','fn(_) { json.null() }');break;
       case 'string':{
-        let d=bounds(a,'s.text()');for(const p of a.patterns??[])d=expect(`s.pattern(${d}, ${quote(p)})`);
+        let d=bounds(a,'s.string()');for(const p of a.patterns??[])d=expect(`s.pattern(${d}, ${quote(p)})`);
         expression=mapped(d,'json.string');break;
       }
       case 'integer':expression=mapped(bounds(a,'s.safe_integer()'),'json.int');break;

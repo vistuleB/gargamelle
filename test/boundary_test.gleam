@@ -13,7 +13,7 @@ fn handoff(build: fn() -> a) -> a
 pub fn decode_once_and_pass_both_test() {
   let #(tick, count) = counter(fn(tick, count) { #(tick, count) })
   let definition =
-    s.map(s.text(), fn(text) {
+    s.map(s.string(), fn(text) {
       tick()
       text <> "!"
     })
@@ -34,7 +34,7 @@ pub fn invalid_input_skips_conversion_and_handler_test() {
   let #(tick, count) = counter(fn(tick, count) { #(tick, count) })
   let definition =
     s.array(
-      s.map(s.text(), fn(text) {
+      s.map(s.string(), fn(text) {
         tick()
         text
       }),
@@ -68,7 +68,7 @@ pub fn same_output_type_different_contract_test() {
 pub fn original_json_and_defaulted_output_test() {
   let assert Ok(default) = s.parse("\"Brainy\"")
   let assert Ok(record) =
-    s.defaulted(s.record(fn(name) { name }), "name", s.text(), default)
+    s.defaulted(s.record(fn(name) { name }), "name", s.string(), default)
   let boundary =
     gargamelle_boundary.new(
       s.contract(s.finish(record, s.Open)),
@@ -84,7 +84,7 @@ pub fn original_json_and_defaulted_output_test() {
 
 pub fn handler_result_is_separate_test() {
   let boundary =
-    gargamelle_boundary.new(s.contract(s.text()), fn(_, _) {
+    gargamelle_boundary.new(s.contract(s.string()), fn(_, _) {
       Error("application error")
     })
   let assert Ok(json) = s.parse("\"Brainy\"")

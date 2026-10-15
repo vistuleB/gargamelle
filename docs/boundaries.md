@@ -37,7 +37,7 @@ import gleam/string
 // The component publishes a boundary; its handler stays private.
 pub fn names_boundary() -> gargamelle_boundary.Boundary(List(String), String) {
   gargamelle_boundary.new(
-    gargamelle.contract(gargamelle.array(gargamelle.text())),
+    gargamelle.contract(gargamelle.array(gargamelle.string())),
     fn(names, _) { string.join(names, ", ") },
   )
 }
@@ -76,7 +76,7 @@ import gleam/io
 
 pub fn main() {
   let receiver = gargamelle_boundary.json(
-    gargamelle.contract(gargamelle.array(gargamelle.text())),
+    gargamelle.contract(gargamelle.array(gargamelle.string())),
     fn(verified) {
       gargamelle.to_string(gargamelle.verified_json(verified), gargamelle.Compact)
     },
@@ -126,8 +126,8 @@ import gargamelle/encoding as gargamelle_encoding
 import gleam/io
 
 pub fn main() {
-  let contract = gargamelle.contract(gargamelle.array(gargamelle.text()))
-  let encoder = gargamelle_encoding.array(gargamelle_encoding.text())
+  let contract = gargamelle.contract(gargamelle.array(gargamelle.string()))
+  let encoder = gargamelle_encoding.array(gargamelle_encoding.string())
   let registration = gargamelle_boundary.paired(
     contract,
     encoder,
@@ -183,7 +183,7 @@ import gleam/io
 
 pub fn main() {
   let expected = "Brainy"
-  let contract = gargamelle.contract(gargamelle.text())
+  let contract = gargamelle.contract(gargamelle.string())
     |> gargamelle.require("Name agrees with the registered name", fn(name) {
       case name == expected {
         True -> Ok(Nil)

@@ -13,7 +13,7 @@ async function compare(d,cases){const schema=emitted(d),checks=[compileOracle(sc
 test('equation initial-answer visibility structurally requires a sequence',async()=>{
  const base=record([['editor',record([['initialAnswerVisible',s.boolean()]])]]);
  const condition=record([['editor',record([['initialAnswerVisible',s.boolean_constant(true)]])]]);
- const requirement=record([['sequence',s.array(record([['kind',s.text()],['text',s.text()]]))]]);
+ const requirement=record([['sequence',s.array(record([['kind',s.string()],['text',s.string()]]))]]);
  const d=s.if_then(base,condition,requirement);
  await compare(d,[[{editor:{initialAnswerVisible:true},sequence:[{kind:'symbol',text:'x'}]},true,{editor:{initialAnswerVisible:true}}],[{editor:{initialAnswerVisible:true}},false],[{editor:{initialAnswerVisible:false}},true,{editor:{initialAnswerVisible:false}}],[{editor:{initialAnswerVisible:'true'}},false]]);
  const errors=evaluate(d,{editor:{initialAnswerVisible:true},sequence:[{kind:'symbol',text:0}]}).value;
@@ -33,7 +33,7 @@ test('else selection, base validation, and repeated conditionals preserve output
  await compare(repeated,[[2,true,{value:2}],[3,false],[-1,true,{value:-1}]]);
  assert.equal(emitted(repeated).allOf.length,3);
  assert.match(docs.render(d,'else'),/else requirement/);
- const incompatible=s.if_then(s.text(),s.number(),s.boolean());
+ const incompatible=s.if_then(s.string(),s.number(),s.boolean());
  await compare(incompatible,[['text',true],[1,false],[true,false]]);
 });
 
@@ -52,7 +52,7 @@ test('conditional graphs collect all branches and reject same-input cycles',asyn
  await compare(d,[[[1,[2]],true],[[],false],[['bad'],false]]);
  assert.equal(s.recursive('loop',self=>new Ok(s.if_then(s.number(),self,s.number()))) instanceof Ok,false);
  assert.equal(s.recursive('loop',self=>new Ok(s.if_then_else(s.number(),s.number(),s.number(),self))) instanceof Ok,false);
- let escaped;assert.throws(()=>s.recursive('unbound',self=>{escaped=s.if_then(s.number(),s.text(),self);throw new Error('stop');}),/stop/);
+ let escaped;assert.throws(()=>s.recursive('unbound',self=>{escaped=s.if_then(s.number(),s.string(),self);throw new Error('stop');}),/stop/);
  assert.throws(()=>s.schema_string(escaped, s.JsonFormat$Compact$const),/unfinalized/);assert.throws(()=>evaluate(escaped,1),/unfinalized/);
- const conflict=s.if_then(s.number(),unwrap(s.named('same',s.text())),unwrap(s.named('same',s.number())));assert.throws(()=>s.schema_string(conflict, s.JsonFormat$Compact$const),/Conflicting/);
+ const conflict=s.if_then(s.number(),unwrap(s.named('same',s.string())),unwrap(s.named('same',s.number())));assert.throws(()=>s.schema_string(conflict, s.JsonFormat$Compact$const),/Conflicting/);
 });

@@ -7,7 +7,7 @@ import {Error as GleamError} from '../build/dev/javascript/gargamelle/gleam.mjs'
 test('semantic callback exceptions remain operational and stop subsequent callbacks',()=>{
   const failure=new Error('requirement failed operationally');
   const events=[];
-  const definition=s.map(s.text(),text=>{events.push('decode');return text;});
+  const definition=s.map(s.string(),text=>{events.push('decode');return text;});
   let contract=s.require(s.contract(definition),'Reject',()=>{events.push('reject');return new GleamError(toList([new s.Violation('','rejected')]));});
   contract=s.require(contract,'Throw',()=>{events.push('throw');throw failure;});
   contract=s.require(contract,'Later',()=>{events.push('later');return new Ok(undefined);});
@@ -18,7 +18,7 @@ test('semantic callback exceptions remain operational and stop subsequent callba
 
 test('verification retains the authoritative contract and discards decoded data',()=>{
   let conversions=0,checks=0;
-  const definition=s.map(s.text(),text=>{conversions++;return {text};});
+  const definition=s.map(s.string(),text=>{conversions++;return {text};});
   const contract=s.require(s.contract(definition),'Nonempty',data=>{
     checks++;assert.equal(data.text,'Brainy');return new Ok(undefined);
   });

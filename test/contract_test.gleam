@@ -16,7 +16,7 @@ pub fn structural_rejection_skips_all_callbacks_test() {
   let #(tick, count) = counter(fn(tick, count) { #(tick, count) })
   let contract =
     s.contract(
-      s.map(s.text(), fn(text) {
+      s.map(s.string(), fn(text) {
         tick()
         text
       }),
@@ -27,7 +27,7 @@ pub fn structural_rejection_skips_all_callbacks_test() {
     })
   let receiver = gargamelle_boundary.new(contract, fn(_, _) { tick() })
   let assert Ok(json) = s.parse("false")
-  let assert Error(errors) = s.validate(s.text(), json)
+  let assert Error(errors) = s.validate(s.string(), json)
   gargamelle_boundary.forward(receiver, json)
   |> should.equal(Error(s.Structural(errors)))
   count() |> should.equal(0)
@@ -37,7 +37,7 @@ pub fn conversion_checks_and_handler_run_once_in_order_test() {
   let #(tick, count) = counter(fn(tick, count) { #(tick, count) })
   let contract =
     s.contract(
-      s.map(s.text(), fn(text) {
+      s.map(s.string(), fn(text) {
         count() |> should.equal(0)
         tick()
         text
@@ -68,7 +68,7 @@ pub fn conversion_checks_and_handler_run_once_in_order_test() {
 pub fn semantic_failures_are_collected_and_skip_handler_test() {
   let #(tick, count) = counter(fn(tick, count) { #(tick, count) })
   let contract =
-    s.contract(s.text())
+    s.contract(s.string())
     |> s.require("First", fn(_) {
       tick()
       Error([s.Violation("", "First failure")])
@@ -100,7 +100,7 @@ pub fn semantic_failures_are_collected_and_skip_handler_test() {
 
 pub fn empty_failure_is_still_rejection_test() {
   let contract =
-    s.contract(s.text()) |> s.require("Reject", fn(_) { Error([]) })
+    s.contract(s.string()) |> s.require("Reject", fn(_) { Error([]) })
   let assert Ok(json) = s.parse("\"Brainy\"")
   s.validate_contract(contract, json)
   |> should.equal(
@@ -117,7 +117,7 @@ pub fn empty_failure_is_still_rejection_test() {
 pub fn json_checks_decode_once_and_preserve_original_test() {
   let #(tick, count) = counter(fn(tick, count) { #(tick, count) })
   let assert Ok(record) =
-    s.record(fn(name) { name }) |> s.required("name", s.text())
+    s.record(fn(name) { name }) |> s.required("name", s.string())
   let definition =
     s.finish(record, s.Open)
     |> s.map(fn(name) {
@@ -146,7 +146,7 @@ pub fn semantic_contract_is_authoritative_and_transferable_test() {
     handoff(fn() {
       let expected = "Brainy"
       let contract =
-        s.contract(s.text())
+        s.contract(s.string())
         |> s.require("Expected name", fn(name) {
           case name == expected {
             True -> Ok(Nil)
@@ -158,7 +158,7 @@ pub fn semantic_contract_is_authoritative_and_transferable_test() {
       })
     })
   let assert Ok(other_json) = s.parse("\"Jokey\"")
-  let assert Ok(other) = s.verify(s.contract(s.text()), other_json)
+  let assert Ok(other) = s.verify(s.contract(s.string()), other_json)
   gargamelle_boundary.forward_json(receiver, s.verified_json(other))
   |> should.be_error
   let assert Ok(json) = s.parse("\"Brainy\"")
@@ -167,7 +167,7 @@ pub fn semantic_contract_is_authoritative_and_transferable_test() {
 
 pub fn typed_and_json_receivers_enforce_same_contract_test() {
   let contract =
-    s.contract(s.text())
+    s.contract(s.string())
     |> s.require("Expected name", fn(name) {
       case name == "Brainy" {
         True -> Ok(Nil)
@@ -188,7 +188,7 @@ pub fn typed_and_json_receivers_enforce_same_contract_test() {
 }
 
 pub fn contract_documentation_lists_every_requirement_without_callbacks_test() {
-  let definition = s.map(s.text(), fn(_) { panic as "No conversion" })
+  let definition = s.map(s.string(), fn(_) { panic as "No conversion" })
   let contract =
     s.contract(definition)
     |> s.require("Check <one>", fn(_) { panic as "No check" })

@@ -17,7 +17,7 @@ const raw=json=>JSON.parse(s.to_string(json,s.JsonFormat$Compact$const));
 const seedOptions=seed=>({seed,attempts:200,maxDepth:5,maxNodes:60,maxWidth:4,maxStringLength:10});
 
 test('fixed seeds replay samples and metadata exactly, including seed zero',()=>{
-  const definition=s.array(s.text());
+  const definition=s.array(s.string());
   const results=[];
   for(const seed of [0,1,42,0xffffffff]){
     const first=generate(definition,seedOptions(seed)),second=generate(definition,seedOptions(seed));
@@ -34,16 +34,16 @@ test('accepted samples agree with Ajv and Hyperjump without invoking converters'
   let converted=0;
   const required=unwrap(s.required(s.record(x=>x),'values',s.array(s.safe_integer())));
   const definitions=[
-    s.text(),s.boolean(),s.null$(),s.number(),s.safe_integer(),unwrap(s.string_enum(toList(['a','b']))),
-    s.array(s.nullable(s.text())),s.finish(required,s.RecordPolicy$Strict$const),
+    s.string(),s.boolean(),s.null$(),s.number(),s.safe_integer(),unwrap(s.string_enum(toList(['a','b']))),
+    s.array(s.nullable(s.string())),s.finish(required,s.RecordPolicy$Strict$const),
     unwrap(s.bounds(s.array(s.safe_integer()),new Some(1),new Some(3))),
-    unwrap(s.bounds(s.text(),new Some(2),new Some(4))),
+    unwrap(s.bounds(s.string(),new Some(2),new Some(4))),
     unwrap(s.integer_multiple_of(s.safe_integer(),2)),
-    s.exclude(s.text(),s.string_constant('a')),
+    s.exclude(s.string(),s.string_constant('a')),
     unwrap(s.unique_items(s.array(s.boolean()))),
-    s.map(s.text(),()=>{converted++;throw Error('conversion must not run');}),
+    s.map(s.string(),()=>{converted++;throw Error('conversion must not run');}),
     unwrap(s.recursive('generated-tree',self=>s.any_of(toList([
-      s.map(s.text(),()=>undefined),s.map(s.array(self),()=>undefined),
+      s.map(s.string(),()=>undefined),s.map(s.array(self),()=>undefined),
     ])))),
   ];
   let samples=0;
@@ -64,7 +64,7 @@ test('accepted samples agree with Ajv and Hyperjump without invoking converters'
 });
 
 test('hostile object keys remain ordinary keys, with the retained Ajv discrepancy diagnosed',async()=>{
-  const fields=unwrap(s.required(s.record(x=>x),'__proto__',s.text()));
+  const fields=unwrap(s.required(s.record(x=>x),'__proto__',s.string()));
   const definition=s.finish(fields,s.RecordPolicy$Strict$const);
   const result=generate(definition,seedOptions(1));
   assert.equal(result.status,'generated');
@@ -77,11 +77,11 @@ test('hostile object keys remain ordinary keys, with the retained Ajv discrepanc
 
 test('depth, node, width, text and attempt budgets report exhaustion rather than impossibility',()=>{
   const definitions=[
-    [s.array(s.array(s.text())),{maxDepth:0,maxWidth:0}],
-    [unwrap(s.bounds(s.array(s.text()),new Some(1),None)),{maxDepth:0,maxWidth:1}],
-    [unwrap(s.bounds(s.array(s.text()),new Some(3),None)),{maxNodes:2,maxWidth:4}],
-    [unwrap(s.bounds(s.array(s.text()),new Some(3),None)),{maxWidth:2}],
-    [unwrap(s.bounds(s.text(),new Some(5),None)),{maxStringLength:4}],
+    [s.array(s.array(s.string())),{maxDepth:0,maxWidth:0}],
+    [unwrap(s.bounds(s.array(s.string()),new Some(1),None)),{maxDepth:0,maxWidth:1}],
+    [unwrap(s.bounds(s.array(s.string()),new Some(3),None)),{maxNodes:2,maxWidth:4}],
+    [unwrap(s.bounds(s.array(s.string()),new Some(3),None)),{maxWidth:2}],
+    [unwrap(s.bounds(s.string(),new Some(5),None)),{maxStringLength:4}],
   ];
   // Empty nested arrays remain valid at depth zero.
   assert.equal(generate(definitions[0][0],definitions[0][1]).status,'generated');
@@ -92,9 +92,9 @@ test('depth, node, width, text and attempt budgets report exhaustion rather than
     assert.ok(result.budgetFailures>0);
     assert.equal(Object.hasOwn(result,'impossible'),false);
   }
-  assert.equal(generate(s.text(),{attempts:0}).status,'exhausted');
-  assert.throws(()=>generate(s.text(),{maxDepth:-1}),/Invalid budget/);
-  assert.throws(()=>generate(s.text(),{invented:1}),/Unknown budget/);
+  assert.equal(generate(s.string(),{attempts:0}).status,'exhausted');
+  assert.throws(()=>generate(s.string(),{maxDepth:-1}),/Invalid budget/);
+  assert.throws(()=>generate(s.string(),{invented:1}),/Unknown budget/);
 });
 
 test('100 seeded samples are admitted and accepted by native Erlang validation',()=>{
@@ -120,21 +120,21 @@ test('100 seeded samples are admitted and accepted by native Erlang validation',
 });
 
 test('unsupported assertions are explicit and do not get dropped',()=>{
-  const definition=unwrap(s.pattern(s.text(),'^special$'));
+  const definition=unwrap(s.pattern(s.string(),'^special$'));
   const result=generate(definition);
   assert.equal(result.status,'unsupported');
   assert.deepEqual(result.keywords,['/pattern']);
 });
 
 test('overlapping oneOf and impossible conjunctions never yield an accepted sample',()=>{
-  const exclusive=unwrap(s.one_of(toList([s.text(),s.text()])));
-  const contradictory=s.exclude(s.text(),s.text());
+  const exclusive=unwrap(s.one_of(toList([s.string(),s.string()])));
+  const contradictory=s.exclude(s.string(),s.string());
   for(const definition of [exclusive,contradictory])assert.equal(generate(definition,{attempts:10}).status,'exhausted');
 });
 
 test('structural samples and semantic samples remain distinct',()=>{
   let semanticCalls=0;
-  const rejected=s.require(s.contract(s.text()),'Reject all proposed strings',()=>{
+  const rejected=s.require(s.contract(s.string()),'Reject all proposed strings',()=>{
     semanticCalls++;return new GleamError(toList([new s.Violation('','Rejected')]));
   });
   assert.equal(generate(s.contract_definition(rejected),{attempts:5}).status,'generated');
@@ -152,12 +152,12 @@ test('structural samples and semantic samples remain distinct',()=>{
 
 test('semantic exceptions are operational failures and propagate unchanged',()=>{
   const failure=new Error('semantic callback failed');
-  const contract=s.require(s.contract(s.text()),'Throws',()=>{throw failure;});
+  const contract=s.require(s.contract(s.string()),'Throws',()=>{throw failure;});
   assert.throws(()=>generateContract(contract),error=>error===failure);
 });
 
 test('structural shrinking retains admission, validity and the failing property',()=>{
-  const definition=s.array(s.text());
+  const definition=s.array(s.string());
   const start=unwrap(s.parse('["long value","another","third"]'));
   const fails=json=>raw(json).some(value=>value.length>0);
   const result=shrink(definition,start,fails);
@@ -180,7 +180,7 @@ test('semantic shrinking keeps contract acceptance while reducing a counterexamp
 });
 
 test('shrink exhaustion returns a still valid counterexample, and exceptions escape',()=>{
-  const definition=s.array(s.text()),start=unwrap(s.parse('["long value"]'));
+  const definition=s.array(s.string()),start=unwrap(s.parse('["long value"]'));
   const fails=json=>raw(json).some(text=>text.length>0);
   for(const budgets of [{maxSteps:0},{maxCandidates:0}]){
     const result=shrink(definition,start,fails,budgets);

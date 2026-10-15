@@ -17,7 +17,7 @@ pub fn scalar_domain_test() {
     },
   )
   let assert Ok(paired) = s.parse("\"\\ud83d\\udc9c\"")
-  s.decode(s.text(), paired) |> should.equal(Ok("💜"))
+  s.decode(s.string(), paired) |> should.equal(Ok("💜"))
   let assert Ok(discarded) = s.parse("{\"x\":\"\\ud800\",\"x\":1}")
   s.to_string(discarded, s.Compact) |> should.equal("{\"x\":1}")
   let assert Error(s.AdmissionError(message)) = s.parse("[\"\\ud800\",]")

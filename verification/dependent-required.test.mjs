@@ -8,19 +8,19 @@ import {compileSupplementary} from './supplementary-oracle.mjs';
 test('alternating object modifiers retain every conjunction across intervening wrappers',async()=>{
   const dependency=(d,key,required)=>unwrap(s.dependent_required(d,key,toList(required)));
   const keys=(d,k)=>unwrap(s.property_names(d,k));
-  const prefix=unwrap(s.pattern(s.text(),'^a'));
+  const prefix=unwrap(s.pattern(s.string(),'^a'));
   const cases=[
-    [dependency(keys(dependency(s.dictionary(s.text()),'a',['b']),s.text()),'c',['d']),
+    [dependency(keys(dependency(s.dictionary(s.string()),'a',['b']),s.string()),'c',['d']),
       [[{},true],[{a:'x'},false],[{c:'x'},false],[{a:'x',b:'x'},true],[{a:'x',b:'x',c:'x'},false],[{a:'x',b:'x',c:'x',d:'x'},true]]],
-    [keys(dependency(keys(s.dictionary(s.text()),prefix),'a',[]),s.text()),
+    [keys(dependency(keys(s.dictionary(s.string()),prefix),'a',[]),s.string()),
       [[{},true],[{z:'x'},false],[{a:'x'},true]]],
-    [dependency(keys(dependency(s.dictionary(s.text()),'a',['b']),s.text()),'a',['c']),
+    [dependency(keys(dependency(s.dictionary(s.string()),'a',['b']),s.string()),'a',['c']),
       [[{a:'x',b:'x'},false],[{a:'x',c:'x'},false],[{a:'x',b:'x',c:'x'},true]]],
   ];
   // Existing allOf clauses must survive both kinds of keyword collision.
-  const base=dependency(keys(s.dictionary(s.text()),prefix),'a',['ab']);
-  const conditional=s.if_then(base,s.dictionary(s.text()),dependency(s.dictionary(s.text()),'ab',['ac']));
-  const composed=dependency(keys(dependency(keys(conditional,s.text()),'a',['ad']),prefix),'a',['ae']);
+  const base=dependency(keys(s.dictionary(s.string()),prefix),'a',['ab']);
+  const conditional=s.if_then(base,s.dictionary(s.string()),dependency(s.dictionary(s.string()),'ab',['ac']));
+  const composed=dependency(keys(dependency(keys(conditional,s.string()),'a',['ad']),prefix),'a',['ae']);
   cases.push([composed,[[{},true],[{z:'x'},false],[{a:'x',ad:'x',ae:'x'},false],[{a:'x',ab:'x',ad:'x',ae:'x'},false],[{a:'x',ab:'x',ac:'x',ad:'x'},false],[{a:'x',ab:'x',ac:'x',ad:'x',ae:'x'},true]]]);
   for(const [definition,values] of cases){
     let calls=0;
@@ -38,7 +38,7 @@ test('alternating object modifiers retain every conjunction across intervening w
 
 test('dependentRequired uses original own-key presence and agrees with both schema oracles',async()=>{
   let calls=0;
-  let definition=unwrap(s.dependent_required(s.map(s.dictionary(s.nullable(s.text())),x=>{calls++;return x;}),'token',toList(['expires_at','expires_at'])));
+  let definition=unwrap(s.dependent_required(s.map(s.dictionary(s.nullable(s.string())),x=>{calls++;return x;}),'token',toList(['expires_at','expires_at'])));
   definition=unwrap(s.dependent_required(definition,'token',toList(['token','issuer'])));
   const schema=emitted(definition);
   assert.deepEqual(schema.dependentRequired,{token:['expires_at','token','issuer']});
@@ -58,12 +58,12 @@ test('dependentRequired uses original own-key presence and agrees with both sche
 test('dependentRequired composes with named schemas, key constraints and hostile keys',async()=>{
   let definition=unwrap(s.named('flags',s.dictionary(s.boolean())));
   definition=unwrap(s.dependent_required(definition,'__proto__',toList(['a/~'])));
-  definition=unwrap(s.property_names(definition,s.text()));
+  definition=unwrap(s.property_names(definition,s.string()));
   const checks=[compileOracle(emitted(definition)),await compileSupplementary(emitted(definition))];
   for(const [source,accepted] of [['{}',true],['{"__proto__":true}',false],['{"__proto__":true,"a/~":false}',true]]){
     for(const check of checks)assert.equal(check(JSON.parse(source)).accepted,accepted);
     assert.equal(s.validate(definition,unwrap(s.parse(source))).isOk(),accepted);
   }
-  assert.equal(s.dependent_required(s.dictionary(s.text()),'\ud800',toList([])).isOk(),false);
-  assert.equal(s.dependent_required(s.dictionary(s.text()),'a',toList(['\ud800'])).isOk(),false);
+  assert.equal(s.dependent_required(s.dictionary(s.string()),'\ud800',toList([])).isOk(),false);
+  assert.equal(s.dependent_required(s.dictionary(s.string()),'a',toList(['\ud800'])).isOk(),false);
 });

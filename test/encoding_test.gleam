@@ -23,8 +23,8 @@ pub fn primitive_roundtrips_test() {
   let assert Ok(text) =
     gargamelle_encoding.encode(
       gargamelle_encoding.codec(
-        gargamelle_encoding.text(),
-        s.contract(s.text()),
+        gargamelle_encoding.string(),
+        s.contract(s.string()),
       ),
       "Brainy\n😀",
     )
@@ -62,9 +62,9 @@ pub fn arrays_nullable_and_empty_test() {
   let codec =
     gargamelle_encoding.codec(
       gargamelle_encoding.array(
-        gargamelle_encoding.nullable(gargamelle_encoding.text()),
+        gargamelle_encoding.nullable(gargamelle_encoding.string()),
       ),
-      s.contract(s.array(s.nullable(s.text()))),
+      s.contract(s.array(s.nullable(s.string()))),
     )
   let assert Ok(value) =
     gargamelle_encoding.encode(codec, [Some("Brainy"), None])
@@ -84,7 +84,7 @@ pub fn person_encoder() {
     gargamelle_encoding.field(
       gargamelle_encoding.record(),
       "name",
-      gargamelle_encoding.text(),
+      gargamelle_encoding.string(),
       fn(p: Person) { p.name },
     )
   let assert Ok(record) =
@@ -98,7 +98,7 @@ pub fn person_encoder() {
     gargamelle_encoding.field(
       record,
       "nickname",
-      gargamelle_encoding.nullable(gargamelle_encoding.text()),
+      gargamelle_encoding.nullable(gargamelle_encoding.string()),
       fn(p) { p.nickname },
     )
   gargamelle_encoding.finish(record)
@@ -111,10 +111,10 @@ pub fn person_definition() {
         fn(age) { fn(nickname) { Person(name, age, nickname) } }
       }),
       "name",
-      s.text(),
+      s.string(),
     )
   let assert Ok(record) = s.optional(record, "age", s.safe_integer())
-  let assert Ok(record) = s.required(record, "nickname", s.nullable(s.text()))
+  let assert Ok(record) = s.required(record, "nickname", s.nullable(s.string()))
   s.finish(record, s.Strict)
 }
 
@@ -134,7 +134,7 @@ pub fn record_getters_optional_versus_null_test() {
 pub fn constraints_reject_well_typed_output_test() {
   let codec =
     gargamelle_encoding.codec(
-      gargamelle_encoding.text(),
+      gargamelle_encoding.string(),
       s.contract(s.string_constant("Brainy")),
     )
   let assert Error(gargamelle_encoding.Contract(s.Structural(errors))) =
@@ -148,7 +148,7 @@ pub fn record_shape_mismatch_rejected_test() {
     gargamelle_encoding.field(
       gargamelle_encoding.record(),
       "wrong",
-      gargamelle_encoding.text(),
+      gargamelle_encoding.string(),
       fn(p: Person) { p.name },
     )
   let codec =
@@ -165,16 +165,19 @@ pub fn duplicate_fields_rejected_test() {
     gargamelle_encoding.field(
       gargamelle_encoding.record(),
       "name",
-      gargamelle_encoding.text(),
+      gargamelle_encoding.string(),
       fn(x) { x },
     )
   let assert Error(gargamelle_encoding.InvalidField(
     name,
     gargamelle_encoding.DuplicateKey,
   )) =
-    gargamelle_encoding.field(record, "name", gargamelle_encoding.text(), fn(x) {
-      x
-    })
+    gargamelle_encoding.field(
+      record,
+      "name",
+      gargamelle_encoding.string(),
+      fn(x) { x },
+    )
   name |> should.equal("name")
 }
 
@@ -194,8 +197,8 @@ pub fn unsafe_integer_rejected_test() {
 pub fn encoded_and_decoded_values_need_not_be_equal_test() {
   let codec =
     gargamelle_encoding.codec(
-      gargamelle_encoding.text(),
-      s.contract(s.map(s.text(), fn(text) { text <> "!" })),
+      gargamelle_encoding.string(),
+      s.contract(s.map(s.string(), fn(text) { text <> "!" })),
     )
   let assert Ok(verified) = gargamelle_encoding.encode(codec, "Brainy")
   decode_for_test(verified) |> should.equal("Brainy!")
@@ -207,9 +210,9 @@ pub fn checked_encoding_does_not_convert_test() {
   let #(tick, count) = counter(fn(tick, count) { #(tick, count) })
   let codec =
     gargamelle_encoding.codec(
-      gargamelle_encoding.text(),
+      gargamelle_encoding.string(),
       s.contract(
-        s.map(s.text(), fn(text) {
+        s.map(s.string(), fn(text) {
           tick()
           text
         }),
@@ -219,7 +222,7 @@ pub fn checked_encoding_does_not_convert_test() {
   s.to_string(s.verified_json(verified), s.Compact)
   |> should.equal("\"Brainy\"")
   s.schema_string(s.verified_definition(verified), s.Compact)
-  |> should.equal(s.schema_string(s.text(), s.Compact))
+  |> should.equal(s.schema_string(s.string(), s.Compact))
   count() |> should.equal(0)
   decode_for_test(verified) |> should.equal("Brainy")
   count() |> should.equal(1)
@@ -235,7 +238,7 @@ pub fn tree_encoder() {
       gargamelle_encoding.field(
         gargamelle_encoding.record(),
         "name",
-        gargamelle_encoding.text(),
+        gargamelle_encoding.string(),
         fn(tree: Tree) { tree.name },
       )
     let assert Ok(record) =
@@ -255,7 +258,7 @@ pub fn tree_definition() {
       s.required(
         s.record(fn(name) { fn(children) { Tree(name, children) } }),
         "name",
-        s.text(),
+        s.string(),
       )
     let assert Ok(record) = s.required(record, "children", s.array(self))
     Ok(s.finish(record, s.Strict))
@@ -290,7 +293,7 @@ pub fn recursive_choice_builder_once_test() {
       tick()
       Ok(
         gargamelle_encoding.contramap(
-          gargamelle_encoding.choice(
+          gargamelle_encoding.result(
             gargamelle_encoding.number(),
             gargamelle_encoding.array(self),
           ),
@@ -326,14 +329,14 @@ pub fn original_encoding_without_definition_test() {
 pub fn output_encodes_decodes_checks_and_handles_once_test() {
   let #(tick, count) = counter(fn(tick, count) { #(tick, count) })
   let encoder =
-    gargamelle_encoding.contramap(gargamelle_encoding.text(), fn(text) {
+    gargamelle_encoding.contramap(gargamelle_encoding.string(), fn(text) {
       count() |> should.equal(0)
       tick()
       text
     })
   let contract =
     s.contract(
-      s.map(s.text(), fn(text) {
+      s.map(s.string(), fn(text) {
         count() |> should.equal(1)
         tick()
         text <> "!"
@@ -367,7 +370,8 @@ pub fn structural_output_rejection_skips_conversion_and_handler_test() {
     |> s.require("Never reached", fn(_) { panic as "Rejected requirement" })
   let receiver =
     gargamelle_boundary.json(contract, fn(_) { panic as "Rejected handler" })
-  let output = gargamelle_boundary.output(gargamelle_encoding.text(), receiver)
+  let output =
+    gargamelle_boundary.output(gargamelle_encoding.string(), receiver)
   let assert Error(gargamelle_encoding.Contract(s.Structural(_))) =
     gargamelle_boundary.send(output, "Jokey")
 }
@@ -375,7 +379,7 @@ pub fn structural_output_rejection_skips_conversion_and_handler_test() {
 pub fn semantic_output_rejection_collects_failures_and_skips_handler_test() {
   let #(tick, count) = counter(fn(tick, count) { #(tick, count) })
   let contract =
-    s.contract(s.text())
+    s.contract(s.string())
     |> s.require("First", fn(_) {
       tick()
       Error([s.Violation("", "First failure")])
@@ -388,7 +392,7 @@ pub fn semantic_output_rejection_collects_failures_and_skips_handler_test() {
     gargamelle_boundary.json(contract, fn(_) { panic as "Rejected handler" })
   let assert Error(gargamelle_encoding.Contract(s.Semantic(failures))) =
     gargamelle_boundary.send(
-      gargamelle_boundary.output(gargamelle_encoding.text(), receiver),
+      gargamelle_boundary.output(gargamelle_encoding.string(), receiver),
       "Brainy",
     )
   let assert [
@@ -400,26 +404,24 @@ pub fn semantic_output_rejection_collects_failures_and_skips_handler_test() {
 
 pub fn checked_encoding_retains_full_contract_and_original_json_test() {
   let contract =
-    s.contract(s.map(s.text(), fn(text) { text <> "!" }))
+    s.contract(s.map(s.string(), fn(text) { text <> "!" }))
     |> s.require("Post-conversion check", fn(text) {
       case text == "Brainy!" {
         True -> Ok(Nil)
         False -> Error([s.Violation("", "Unexpected name")])
       }
     })
-  let codec = gargamelle_encoding.codec(gargamelle_encoding.text(), contract)
+  let codec = gargamelle_encoding.codec(gargamelle_encoding.string(), contract)
   let assert Ok(verified) = gargamelle_encoding.encode(codec, "Brainy")
   s.to_string(s.verified_json(verified), s.Compact)
   |> should.equal("\"Brainy\"")
   s.contract_requirements(s.verified_contract(verified))
-  |> should.equal(
-    s.contract_requirements(gargamelle_encoding.codec_contract(codec)),
-  )
+  |> should.equal(s.contract_requirements(gargamelle_encoding.contract(codec)))
   gargamelle_encoding.encode(codec, "Jokey") |> should.be_error
 }
 
 pub fn completed_encoders_lift_into_recursive_plans_test() {
-  let name: gargamelle_encoding.Encoder(String) = gargamelle_encoding.text()
+  let name: gargamelle_encoding.Encoder(String) = gargamelle_encoding.string()
   let assert Ok(encoder) =
     gargamelle_encoding.recursive(fn(self) {
       let assert Ok(record) =

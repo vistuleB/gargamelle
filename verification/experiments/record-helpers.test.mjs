@@ -47,23 +47,23 @@ test('static record helpers preserve schema, acceptance, output, and errors on b
       }else rejected++;
     }
     assert.ok(accepted>0&&rejected>0);t.diagnostic(`${accepted+rejected} cases: ${accepted} accepted, ${rejected} rejected; both schema oracles agree`);
-    const original=s.required(s.record(x=>x),'\ud800',s.text());
-    const invalid=shared.required(shared.start(x=>x),'\ud800',s.text(),e.text(),x=>x);
+    const original=s.required(s.record(x=>x),'\ud800',s.string());
+    const invalid=shared.required(shared.start(x=>x),'\ud800',s.string(),e.string(),x=>x);
     assert.ok(!invalid.isOk());assert.deepEqual(invalid[0][0],original[0]);
-    const key='a/b~',baselineFields=unwrap(s.required(s.record(x=>x),key,s.text()));
-    const combinedFields=unwrap(shared.finish(shared.required(shared.start(x=>x),key,s.text(),e.text(),x=>x),s.RecordPolicy$Strict$const));
+    const key='a/b~',baselineFields=unwrap(s.required(s.record(x=>x),key,s.string()));
+    const combinedFields=unwrap(shared.finish(shared.required(shared.start(x=>x),key,s.string(),e.string(),x=>x),s.RecordPolicy$Strict$const));
     const originalDef=s.finish(baselineFields,s.RecordPolicy$Strict$const);
     const badInput=unwrap(s.parse(JSON.stringify({[key]:false})));
     assert.deepEqual(s.decode(combinedFields[0],badInput),s.decode(originalDef,badInput));
-    const encoderFields=unwrap(e.field(e.record(),key,e.text(),x=>x));
+    const encoderFields=unwrap(e.field(e.record(),key,e.string(),x=>x));
     const badValue='\ud800';
     assert.deepEqual(e.encode_json(combinedFields[1],badValue),e.encode_json(e.finish(encoderFields),badValue));
     assert.equal(e.encode_json(combinedFields[1],badValue)[0].path,'/a~1b~0');
     const imports='import gargamelle as s\nimport gargamelle/encoding as e\nimport shared_record as r\n';
     const cases=[
-      ['unfinished constructor', 'pub fn main() { r.start(fn(name) { fn(age) { #(name, age) } }) |> r.required("name",s.text(),e.text(),fn(value: #(String, Int)) { value.0 }) |> r.finish(s.Strict) }'],
-      ['wrong getter', 'pub fn main() { r.start(fn(value) { value }) |> r.required("name",s.text(),e.text(),fn(_: String) { 1 }) |> r.finish(s.Strict) }'],
-      ['wrong encoder', 'pub fn main() { r.start(fn(value) { value }) |> r.required("name",s.text(),e.safe_integer(),fn(value) { value }) |> r.finish(s.Strict) }'],
+      ['unfinished constructor', 'pub fn main() { r.start(fn(name) { fn(age) { #(name, age) } }) |> r.required("name",s.string(),e.string(),fn(value: #(String, Int)) { value.0 }) |> r.finish(s.Strict) }'],
+      ['wrong getter', 'pub fn main() { r.start(fn(value) { value }) |> r.required("name",s.string(),e.string(),fn(_: String) { 1 }) |> r.finish(s.Strict) }'],
+      ['wrong encoder', 'pub fn main() { r.start(fn(value) { value }) |> r.required("name",s.string(),e.safe_integer(),fn(value) { value }) |> r.finish(s.Strict) }'],
     ];
     const negative=join(directory,'test/negative.gleam');
     for(const [name,body] of cases){

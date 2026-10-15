@@ -8,7 +8,7 @@ import gleam/list
 import gleam/string
 
 pub fn main() {
-  let definition = s.array(s.text())
+  let definition = s.array(s.string())
   let expected = "Brainy"
   let contract =
     s.contract(definition)

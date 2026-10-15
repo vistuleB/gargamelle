@@ -88,21 +88,21 @@ pub fn identical_encoding_and_checked_errors_test() {
 pub fn duplicate_errors_preserved_test() {
   let constructor = fn(first) { fn(second) { #(first, second) } }
   let assert Ok(original) =
-    gargamelle.required(gargamelle.record(constructor), "x", gargamelle.text())
+    gargamelle.required(gargamelle.record(constructor), "x", gargamelle.string())
   let assert Error(expected) =
-    gargamelle.required(original, "x", gargamelle.text())
+    gargamelle.required(original, "x", gargamelle.string())
   let assert Error(shared_record.Definition(actual)) =
     shared_record.start(constructor)
     |> shared_record.required(
       "x",
-      gargamelle.text(),
-      gargamelle_encoding.text(),
+      gargamelle.string(),
+      gargamelle_encoding.string(),
       fn(value: #(String, String)) { value.0 },
     )
     |> shared_record.required(
       "x",
-      gargamelle.text(),
-      gargamelle_encoding.text(),
+      gargamelle.string(),
+      gargamelle_encoding.string(),
       fn(value: #(String, String)) { value.1 },
     )
   actual |> should.equal(expected)
@@ -150,8 +150,8 @@ pub fn construction_keeps_first_error_test() {
     )
     |> shared_record.required(
       "active",
-      gargamelle.text(),
-      gargamelle_encoding.text(),
+      gargamelle.string(),
+      gargamelle_encoding.string(),
       fn(value) { value.1 },
     )
     |> shared_record.finish(gargamelle.Strict)
@@ -187,7 +187,7 @@ pub fn mismatch_still_checked_test() {
     |> shared_record.required(
       "name",
       gargamelle.string_constant("Azrael"),
-      gargamelle_encoding.text(),
+      gargamelle_encoding.string(),
       fn(value) { value },
     )
     |> shared_record.finish(gargamelle.Strict)

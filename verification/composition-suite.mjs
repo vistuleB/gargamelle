@@ -25,18 +25,18 @@ export async function runCompositionSuite({s,unwrap,toList},seeds=compositionSee
   const values=inputs(),pairs=new Set(),separated=new Set(),wrappers=new Set();
   let snapshots=0,comparisons=0,monotonicChecks=0,metadataChecks=0,orderChecks=0,recursiveSequences=0,callbacks=0;
   const input=values.map(value=>unwrap(s.parse(JSON.stringify(value))));
-  const presence=key=>s.finish(unwrap(s.required(s.record(x=>x),key,s.text())),s.RecordPolicy$Open$const);
+  const presence=key=>s.finish(unwrap(s.required(s.record(x=>x),key,s.string())),s.RecordPolicy$Open$const);
   const apply=(base,step,id)=>{
     switch(step.kind){
       case 'dependency':return unwrap(s.dependent_required(base,step.key,toList(step.required)));
-      case 'keys':return unwrap(s.property_names(base,s.map(unwrap(s.pattern(s.text(),step.pattern)),()=>{throw new Error('key converter ran');})));
-      case 'conditional':return s.if_then(base,presence(step.key),unwrap(s.dependent_required(s.dictionary(s.text()),step.key,toList(step.required))));
+      case 'keys':return unwrap(s.property_names(base,s.map(unwrap(s.pattern(s.string(),step.pattern)),()=>{throw new Error('key converter ran');})));
+      case 'conditional':return s.if_then(base,presence(step.key),unwrap(s.dependent_required(s.dictionary(s.string()),step.key,toList(step.required))));
       case 'exclude':return s.exclude(base,presence(step.key));
       case 'title':return s.title(base,'composition '+id);
       case 'description':return s.description(base,'bounded composition');
       case 'examples':return s.examples(base,toList([unwrap(s.parse('{"z":0}'))]));
-      case 'default':return s.default$(base,unwrap(s.parse('false')));
-      case 'format':return s.format(base,'custom-composition');
+      case 'default':return s.default_annotation(base,unwrap(s.parse('false')));
+      case 'format':return s.format_annotation(base,'custom-composition');
       case 'map':return s.map(base,x=>{callbacks++;return x;});
       case 'named':return unwrap(s.named('composition-'+id,base));
       default:throw new Error('Unknown step '+step.kind);
@@ -71,13 +71,13 @@ export async function runCompositionSuite({s,unwrap,toList},seeds=compositionSee
         : [{kind:'keys',pattern:'^[a-d]+$'},{kind:'dependency',key:'a',required:['b']},{kind:'keys',pattern:'^[a-z]{1,2}$'}];
       steps.push({kind:wrapperKinds[index%wrapperKinds.length]});
       while(steps.length<6+index%5){const kind=[...assertionKinds,...wrapperKinds][pick(11)];steps.push(assertionKinds.includes(kind)?makeAssertion(kind,pick):{kind});}
-      let definition=s.dictionary(s.text());
+      let definition=s.dictionary(s.string());
       if(index===7){
         recursiveSequences++;
         definition=unwrap(s.recursive('sequence-tree-'+seed,self=>{
           let body=s.dictionary(self);
           for(const [i,step] of steps.entries())body=apply(body,step,'recursive-'+seed+'-'+i);
-          return s.any_of(toList([s.map(s.text(),()=>null),s.map(body,()=>null)]));
+          return s.any_of(toList([s.map(s.string(),()=>null),s.map(body,()=>null)]));
         }));
         // Keep the top level an object, with recursive constraints on its values.
         definition=s.dictionary(definition);
@@ -98,8 +98,8 @@ export async function runCompositionSuite({s,unwrap,toList},seeds=compositionSee
     }
     for(const [index,[first,second]] of orderWhitelist.entries()){
       const a=makeAssertion(first,pick),b=makeAssertion(second,pick);
-      const forward=await snapshot(apply(apply(s.dictionary(s.text()),a,'order-a'),b,'order-b'),seed+'/order/'+index+'/forward');
-      const reverse=await snapshot(apply(apply(s.dictionary(s.text()),b,'order-b'),a,'order-a'),seed+'/order/'+index+'/reverse');
+      const forward=await snapshot(apply(apply(s.dictionary(s.string()),a,'order-a'),b,'order-b'),seed+'/order/'+index+'/forward');
+      const reverse=await snapshot(apply(apply(s.dictionary(s.string()),b,'order-b'),a,'order-a'),seed+'/order/'+index+'/reverse');
       assert.deepEqual(forward,reverse,'Whitelisted order changed acceptance');orderChecks+=values.length;
     }
   }

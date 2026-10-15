@@ -11,5 +11,5 @@ pub fn typed_membership_test() {
   let assert Error([error]) = s.decode(def, value)
   error.category |> should.equal("contains_count")
   error.path |> should.equal("")
-  s.contains(s.text(), s.text(), 0, None) |> should.be_error
+  s.contains(s.string(), s.string(), 0, None) |> should.be_error
 }

@@ -6,7 +6,7 @@ import {compileOracle} from './oracle.mjs';
 import {compileSupplementary} from './supplementary-oracle.mjs';
 const inputs=values=>toList(values.map(v=>unwrap(s.parse(JSON.stringify(v)))));
 test('checked documentation examples agree with validators and never decode',async()=>{
- let calls=0;const d=s.map(s.text(),()=>{calls++;throw new Error('decoder');});
+ let calls=0;const d=s.map(s.string(),()=>{calls++;throw new Error('decoder');});
  const schema=emitted(d),checks=[compileOracle(schema),await compileSupplementary(schema)];
  const values=['text','</article><script>alert(1)</script>','😀'];
  for(const v of values)for(const check of checks)assert.equal(check(v).accepted,true);
@@ -20,6 +20,6 @@ test('all rejected examples retain index and paths and narrowing catches drift',
  assert.equal(result instanceof Ok,false);
  assert.deepEqual([...result[0]].map(e=>e.index),[1,2,3]);
  assert.deepEqual([...result[0]].map(e=>[...e.errors][0].path),['/0','','/1']);
- const value=inputs(['long']);assert.ok(docs.render_examples(s.text(),'old',value) instanceof Ok);
- assert.equal(docs.render_examples(unwrap(s.bounds(s.text(),None,new Some(2))),'new',value) instanceof Ok,false);
+ const value=inputs(['long']);assert.ok(docs.render_examples(s.string(),'old',value) instanceof Ok);
+ assert.equal(docs.render_examples(unwrap(s.bounds(s.string(),None,new Some(2))),'new',value) instanceof Ok,false);
 });

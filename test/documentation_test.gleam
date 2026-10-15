@@ -7,8 +7,8 @@ import gleeunit/should
 pub fn nested_definition_test() {
   let assert Ok(r) =
     s.record(fn(name) { fn(tags) { #(name, tags) } })
-    |> s.required("name", s.text() |> s.description("Name <not markup>"))
-  let assert Ok(r) = s.optional(r, "tags", s.array(s.nullable(s.text())))
+    |> s.required("name", s.string() |> s.description("Name <not markup>"))
+  let assert Ok(r) = s.optional(r, "tags", s.array(s.nullable(s.string())))
   let html = docs.render(s.finish(r, s.Strict), "person")
   string.contains(html, "<details class=\"node\" open>") |> should.be_true
   string.contains(html, "Name &lt;not markup&gt;") |> should.be_true
@@ -18,7 +18,7 @@ pub fn nested_definition_test() {
   string.contains(html, "class=\"badge policy\"") |> should.be_true
   string.contains(html, "strict</span></summary>") |> should.be_true
   string.contains(html, "unknown fields rejected") |> should.be_false
-  let html = docs.render(s.dictionary(s.text()), "dictionary")
+  let html = docs.render(s.dictionary(s.string()), "dictionary")
   string.contains(html, "class=\"type\">dictionary</span>") |> should.be_true
   string.contains(html, "each map value") |> should.be_true
   string.contains(html, "strict") |> should.be_false
@@ -26,7 +26,7 @@ pub fn nested_definition_test() {
 }
 
 pub fn named_definition_test() {
-  let assert Ok(item) = s.named("shared-item", s.text())
+  let assert Ok(item) = s.named("shared-item", s.string())
   let html = docs.render(s.array(item), "items")
   string.contains(html, "Shared definitions") |> should.be_true
   string.contains(html, "See shared structure") |> should.be_true
@@ -37,7 +37,7 @@ pub fn defaults_and_annotations_test() {
   let assert Ok(default) = s.parse("null")
   let assert Ok(r) =
     s.record(fn(x) { x })
-    |> s.defaulted("value", s.nullable(s.text()), default)
+    |> s.defaulted("value", s.nullable(s.string()), default)
   let html = docs.render(s.finish(r, s.Strict) |> s.title("<Example>"), "a\"b")
   string.contains(html, "default: null") |> should.be_true
   string.contains(html, "&lt;Example&gt;") |> should.be_true
@@ -59,7 +59,8 @@ pub fn alias_validation_test() {
 }
 
 pub fn arbitrary_tag_test() {
-  let assert Ok(r) = s.record(fn(text) { text }) |> s.required("text", s.text())
+  let assert Ok(r) =
+    s.record(fn(text) { text }) |> s.required("text", s.string())
   let assert Ok(definition) =
     s.tagged("mode", [s.variant("custom", r, s.Strict)])
   let html = docs.render(definition, "tagged")

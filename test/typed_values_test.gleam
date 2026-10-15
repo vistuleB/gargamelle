@@ -17,8 +17,8 @@ fn person_record() {
     s.record(fn(name) {
       fn(nickname) { fn(age) { Person(name, nickname, age) } }
     })
-    |> s.required("name", s.text())
-  let assert Ok(r) = s.optional(r, "nickname", s.nullable(s.text()))
+    |> s.required("name", s.string())
+  let assert Ok(r) = s.optional(r, "nickname", s.nullable(s.string()))
   let assert Ok(default) = s.parse("42")
   let assert Ok(r) = s.defaulted(r, "age", s.safe_integer(), default)
   r
@@ -55,8 +55,8 @@ pub fn dictionary_and_array_values_test() {
 
 pub fn annotated_two_fields_regression_test() {
   let assert Ok(r) =
-    s.record(fn(a) { fn(b) { #(a, b) } }) |> s.required("a", s.text())
-  let assert Ok(r) = s.required(r, "b", s.description(s.text(), "second"))
+    s.record(fn(a) { fn(b) { #(a, b) } }) |> s.required("a", s.string())
+  let assert Ok(r) = s.required(r, "b", s.description(s.string(), "second"))
   let d = s.description(s.finish(r, s.Strict), "outer")
   let assert Ok(v) = s.parse("{\"a\":\"one\",\"b\":\"two\"}")
   s.decode(d, v) |> should.equal(Ok(#("one", "two")))

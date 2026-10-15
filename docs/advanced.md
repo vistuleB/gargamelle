@@ -15,13 +15,13 @@ runs no conversion callbacks. Repeated calls replace the examples at that node.
 The HTML renderer displays these samples as metadata. For examples checked against
 an input contract before rendering, use `documentation.render_examples` instead.
 
-`default(definition, value)` adds a standalone default annotation. It neither
+`default_annotation(definition, value)` adds a standalone default annotation. It neither
 checks the sample against the definition nor substitutes it during decoding.
 Use `defaulted` for a record field whose absence should supply a validated value;
 that field's actual default overrides any standalone annotation on its child.
 
-`format(definition, "email")` describes a format without validating it. Standard
-and custom names are accepted; a non-email string still passes a text definition
+`format_annotation(definition, "email")` describes a format without validating it. Standard
+and custom names are accepted; a non-email string still passes a string definition
 annotated as email. HTML documentation labels this metadata as an annotation.
 Schema consumers must leave format assertions disabled to use the same acceptance
 semantics. Asserted formats are not supplied by this operation.
@@ -34,14 +34,14 @@ the same checks without enabling optional format assertions. It does not restric
 UUID version or variant bits. As in JSON Schema, format constraints apply only
 to string inputs; the base definition governs other types. UUID is the only
 asserted format currently supplied. Email, URI and date/time remain annotation-only.
-On a text base, primitive bounds and patterns can be applied before or after
+On a string base, primitive bounds and patterns can be applied before or after
 `assert_format`; its conditional assertion is retained.
 
 ## Modifier composition
 
 Modifier support follows the JSON input definition, subject to the function's
 Gleam signature. `map` changes decoded output; it does not change which JSON
-shape a modifier constrains. For example, `bounds` on text mapped to `Int` still
+shape a modifier constrains. For example, `bounds` on a string mapped to `Int` still
 limits string length, while `integer_multiple_of` rejects that input definition.
 
 | Modifier | Supported input base |
@@ -228,9 +228,9 @@ pub fn preferences_definition() {
     s.record(fn(label) {
       fn(notifications) { fn(theme) { Settings(label, notifications, theme) } }
     })
-  let assert Ok(settings) = s.required(settings, "label", s.text())
+  let assert Ok(settings) = s.required(settings, "label", s.string())
   let assert Ok(settings) = s.required(settings, "notifications", s.boolean())
-  let assert Ok(settings) = s.required(settings, "theme", s.text())
+  let assert Ok(settings) = s.required(settings, "theme", s.string())
 
   let fields =
     s.record(fn(enabled) {
@@ -243,11 +243,11 @@ pub fn preferences_definition() {
       }
     })
   let assert Ok(fields) = s.required(fields, "enabled", s.boolean())
-  let assert Ok(fields) = s.required(fields, "metadata", s.dictionary(s.text()))
-  let assert Ok(fields) = s.required(fields, "name", s.text())
+  let assert Ok(fields) = s.required(fields, "metadata", s.dictionary(s.string()))
+  let assert Ok(fields) = s.required(fields, "name", s.string())
   let assert Ok(fields) =
     s.required(fields, "settings", s.finish(settings, s.Strict))
-  let assert Ok(fields) = s.required(fields, "tags", s.array(s.text()))
+  let assert Ok(fields) = s.required(fields, "tags", s.array(s.string()))
   s.finish(fields, s.Strict)
 }
 
@@ -325,7 +325,7 @@ value:
 
 ```gleam
 let entry = gargamelle.tuple(fn(label) { fn(weight) { #(label, weight) } })
-  |> gargamelle.element(gargamelle.text())
+  |> gargamelle.element(gargamelle.string())
   |> gargamelle.element(gargamelle.number())
   |> gargamelle.finish_tuple
 // ["x", 1.25] decodes to #(String, Float); shorter/longer arrays are rejected.
@@ -350,10 +350,10 @@ a translation dictionary can require locale-shaped keys:
 
 ```gleam
 let assert Ok(locale) = gargamelle.pattern(
-  gargamelle.text(), "^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$",
+  gargamelle.string(), "^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$",
 )
 let assert Ok(translations) = gargamelle.property_names(
-  gargamelle.dictionary(gargamelle.text()), locale,
+  gargamelle.dictionary(gargamelle.string()), locale,
 )
 ```
 
@@ -414,7 +414,7 @@ consume array items; no depth cap is introduced. Complex overlapping body and
 match schemas may repeat validation work and increase decoding cost.
 
 A content array can require at least one non-whitespace text item using a
-matching text definition with the pattern `\S`. Other items still follow the
+matching string definition with the pattern `\S`. Other items still follow the
 base item definition. If items include reference objects, checking whether those
 references exist belongs in application code after decoding.
 
@@ -495,7 +495,7 @@ from itself can legitimately produce an unsatisfiable contract; construction doe
 not solve satisfiability. Supported modifiers can be applied before or after
 exclusion, preserving both the base constraints and the exclusion check.
 
-An identifier can use a nonempty text definition as its base and exclude strings
+An identifier can use a nonempty string definition as its base and exclude strings
 matching whitespace. Uniqueness across separately decoded records remains an
 application check.
 

@@ -439,7 +439,7 @@ bound is claimed. Nonfinite Float and unsafe Int inputs must fail rather than be
 silently normalized to null or rounded integer output. Encoding failures stop at
 the first failure. InvalidValue carries a JSON Pointer into the would-be output
 and a typed primitive reason. Compositions prepend escaped field names and decimal
-array indices; nullable, choice and projection wrappers add no segments. String
+array indices; nullable, Result and projection wrappers add no segments. String
 scalar checks occur before leaf serialization so domain errors retain their
 location. InvalidField identifies a rejected declaration key separately; there
 is no containing output path until the builder is composed. Final admission
@@ -463,11 +463,11 @@ both formats recovers the same admitted JSON value.
 conformance or changing acceptance/conversion. Repeated annotations of the same
 keyword at the same emitted node use the outermost (last supplied) value.
 
-`default` attaches an admitted JSON annotation without checking conformance or
+`default_annotation` attaches an admitted JSON annotation without checking conformance or
 changing conversion. A defaulted record field emits its validated declared
 default, overriding any standalone default annotation on its child.
 
-`format` is annotation-only, including custom names. Schema/decoder agreement
+`format_annotation` is annotation-only, including custom names. Schema/decoder agreement
 assumes external validators do not enable optional format assertions. A consumer
 that enables such assertions adds acceptance rules beyond this contract.
 
@@ -575,10 +575,10 @@ public constructor or emission facility is provided for that keyword.
 | Keywords | Coverage | Public API and restrictions |
 | --- | --- | --- |
 | `title`, `description` | Supported | Annotation constructors; no effect on acceptance or conversion. |
-| `default` | Supported | Metadata via `default`; defaulted record fields separately validate and insert their declared defaults during decoding. |
+| `default` | Supported | Metadata via `default_annotation`; defaulted record fields separately validate and insert their declared defaults during decoding. |
 | `examples` | Supported | Admitted JSON metadata, without automatic conformance checks. Checked HTML examples are a separate rendering operation. |
 | `deprecated`, `readOnly`, `writeOnly` | Unsupported | No corresponding annotation constructors. |
-| `format` | Restricted | Arbitrary annotation names via `format`; optional external format assertions must remain disabled for agreement. `assert_format(_, Uuid)` separately enforces UUID syntax through ordinary length and pattern assertions. No general Format-Assertion vocabulary support. |
+| `format` | Restricted | Arbitrary annotation names via `format_annotation`; optional external format assertions must remain disabled for agreement. `assert_format(_, Uuid)` separately enforces UUID syntax through ordinary length and pattern assertions. No general Format-Assertion vocabulary support. |
 | `contentEncoding`, `contentMediaType`, `contentSchema` | Unsupported | No encoded-content annotations, decoding or validation. |
 
 A schema may combine supported keywords only through the available constructors

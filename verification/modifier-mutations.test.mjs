@@ -24,7 +24,7 @@ import * as s from './gargamelle/gargamelle.mjs';
 import {Ok} from './gargamelle/gleam.mjs';
 import {Some,Option$None$const as None} from './gleam_stdlib/gleam/option.mjs';
 const unwrap=r=>{assert.ok(r instanceof Ok);return r[0];};
-const named=unwrap(s.named('bounded',s.text()));
+const named=unwrap(s.named('bounded',s.string()));
 const bounded=unwrap(s.bounds(named,new Some(2),None));
 assert.equal(s.validate(bounded,unwrap(s.parse('"ab"'))).isOk(),true);
 let d=unwrap(s.contains(s.array(s.safe_integer()),unwrap(s.integer_constant(1)),1,None));

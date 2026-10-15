@@ -42,7 +42,7 @@ test('seeded recursive trees preserve values and schema agreement',async()=>{
 
 function mutual(){return unwrap(s.recursive_pair('alpha','beta',(a,b)=>{
  let ar=unwrap(s.required(s.record(x=>({children:[...x]})),'children',s.array(b)));
- let br=unwrap(s.required(s.record(x=>next=>({name:x,next:next instanceof Some?next[0]:null})),'name',s.text()));
+ let br=unwrap(s.required(s.record(x=>next=>({name:x,next:next instanceof Some?next[0]:null})),'name',s.string()));
  br=unwrap(s.optional(br,'next',a));
  return new Ok([s.finish(ar,s.RecordPolicy$Strict$const),s.finish(br,s.RecordPolicy$Strict$const)]);
 }));}
@@ -78,13 +78,13 @@ test('construction rejects unresolved, non-progressing and conflicting recursion
  const d=unwrap(s.recursive('callback-tree',self=>{builderCalls++;return s.any_of(toList([s.map(s.number(),x=>{decoded.push(x);return x;}),s.map(s.array(self),xs=>[...xs])]));}));
  assert.equal(builderCalls,1);assert.deepEqual(decoded,[]);s.schema_string(d, s.JsonFormat$Compact$const);s.validate(d,unwrap(s.parse('[1,[2]]')));assert.deepEqual(decoded,[]);
  assert.deepEqual(evaluate(d,[1,[2]]).value,[1,[2]]);assert.deepEqual(decoded,[1,2]);assert.equal(builderCalls,1);
- const conflict=s.recursive('same',()=>new Ok(unwrap(s.named('same',s.text()))));assert.equal(conflict instanceof Ok,false);
+ const conflict=s.recursive('same',()=>new Ok(unwrap(s.named('same',s.string()))));assert.equal(conflict instanceof Ok,false);
  const independent=tree('other');assert.equal(evaluate(independent,[1]).accepted,true);
  let unbound;const marker=new s.ConstructionError('builder failure');
  const failed=s.recursive('failed',self=>{unbound=self;return new GleamError(marker);});
  assert.equal(failed instanceof Ok,false);assert.equal(failed[0],marker);
  assert.throws(()=>s.schema_string(unbound, s.JsonFormat$Compact$const),/unfinalized recursive/);
- const textTree=unwrap(s.recursive('tree',self=>s.any_of(toList([s.text(),s.map(s.array(self),xs=>[...xs])]))));
+ const textTree=unwrap(s.recursive('tree',self=>s.any_of(toList([s.string(),s.map(s.array(self),xs=>[...xs])]))));
  const wrapper=d=>unwrap(s.named('wrapper',s.array(d)));
  assert.throws(()=>s.schema_string(unwrap(s.any_of(toList([wrapper(tree()),wrapper(textTree)]))), s.JsonFormat$Compact$const),/Conflicting named schema definitions/);
 });

@@ -28,7 +28,7 @@ try{
   }
   for(const [index,entry] of regexCases.entries()){
     checkpoint={stage:'regex',index};
-    const expected=nativeJSRegex(entry),definition=s.pattern(s.text(),entry.pattern),valid=definition instanceof Ok;
+    const expected=nativeJSRegex(entry),definition=s.pattern(s.string(),entry.pattern),valid=definition instanceof Ok;
     require(valid===expected.valid,'Pattern syntax differs from browser RegExp at '+index);
     let actual={valid};
     if(valid){actual.matched=s.validate(definition[0],unwrap(s.parse(JSON.stringify(entry.text)))) instanceof Ok;
@@ -61,7 +61,7 @@ try{
   const target=document.getElementById(decodeURIComponent(location.hash.slice(1)));
   rendererCheck('hash navigation reveals definition',target&&target.querySelector('details')?.open);
   let calls=0;
-  const mapped=s.map(s.text(),()=>{calls++;throw new Error('Documentation decoded example');});
+  const mapped=s.map(s.string(),()=>{calls++;throw new Error('Documentation decoded example');});
   const examples=unwrap(docs.render_examples(mapped,'examples',toList([unwrap(s.parse('"</article><script>window.injected=true</script>"'))])));
   const container=document.createElement('div');container.innerHTML=examples;
   rendererCheck('checked examples suppress converters',calls===0);

@@ -73,7 +73,7 @@ test('bounds compose by intersection, retain exclusive equality, and reject inva
  }
  for(const [lo,hi] of [[new s.Inclusive(2),new s.Inclusive(1)],[new s.Exclusive(1),new s.Inclusive(1)],[new s.Inclusive(1),new s.Exclusive(1)],[new s.Exclusive(1),new s.Exclusive(1)]])assert.equal(s.number_bounds(s.number(),new Some(lo),new Some(hi)) instanceof Ok,false);
  assert.equal(s.number_bounds(singleton,new Some(new s.Exclusive(0.5)),None) instanceof Ok,false);
- assert.equal(s.number_bounds(s.map(s.text(),()=>1.0),None,None) instanceof Ok,false);
+ assert.equal(s.number_bounds(s.map(s.string(),()=>1.0),None,None) instanceof Ok,false);
  assert.equal(s.bounds(s.number(),new Some(1),None) instanceof Ok,false);
  // A mathematically nonempty interval can contain no representable number.
  const empty=bounded(new Some(new s.Exclusive(1)),new Some(new s.Exclusive(next(1,true))));

@@ -18,7 +18,7 @@ pub fn main() {
     s.required(
       s.record(fn(name) { fn(metadata) { #(name, metadata) } }),
       "name",
-      s.text(),
+      s.string(),
     )
   let assert Ok(fields) = s.required(fields, "metadata", s.anything())
   let definition = s.finish(fields, s.Strict)

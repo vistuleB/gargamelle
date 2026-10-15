@@ -23,7 +23,7 @@ pub fn children(
 ) -> Result(s.Plan(List(a), r), s.ConstructionError) {
   use constrained <- result.try(s.contains(
     s.array(child),
-    s.map(s.text(), fn(_) -> Nil { panic as "auxiliary conversion" }),
+    s.map(s.string(), fn(_) -> Nil { panic as "auxiliary conversion" }),
     0,
     Some(2),
   ))
@@ -33,7 +33,7 @@ pub fn children(
 fn tree() {
   s.recursive("tree", fn(self) {
     use branch <- result.try(children(self))
-    s.one_of([s.map(s.text(), Leaf), s.map(branch, Branch)])
+    s.one_of([s.map(s.string(), Leaf), s.map(branch, Branch)])
   })
 }
 
@@ -45,7 +45,7 @@ pub fn completed_definition_and_closure_survive_creator_exit_test() {
   let assert Ok(get) =
     handoff(fn() {
       use definition <- result.try(tree())
-      let mapped = s.map(s.text(), fn(_) { fn() { definition } })
+      let mapped = s.map(s.string(), fn(_) { fn() { definition } })
       let assert Ok(input) = s.parse("\"capture\"")
       Ok(s.decode(mapped, input))
     })
@@ -63,7 +63,7 @@ pub fn independent_pair_and_generic_helper_builder_once_test() {
         use body <- result.try(children(b))
         use other <- result.try(
           s.any_of([
-            s.text(),
+            s.string(),
             s.map(s.array(a), fn(xs) { list.length(xs) |> int_label }),
           ]),
         )
@@ -97,7 +97,7 @@ pub fn recursive_default_evidence_and_atomic_callback_suppression_test() {
       }),
       default,
     )
-  let assert Ok(fields) = s.required(fields, "a/~", s.text())
+  let assert Ok(fields) = s.required(fields, "a/~", s.string())
   let definition = s.finish(fields, s.Strict)
   let assert Ok(input) = s.parse("{\"a/~\":false,\"extra\":true}")
   let assert Error(errors) = s.decode(definition, input)
@@ -118,7 +118,7 @@ pub fn construction_resolution_names_and_guards_test() {
     use _ <- result.try(
       s.recursive("same", fn(_) { Ok(s.map(s.array(outer), fn(_) { "inner" })) }),
     )
-    Ok(s.text())
+    Ok(s.string())
   })
   |> should.be_error
   let assert Ok(empty) = s.parse("[]")
@@ -129,8 +129,8 @@ pub fn construction_resolution_names_and_guards_test() {
     })
   })
   |> should.be_error
-  s.recursive("invalid/name", fn(_) { Ok(s.text()) }) |> should.be_error
-  s.recursive("probe", fn(self) { Ok(s.exclude(s.text(), self)) })
+  s.recursive("invalid/name", fn(_) { Ok(s.string()) }) |> should.be_error
+  s.recursive("probe", fn(self) { Ok(s.exclude(s.string(), self)) })
   |> should.be_error
 }
 
@@ -142,7 +142,7 @@ pub fn captured_plan_cannot_hide_behind_imported_graph_sharing_test() {
   let assert Ok(completed) =
     s.recursive("captured", fn(self) {
       s.any_of([
-        s.map(s.text(), fn(_) { Captured(fn() { self }) }),
+        s.map(s.string(), fn(_) { Captured(fn() { self }) }),
         s.map(s.array(self), fn(_) { Captured(fn() { self }) }),
       ])
     })

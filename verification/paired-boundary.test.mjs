@@ -28,11 +28,11 @@ test('boundary paired API retains contract identity and typed encoding diagnosti
 
 test('paired callbacks propagate operational failures without invoking later handlers',()=>{
   const marker=new Error('application failure');let handled=0;
-  const contract=s.contract(s.text()),json=unwrap(s.parse('"Brainy"'));
-  const encoder=e.text();
+  const contract=s.contract(s.string()),json=unwrap(s.parse('"Brainy"'));
+  const encoder=e.string();
   const badEncoder=b.paired(contract,e.contramap(encoder,()=>{throw marker;}),()=>{handled++;},()=>{handled++;});
   assert.throws(()=>b.save(badEncoder,'Brainy'),error=>error===marker);
-  const badConversion=b.paired(s.contract(s.map(s.text(),()=>{throw marker;})),encoder,()=>{handled++;},()=>{handled++;});
+  const badConversion=b.paired(s.contract(s.map(s.string(),()=>{throw marker;})),encoder,()=>{handled++;},()=>{handled++;});
   assert.throws(()=>b.load(badConversion,json),error=>error===marker);
   const badCheck=b.paired(s.require(contract,'Throws',()=>{throw marker;}),encoder,()=>{handled++;},()=>{handled++;});
   assert.throws(()=>b.save(badCheck,'Brainy'),error=>error===marker);
@@ -71,9 +71,9 @@ test('paired guide runs on both targets and invalid constructions fail compilati
     const imports='import gargamelle as s\nimport gargamelle/boundary as b\nimport gargamelle/encoding as e\n';
     const cases=[
       ['opaque',imports+'pub fn main() { b.PairedBoundary(Nil, Nil) }',/Unknown module value/],
-      ['certificate',imports+'pub fn main() { let c = s.contract(s.text()) let p = b.paired(c, e.text(), fn(x, _) { x }, fn(_) { Nil }) let assert Ok(j) = s.parse("\\\"Brainy\\\"") let assert Ok(v) = s.verify(c, j) b.load(p, v) }',/Type mismatch/],
-      ['checked encoder',imports+'pub fn main() { let c = s.contract(s.text()) let codec = e.codec(e.text(), c) b.paired(c, e.encode(codec, _), fn(x, _) { x }, fn(_) { Nil }) }',/Type mismatch/],
-      ['raw output',imports+'pub fn main() { b.paired(s.contract(s.text()), fn(x) { Ok(x) }, fn(x, _) { x }, fn(_) { Nil }) }',/Type mismatch/],
+      ['certificate',imports+'pub fn main() { let c = s.contract(s.string()) let p = b.paired(c, e.string(), fn(x, _) { x }, fn(_) { Nil }) let assert Ok(j) = s.parse("\\\"Brainy\\\"") let assert Ok(v) = s.verify(c, j) b.load(p, v) }',/Type mismatch/],
+      ['checked encoder',imports+'pub fn main() { let c = s.contract(s.string()) let codec = e.codec(e.string(), c) b.paired(c, e.encode(codec, _), fn(x, _) { x }, fn(_) { Nil }) }',/Type mismatch/],
+      ['raw output',imports+'pub fn main() { b.paired(s.contract(s.string()), fn(x) { Ok(x) }, fn(x, _) { x }, fn(_) { Nil }) }',/Type mismatch/],
     ];
     for(const [name,source,diagnostic] of cases){
       writeFileSync(consumer,source+'\n');

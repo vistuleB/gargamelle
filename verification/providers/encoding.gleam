@@ -7,21 +7,21 @@ fn entry_encoder() {
     gargamelle_encoding.field(
       gargamelle_encoding.record(),
       "blankId",
-      gargamelle_encoding.text(),
+      gargamelle_encoding.string(),
       fn(value: cloze.Entry) { value.blank_id },
     )
   let assert Ok(fields) =
     gargamelle_encoding.field(
       fields,
       "response",
-      gargamelle_encoding.text(),
+      gargamelle_encoding.string(),
       fn(value) { value.response },
     )
   let assert Ok(fields) =
     gargamelle_encoding.field(
       fields,
       "accepted",
-      gargamelle_encoding.array(gargamelle_encoding.text()),
+      gargamelle_encoding.array(gargamelle_encoding.string()),
       fn(value) { value.accepted },
     )
   let assert Ok(fields) =
@@ -60,7 +60,7 @@ pub fn cloze_encoder() -> gargamelle_encoding.Encoder(cloze.Evidence) {
     gargamelle_encoding.field(
       gargamelle_encoding.record(),
       "type",
-      gargamelle_encoding.text(),
+      gargamelle_encoding.string(),
       fn(_: cloze.Evidence) { "cloze" },
     )
   let assert Ok(fields) =

@@ -56,7 +56,7 @@ pub fn distinct_mutually_recursive_types_test() {
       use rb <- result.try(s.required(
         s.record(fn(name) { fn(next) { Second(name, next) } }),
         "name",
-        s.text(),
+        s.string(),
       ))
       use rb <- result.try(s.optional(rb, "next", a))
       Ok(#(s.finish(ra, s.Strict), s.finish(rb, s.Strict)))
@@ -71,7 +71,7 @@ pub fn distinct_mutually_recursive_types_test() {
 
 pub fn non_progressing_recursion_test() {
   s.recursive("loop", fn(self) { Ok(self) }) |> should.be_error
-  s.recursive("loop", fn(self) { s.any_of([self, s.text()]) })
+  s.recursive("loop", fn(self) { s.any_of([self, s.string()]) })
   |> should.be_error
   s.recursive_pair("a", "b", fn(a, b) { Ok(#(b, a)) }) |> should.be_error
 }

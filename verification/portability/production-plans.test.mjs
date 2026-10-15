@@ -127,10 +127,10 @@ pub fn forbidden() {
       ['removed-policy-type', 'import gargamelle as s\nimport gargamelle/boundary as b\npub fn main(policy: s.Policy) { policy }', /Unknown module type/],
       ['removed-closed', 'import gargamelle as s\nimport gargamelle/boundary as b\npub fn main() { s.Closed }', /Unknown module value/],
       ['removed-value-text', 'import gargamelle as s\nimport gargamelle/boundary as b\npub fn main() { s.value_text(Nil) }', /Unknown module value/],
-      ['removed-emit-json', 'import gargamelle as s\nimport gargamelle/boundary as b\npub fn main() { s.emit_json(s.text()) }', /Unknown module value/],
-      ['removed-emit-text', 'import gargamelle as s\nimport gargamelle/boundary as b\npub fn main() { s.emit_text(s.text()) }', /Unknown module value/],
+      ['removed-emit-json', 'import gargamelle as s\nimport gargamelle/boundary as b\npub fn main() { s.emit_json(s.string()) }', /Unknown module value/],
+      ['removed-emit-text', 'import gargamelle as s\nimport gargamelle/boundary as b\npub fn main() { s.emit_text(s.string()) }', /Unknown module value/],
       ['missing-json-format', 'import gargamelle as s\nimport gargamelle/boundary as b\npub fn main() { let assert Ok(v) = s.parse("null") s.to_string(v) }', /Incorrect arity/],
-      ['missing-schema-format', 'import gargamelle as s\nimport gargamelle/boundary as b\npub fn main() { s.schema_string(s.text()) }', /Incorrect arity/],
+      ['missing-schema-format', 'import gargamelle as s\nimport gargamelle/boundary as b\npub fn main() { s.schema_string(s.string()) }', /Incorrect arity/],
       ['foreign-json', 'import gargamelle as s\nimport gargamelle/boundary as b\nimport gleam/json\npub fn main() -> s.Json { json.string("not admitted") }', /Type mismatch/],
       ['opaque-json', 'import gargamelle as s\nimport gargamelle/boundary as b\npub fn main() { s.Json("unadmitted") }', /Unknown module value/],
     ]) {

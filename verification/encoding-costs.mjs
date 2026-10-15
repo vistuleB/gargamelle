@@ -21,7 +21,7 @@ const measure=run=>{
 const rows=[];
 for(const length of [10,1000]){
   const raw=Array.from({length},(_,i)=>'Brainy '+i+' 😀');
-  const value=toList(raw),encoder=e.array(e.text()),definition=s.array(s.text());
+  const value=toList(raw),encoder=e.array(e.string()),definition=s.array(s.string());
   const structural=s.contract(definition);
   const semantic=s.require(structural,'Names nonempty',names=>[...names].every(name=>name.length>0)?new Ok(undefined):new Rejected(toList([new s.Violation('','Empty name')])));
   const encoded=unwrap(e.encode_json(encoder,value));

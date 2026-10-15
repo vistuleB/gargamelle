@@ -27,11 +27,11 @@ pub fn baseline() {
     gargamelle.required(
       gargamelle.record(constructor()),
       "name",
-      gargamelle.text(),
+      gargamelle.string(),
     )
   let assert Ok(fields) = gargamelle.required(fields, "age", age_definition())
   let assert Ok(fields) =
-    gargamelle.optional(fields, "nickname", gargamelle.text())
+    gargamelle.optional(fields, "nickname", gargamelle.string())
   let assert Ok(fields) =
     gargamelle.defaulted(
       fields,
@@ -44,7 +44,7 @@ pub fn baseline() {
     gargamelle_encoding.field(
       gargamelle_encoding.record(),
       "name",
-      gargamelle_encoding.text(),
+      gargamelle_encoding.string(),
       fn(person: Person) { person.name },
     )
   let assert Ok(fields) =
@@ -58,7 +58,7 @@ pub fn baseline() {
     gargamelle_encoding.optional_field(
       fields,
       "nickname",
-      gargamelle_encoding.text(),
+      gargamelle_encoding.string(),
       fn(person) { person.nickname },
     )
   let assert Ok(fields) =
@@ -75,8 +75,8 @@ pub fn shared() {
   shared_record.start(constructor())
   |> shared_record.required(
     "name",
-    gargamelle.text(),
-    gargamelle_encoding.text(),
+    gargamelle.string(),
+    gargamelle_encoding.string(),
     fn(person: Person) { person.name },
   )
   |> shared_record.required(
@@ -87,8 +87,8 @@ pub fn shared() {
   )
   |> shared_record.optional(
     "nickname",
-    gargamelle.text(),
-    gargamelle_encoding.text(),
+    gargamelle.string(),
+    gargamelle_encoding.string(),
     fn(person) { person.nickname },
   )
   |> shared_record.defaulted(

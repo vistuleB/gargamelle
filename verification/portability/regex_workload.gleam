@@ -10,9 +10,9 @@ fn measure(run: fn() -> Nil) -> #(Int, Int)
 
 fn field(patterned, pattern) {
   case patterned {
-    False -> s.text()
+    False -> s.string()
     True -> {
-      let assert Ok(definition) = s.pattern(s.text(), pattern)
+      let assert Ok(definition) = s.pattern(s.string(), pattern)
       definition
     }
   }

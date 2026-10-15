@@ -115,7 +115,7 @@ pub fn pointers_escape_keys_and_refer_to_encoded_shape_test() {
 }
 
 pub fn string_admission_retains_leaf_path_and_wrappers_add_no_segments_test() {
-  gargamelle_encoding.encode_json(gargamelle_encoding.text(), invalid_text())
+  gargamelle_encoding.encode_json(gargamelle_encoding.string(), invalid_text())
   |> should.equal(
     Error(gargamelle_encoding.InvalidValue(
       "",
@@ -127,7 +127,7 @@ pub fn string_admission_retains_leaf_path_and_wrappers_add_no_segments_test() {
       gargamelle_encoding.record(),
       "labels",
       gargamelle_encoding.array(
-        gargamelle_encoding.nullable(gargamelle_encoding.text()),
+        gargamelle_encoding.nullable(gargamelle_encoding.string()),
       ),
       fn(values) { values },
     )
@@ -145,7 +145,7 @@ pub fn string_admission_retains_leaf_path_and_wrappers_add_no_segments_test() {
     gargamelle_encoding.optional_field(
       gargamelle_encoding.record(),
       "alias",
-      gargamelle_encoding.text(),
+      gargamelle_encoding.string(),
       fn(value) { value },
     )
   gargamelle_encoding.encode_json(
@@ -161,8 +161,8 @@ pub fn string_admission_retains_leaf_path_and_wrappers_add_no_segments_test() {
   gargamelle_encoding.encode_json(gargamelle_encoding.finish(fields), None)
   |> should.be_ok
   let encoder =
-    gargamelle_encoding.choice(
-      gargamelle_encoding.text(),
+    gargamelle_encoding.result(
+      gargamelle_encoding.string(),
       gargamelle_encoding.safe_integer(),
     )
   gargamelle_encoding.encode_json(encoder, Ok(invalid_text()))
@@ -187,7 +187,7 @@ pub fn invalid_field_declarations_identify_key_without_running_getters_test() {
   gargamelle_encoding.field(
     gargamelle_encoding.record(),
     bad,
-    gargamelle_encoding.text(),
+    gargamelle_encoding.string(),
     fn(value) {
       tick()
       value
@@ -203,7 +203,7 @@ pub fn invalid_field_declarations_identify_key_without_running_getters_test() {
     gargamelle_encoding.field(
       gargamelle_encoding.record(),
       "a/~",
-      gargamelle_encoding.text(),
+      gargamelle_encoding.string(),
       fn(value) {
         tick()
         value
@@ -212,7 +212,7 @@ pub fn invalid_field_declarations_identify_key_without_running_getters_test() {
   gargamelle_encoding.optional_field(
     fields,
     "a/~",
-    gargamelle_encoding.text(),
+    gargamelle_encoding.string(),
     fn(value) {
       tick()
       Some(value)

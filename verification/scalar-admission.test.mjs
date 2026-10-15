@@ -31,14 +31,14 @@ test('scalar admission checks final strings and keys after syntax and duplicate 
 test('schema constructors reject non-scalar text without changing their return types',()=>{
   const invalid=String.fromCharCode(0xd800);
   for(const result of [
-    s.string_enum(toList([invalid])),s.pattern(s.text(),invalid),
-    s.required(s.record(x=>x),invalid,s.text()),
-    s.optional(s.record(x=>x),invalid,s.text()),
+    s.string_enum(toList([invalid])),s.pattern(s.string(),invalid),
+    s.required(s.record(x=>x),invalid,s.string()),
+    s.optional(s.record(x=>x),invalid,s.string()),
     s.tagged(invalid,toList([s.variant('ok',s.record('ok'),new s.Strict())])),
   ]) assert.equal(result instanceof Ok,false);
   for(const build of [
-    ()=>s.string_constant(invalid),()=>s.title(s.text(),invalid),
-    ()=>s.description(s.text(),invalid),()=>s.variant(invalid,s.record('x'),new s.Strict()),
+    ()=>s.string_constant(invalid),()=>s.title(s.string(),invalid),
+    ()=>s.description(s.string(),invalid),()=>s.variant(invalid,s.record('x'),new s.Strict()),
     ()=>s.variant_description(s.variant('ok',s.record('x'),new s.Strict()),invalid),
   ]) assert.throws(build,/Unicode scalar values/);
   assert.ok(s.string_enum(toList(['💜','e\u0301'])) instanceof Ok);

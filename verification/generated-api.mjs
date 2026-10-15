@@ -21,7 +21,7 @@ export function build(a) {
   switch(a.kind) {
     case 'boolean': d=s.boolean(); break;
     case 'null': d=s.map(s.null$(),()=>null); break;
-    case 'string': d=s.text(); if(a.min!=null||a.max!=null)d=unwrap(s.bounds(d,option(a.min),option(a.max))); for(const p of a.patterns??[])d=unwrap(s.pattern(d,p)); break;
+    case 'string': d=s.string(); if(a.min!=null||a.max!=null)d=unwrap(s.bounds(d,option(a.min),option(a.max))); for(const p of a.patterns??[])d=unwrap(s.pattern(d,p)); break;
     case 'integer': d=s.safe_integer(); if(a.min!=null||a.max!=null)d=unwrap(s.bounds(d,option(a.min),option(a.max))); break;
     case 'number': d=s.number(); if(a.min!=null||a.max!=null)d=unwrap(s.number_bounds(d,a.min==null?None:new Some(a.exclusiveMin?new s.Exclusive(a.min):new s.Inclusive(a.min)),a.max==null?None:new Some(a.exclusiveMax?new s.Exclusive(a.max):new s.Inclusive(a.max)))); break;
     case 'enum': d=unwrap(s.string_enum(toList(a.values))); break;

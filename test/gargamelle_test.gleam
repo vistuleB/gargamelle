@@ -13,16 +13,16 @@ pub fn admission_test() {
 
 pub fn nullable_test() {
   let assert Ok(v) = s.parse("null")
-  s.decode(s.nullable(s.nullable(s.text())), v) |> should.equal(Ok(None))
+  s.decode(s.nullable(s.nullable(s.string())), v) |> should.equal(Ok(None))
   let assert Ok(v) = s.parse("\"x\"")
-  s.decode(s.nullable(s.nullable(s.text())), v)
+  s.decode(s.nullable(s.nullable(s.string())), v)
   |> should.equal(Ok(Some(Some("x"))))
 }
 
 pub fn record_test() {
   let assert Ok(r) =
-    s.record(fn(a) { fn(b) { #(a, b) } }) |> s.required("a", s.text())
-  let assert Ok(r) = s.optional(r, "b", s.nullable(s.text()))
+    s.record(fn(a) { fn(b) { #(a, b) } }) |> s.required("a", s.string())
+  let assert Ok(r) = s.optional(r, "b", s.nullable(s.string()))
   let d = s.finish(r, s.Strict)
   let assert Ok(v) = s.parse("{\"a\":\"x\",\"b\":null}")
   s.decode(d, v) |> should.equal(Ok(#("x", Some(None))))
@@ -31,13 +31,14 @@ pub fn record_test() {
 }
 
 pub fn overlap_test() {
-  let assert Ok(d) = s.one_of([s.text(), s.text()])
+  let assert Ok(d) = s.one_of([s.string(), s.string()])
   let assert Ok(v) = s.parse("\"x\"")
   s.decode(d, v) |> should.be_error
 }
 
 pub fn hostile_test() {
-  let assert Ok(r) = s.record(fn(x) { x }) |> s.required("__proto__", s.text())
+  let assert Ok(r) =
+    s.record(fn(x) { x }) |> s.required("__proto__", s.string())
   let d = s.finish(r, s.Strict)
   let assert Ok(v) = s.parse("{\"__proto__\":\"x\"}")
   s.decode(d, v) |> should.equal(Ok("x"))
@@ -49,7 +50,7 @@ pub fn hostile_test() {
 
 pub fn defaults_do_not_call_callbacks_test() {
   let child =
-    s.map(s.text(), fn(_) {
+    s.map(s.string(), fn(_) {
       panic as "must not run while constructing or emitting"
     })
   let assert Ok(v) = s.parse("\"default\"")
@@ -68,7 +69,7 @@ pub fn callbacks_inspecting_values_test() {
         _ -> panic as "wrong value"
       }
     })
-    |> s.required("x", s.text())
+    |> s.required("x", s.string())
   let d = s.finish(r, s.Strict)
   s.schema_string(d, s.Compact) |> should.not_equal("")
   let assert Ok(v) = s.parse("{\"x\":\"expected\"}")
@@ -80,26 +81,26 @@ pub fn constructor_failures_test() {
   s.string_enum(["a", "a"]) |> should.be_error
   s.any_of([]) |> should.be_error
   s.one_of([]) |> should.be_error
-  s.pattern(s.text(), "[") |> should.be_error
-  s.bounds(s.text(), Some(-1), None) |> should.be_error
+  s.pattern(s.string(), "[") |> should.be_error
+  s.bounds(s.string(), Some(-1), None) |> should.be_error
   s.bounds(s.safe_integer(), Some(4), Some(2)) |> should.be_error
   let unsafe_integer = 9_007_199_254_740_991 + 1
   s.integer_constant(unsafe_integer) |> should.be_error
-  s.bounds(s.text(), None, Some(unsafe_integer)) |> should.be_error
+  s.bounds(s.string(), None, Some(unsafe_integer)) |> should.be_error
   let assert Ok(r) =
-    s.record(fn(a) { fn(b) { #(a, b) } }) |> s.required("x", s.text())
-  s.required(r, "x", s.text()) |> should.be_error
+    s.record(fn(a) { fn(b) { #(a, b) } }) |> s.required("x", s.string())
+  s.required(r, "x", s.string()) |> should.be_error
   let assert Ok(v) = s.parse("false")
-  s.record(fn(x) { x }) |> s.defaulted("x", s.text(), v) |> should.be_error
+  s.record(fn(x) { x }) |> s.defaulted("x", s.string(), v) |> should.be_error
 }
 
 pub fn unicode_and_intersections_test() {
-  let assert Ok(d) = s.bounds(s.text(), Some(1), Some(1))
+  let assert Ok(d) = s.bounds(s.string(), Some(1), Some(1))
   let assert Ok(v) = s.parse("\"😀\"")
   s.decode(d, v) |> should.equal(Ok("😀"))
   let assert Ok(v) = s.parse("\"é\"")
   s.decode(d, v) |> should.be_error
-  let assert Ok(d) = s.pattern(s.text(), "a")
+  let assert Ok(d) = s.pattern(s.string(), "a")
   let assert Ok(d) = s.pattern(d, "b")
   let assert Ok(d) = s.pattern(d, "a")
   let assert Ok(v) = s.parse("\"ab\"")
@@ -110,7 +111,7 @@ pub fn unicode_and_intersections_test() {
 }
 
 pub fn tagged_diagnostics_test() {
-  let assert Ok(r) = s.record(fn(x) { x }) |> s.required("a/b~", s.text())
+  let assert Ok(r) = s.record(fn(x) { x }) |> s.required("a/b~", s.string())
   let assert Ok(d) = s.tagged("kind", [s.variant("x", r, s.Strict)])
   let assert Ok(v) = s.parse("{}")
   s.decode(d, v)
@@ -134,13 +135,13 @@ pub fn tagged_diagnostics_test() {
   s.decode(d, v) |> should.equal(Ok("payload"))
   s.tagged("kind", [s.variant("x", r, s.Strict), s.variant("x", r, s.Strict)])
   |> should.be_error
-  let assert Ok(r) = s.record(fn(x) { x }) |> s.required("kind", s.text())
+  let assert Ok(r) = s.record(fn(x) { x }) |> s.required("kind", s.string())
   s.tagged("kind", [s.variant("x", r, s.Strict)]) |> should.be_error
 }
 
 pub fn nullable_error_path_test() {
   let assert Ok(r) =
-    s.record(fn(x) { x }) |> s.required("x", s.nullable(s.text()))
+    s.record(fn(x) { x }) |> s.required("x", s.nullable(s.string()))
   let assert Ok(v) = s.parse("{\"x\":false}")
   s.decode(s.finish(r, s.Strict), v)
   |> should.equal(Error([s.DataError("string_type", "/x", None, [], [])]))
@@ -160,7 +161,7 @@ pub fn all_constants_test() {
 pub fn default_presence_test() {
   let assert Ok(default) = s.parse("\"fallback\"")
   let assert Ok(r) =
-    s.record(fn(x) { x }) |> s.defaulted("x", s.text(), default)
+    s.record(fn(x) { x }) |> s.defaulted("x", s.string(), default)
   let d = s.finish(r, s.Strict)
   let assert Ok(v) = s.parse("{}")
   s.decode(d, v) |> should.equal(Ok("fallback"))

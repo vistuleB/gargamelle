@@ -21,19 +21,19 @@ async function check(def,values,expected,label){
  }
  return schema;
 }
-const wrap=(d,name)=>unwrap(s.named(name,s.title(s.description(s.examples(s.default$(s.format(d,'custom'),unwrap(s.parse('null'))),toList([unwrap(s.parse('false'))])),'description'),'title')));
+const wrap=(d,name)=>unwrap(s.named(name,s.title(s.description(s.examples(s.default_annotation(s.format_annotation(d,'custom'),unwrap(s.parse('null'))),toList([unwrap(s.parse('false'))])),'description'),'title')));
 const cases=[
- {name:'text bounds',base:()=>s.text(),modify:d=>unwrap(s.bounds(d,new Some(2),new Some(4))),values:['','a','ab','abcd','abcde',false],expected:[false,false,true,true,false,false]},
- {name:'text pattern',base:()=>s.text(),modify:d=>unwrap(s.pattern(d,'^a+$')),values:['','a','aa','ab',null],expected:[false,true,true,false,false]},
+ {name:'text bounds',base:()=>s.string(),modify:d=>unwrap(s.bounds(d,new Some(2),new Some(4))),values:['','a','ab','abcd','abcde',false],expected:[false,false,true,true,false,false]},
+ {name:'text pattern',base:()=>s.string(),modify:d=>unwrap(s.pattern(d,'^a+$')),values:['','a','aa','ab',null],expected:[false,true,true,false,false]},
  {name:'integer bounds',base:()=>s.safe_integer(),modify:d=>unwrap(s.bounds(d,new Some(2),new Some(4))),values:[1,2,3,4,5,2.5,'3'],expected:[false,true,true,true,false,false,false]},
  {name:'number bounds',base:()=>s.number(),modify:d=>unwrap(s.number_bounds(d,new Some(new s.Exclusive(1)),new Some(new s.Inclusive(2)))),values:[1,1.5,2,2.5,'1.5'],expected:[false,true,true,false,false]},
  {name:'integer multiples',base:()=>s.safe_integer(),modify:d=>unwrap(s.integer_multiple_of(d,3)),values:[0,3,-3,4,1.5,'3'],expected:[true,true,true,false,false,false]},
- {name:'array bounds',base:()=>s.array(s.text()),modify:d=>unwrap(s.bounds(d,new Some(1),new Some(2))),values:[[],['a'],['a','b'],['a','b','c'],[false],{}],expected:[false,true,true,false,false,false]},
- {name:'dictionary bounds',base:()=>s.dictionary(s.text()),modify:d=>unwrap(s.bounds(d,new Some(1),new Some(2))),values:[{},{a:'x'},{a:'x',b:'y'},{a:'x',b:'y',c:'z'},{a:false},[]],expected:[false,true,true,false,false,false]},
- {name:'unique items',base:()=>s.array(s.text()),modify:d=>unwrap(s.unique_items(d)),values:[[],['a'],['a','b'],['a','a'],[false],{}],expected:[true,true,true,false,false,false]},
- {name:'contains',base:()=>s.array(s.text()),modify:d=>unwrap(s.contains(d,s.string_constant('a'),1,None)),values:[[],['a'],['b'],['a','b'],[false]],expected:[false,true,false,true,false]},
- {name:'property names',base:()=>s.dictionary(s.text()),modify:d=>unwrap(s.property_names(d,unwrap(s.pattern(s.text(),'^a')))),values:[{},{a:'x'},{b:'x'},{a:false},[]],expected:[true,true,false,false,false]},
- {name:'dependencies',base:()=>s.dictionary(s.text()),modify:d=>unwrap(s.dependent_required(d,'a',toList(['b']))),values:[{},{a:'x'},{b:'x'},{a:'x',b:'x'},{a:null}],expected:[true,false,true,true,false]},
+ {name:'array bounds',base:()=>s.array(s.string()),modify:d=>unwrap(s.bounds(d,new Some(1),new Some(2))),values:[[],['a'],['a','b'],['a','b','c'],[false],{}],expected:[false,true,true,false,false,false]},
+ {name:'dictionary bounds',base:()=>s.dictionary(s.string()),modify:d=>unwrap(s.bounds(d,new Some(1),new Some(2))),values:[{},{a:'x'},{a:'x',b:'y'},{a:'x',b:'y',c:'z'},{a:false},[]],expected:[false,true,true,false,false,false]},
+ {name:'unique items',base:()=>s.array(s.string()),modify:d=>unwrap(s.unique_items(d)),values:[[],['a'],['a','b'],['a','a'],[false],{}],expected:[true,true,true,false,false,false]},
+ {name:'contains',base:()=>s.array(s.string()),modify:d=>unwrap(s.contains(d,s.string_constant('a'),1,None)),values:[[],['a'],['b'],['a','b'],[false]],expected:[false,true,false,true,false]},
+ {name:'property names',base:()=>s.dictionary(s.string()),modify:d=>unwrap(s.property_names(d,unwrap(s.pattern(s.string(),'^a')))),values:[{},{a:'x'},{b:'x'},{a:false},[]],expected:[true,true,false,false,false]},
+ {name:'dependencies',base:()=>s.dictionary(s.string()),modify:d=>unwrap(s.dependent_required(d,'a',toList(['b']))),values:[{},{a:'x'},{b:'x'},{a:'x',b:'x'},{a:null}],expected:[true,false,true,true,false]},
 ];
 
 test('named and every annotation preserve modifier support, acceptance and mapped output',async()=>{
@@ -59,9 +59,9 @@ test('named and every annotation preserve modifier support, acceptance and mappe
 
 test('same-input assertions compose without running auxiliary converters',async()=>{
  const forbidden=s.map(s.string_constant('bad'),()=>{throw Error('forbidden converter ran');});
- const consequence=s.map(unwrap(s.bounds(s.text(),new Some(2),None)),()=>{throw Error('consequence converter ran');});
- const condition=s.map(s.text(),()=>{throw Error('condition converter ran');});
- let text=s.if_then(s.exclude(wrap(s.text(),'constrained-text'),forbidden),condition,consequence);
+ const consequence=s.map(unwrap(s.bounds(s.string(),new Some(2),None)),()=>{throw Error('consequence converter ran');});
+ const condition=s.map(s.string(),()=>{throw Error('condition converter ran');});
+ let text=s.if_then(s.exclude(wrap(s.string(),'constrained-text'),forbidden),condition,consequence);
  text=unwrap(s.pattern(unwrap(s.bounds(text,None,new Some(3))),'^[a-z]+$'));
  await check(text,['a','ab','abc','abcd','bad','AB',false],[false,true,true,false,false,false,false],'asserted text');
  let integer=s.exclude(wrap(s.safe_integer(),'constrained-int'),unwrap(s.integer_constant(6)));
@@ -90,9 +90,9 @@ test('separated array modifiers preserve membership, uniqueness, size and prior 
  conditional=unwrap(s.unique_items(conditional));
  conditional=unwrap(s.bounds(conditional,new Some(1),new Some(3)));
  await check(conditional,[[3],[1,2,3],[1,3],[2],[3,3]], [true,true,false,false,false],'conditional arrays');
- let counted=unwrap(s.contains(s.array(s.text()),unwrap(s.pattern(s.text(),'^a')),1,new Some(1)));
+ let counted=unwrap(s.contains(s.array(s.string()),unwrap(s.pattern(s.string(),'^a')),1,new Some(1)));
  counted=unwrap(s.unique_items(counted));
- counted=unwrap(s.contains(counted,unwrap(s.pattern(s.text(),'^b')),1,None));
+ counted=unwrap(s.contains(counted,unwrap(s.pattern(s.string(),'^b')),1,None));
  await check(counted,[['a','b'],['a','ab','b'],['b'],['a'],['a','c','b'],[]],
   [true,false,false,false,true,false],'separated contains upper limits');
 
@@ -100,7 +100,7 @@ test('separated array modifiers preserve membership, uniqueness, size and prior 
 });
 
 test('unsupported shapes and references produce construction errors rather than distribution',()=>{
- const wrong=[s.nullable(s.text()),unwrap(s.any_of(toList([s.text(),s.boolean()]))),s.string_constant('a'),s.anything()];
+ const wrong=[s.nullable(s.string()),unwrap(s.any_of(toList([s.string(),s.boolean()]))),s.string_constant('a'),s.anything()];
  for(const d of wrong){assert.equal(s.bounds(d,None,new Some(2)).isOk(),false);assert.equal(s.pattern(d,'a').isOk(),false);}
  const tree=unwrap(s.recursive('tree',self=>new Ok(s.array(self))));
  assert.equal(s.bounds(tree,None,new Some(2)).isOk(),false);
@@ -108,16 +108,16 @@ test('unsupported shapes and references produce construction errors rather than 
  assert.equal(s.unique_items(tree).isOk(),false);
  const referenceResult=s.recursive('reference',self=>s.bounds(self,None,new Some(2)));
  assert.equal(referenceResult.isOk(),false);
- const tuple=s.finish_tuple(s.element(s.tuple(x=>x),s.text()));
+ const tuple=s.finish_tuple(s.element(s.tuple(x=>x),s.string()));
  assert.equal(s.unique_items(tuple).isOk(),false);assert.equal(s.bounds(tuple,None,new Some(2)).isOk(),false);
- assert.equal(s.property_names(s.nullable(s.dictionary(s.text())),s.text()).isOk(),false);
- assert.equal(s.dependent_required(s.array(s.text()),'a',toList(['b'])).isOk(),false);
- assert.equal(s.number_bounds(s.map(s.text(),()=>1.0),None,new Some(new s.Inclusive(2))).isOk(),false);
+ assert.equal(s.property_names(s.nullable(s.dictionary(s.string())),s.string()).isOk(),false);
+ assert.equal(s.dependent_required(s.array(s.string()),'a',toList(['b'])).isOk(),false);
+ assert.equal(s.number_bounds(s.map(s.string(),()=>1.0),None,new Some(new s.Inclusive(2))).isOk(),false);
  assert.equal(s.pattern(s.map(s.number(),()=>''),'a').isOk(),false);
 });
 
 test('shape-rewriting modifiers preserve names and reject conflicting reuse explicitly',()=>{
- const original=unwrap(s.named('shared',s.text()));
+ const original=unwrap(s.named('shared',s.string()));
  const changed=unwrap(s.bounds(original,new Some(2),None));
  assert.equal(emitted(changed).$defs.shared.minLength,2);
  const combined=unwrap(s.any_of(toList([original,changed])));
@@ -125,7 +125,7 @@ test('shape-rewriting modifiers preserve names and reject conflicting reuse expl
  assert.throws(()=>s.validate(combined,unwrap(s.parse('"ab"'))),/conflicting names/);
  assert.equal(s.bounds(changed,None,new Some(1)).isOk(),false);
  // Assertion-only modifiers remain local to a use of a shared named definition.
- const sharedArray=unwrap(s.named('shared-array',s.array(s.text())));
+ const sharedArray=unwrap(s.named('shared-array',s.array(s.string())));
  const unique=unwrap(s.unique_items(sharedArray));
  const useBoth=unwrap(s.any_of(toList([sharedArray,unique])));
  assert.equal(Object.keys(emitted(useBoth).$defs).length,1);

@@ -6,7 +6,7 @@ pub type Captured {
 }
 
 pub fn captured_definition() {
-  let assert Ok(completed) = s.recursive("captured", fn(_) { Ok(s.text()) })
+  let assert Ok(completed) = s.recursive("captured", fn(_) { Ok(s.string()) })
   Ok(s.map(completed, fn(_) { Captured(fn() { completed }) }))
 }
 
@@ -31,7 +31,7 @@ pub type Second {
 pub fn captured_completed_pair_test() {
   let assert Ok(#(first, second)) =
     s.recursive_pair("first", "second", fn(_, _) {
-      Ok(#(s.text(), s.boolean()))
+      Ok(#(s.string(), s.boolean()))
     })
   let assert Ok(text) = s.parse("\"value\"")
   let assert Ok(boolean) = s.parse("true")

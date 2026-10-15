@@ -57,7 +57,7 @@ test('annotations, defaults and number-like property names retain canonical stru
 
 test('callback instrumentation sees only actual decoded values, no discovery/default validation calls',()=>{
  let calls=[];
- const child=s.map(s.text(),x=>{calls.push(['map',x]);return x.toUpperCase();});
+ const child=s.map(s.string(),x=>{calls.push(['map',x]);return x.toUpperCase();});
  let record=s.record(x=>{calls.push(['record',x]);return x;});
  record=unwrap(s.defaulted(record,'a',child,unwrap(s.parse('"fallback"'))));
  const d=s.finish(record,s.RecordPolicy$Strict$const);
@@ -67,18 +67,18 @@ test('callback instrumentation sees only actual decoded values, no discovery/def
 });
 
 test('construction failure matrix rejects invalid sizes, bounds, defaults, enums and branches',()=>{
- for(const n of [-1,0.5,Infinity,NaN,Number.MAX_SAFE_INTEGER+1])for(const d of [s.text(),s.array(s.text()),s.dictionary(s.text())])assert.equal(s.bounds(d,new Some(n),None) instanceof Ok,false);
+ for(const n of [-1,0.5,Infinity,NaN,Number.MAX_SAFE_INTEGER+1])for(const d of [s.string(),s.array(s.string()),s.dictionary(s.string())])assert.equal(s.bounds(d,new Some(n),None) instanceof Ok,false);
  for(const n of [0.5,Infinity,NaN,Number.MAX_SAFE_INTEGER+1,-Number.MAX_SAFE_INTEGER-1])assert.equal(s.bounds(s.safe_integer(),new Some(n),None) instanceof Ok,false);
- for(const d of [s.text(),s.safe_integer(),s.array(s.text()),s.dictionary(s.text())])assert.equal(s.bounds(d,new Some(3),new Some(2)) instanceof Ok,false);
- const bounded=unwrap(s.bounds(s.text(),new Some(3),None));assert.equal(s.bounds(bounded,None,new Some(2)) instanceof Ok,false);
- assert.equal(s.pattern(s.text(),'[') instanceof Ok,false);
+ for(const d of [s.string(),s.safe_integer(),s.array(s.string()),s.dictionary(s.string())])assert.equal(s.bounds(d,new Some(3),new Some(2)) instanceof Ok,false);
+ const bounded=unwrap(s.bounds(s.string(),new Some(3),None));assert.equal(s.bounds(bounded,None,new Some(2)) instanceof Ok,false);
+ assert.equal(s.pattern(s.string(),'[') instanceof Ok,false);
  for(const values of [[],['a','a']])assert.equal(s.string_enum(toList(values)) instanceof Ok,false);
  for(const union of [s.any_of,s.one_of])assert.equal(union(toList([])) instanceof Ok,false);
  assert.equal(s.tagged('kind',toList([])) instanceof Ok,false);
  assert.equal(s.tagged('kind',toList([s.variant('a',s.record(null),s.RecordPolicy$Strict$const),s.variant('a',s.record(null),s.RecordPolicy$Strict$const)])) instanceof Ok,false);
- let r=unwrap(s.required(s.record(x=>x),'kind',s.text()));assert.equal(s.tagged('kind',toList([s.variant('a',r,s.RecordPolicy$Strict$const)])) instanceof Ok,false);
- r=unwrap(s.required(s.record(x=>y=>[x,y]),'x',s.text()));assert.equal(s.required(r,'x',s.text()) instanceof Ok,false);assert.equal(s.optional(r,'x',s.text()) instanceof Ok,false);
- assert.equal(s.defaulted(s.record(x=>x),'x',s.text(),unwrap(s.parse('null'))) instanceof Ok,false);
+ let r=unwrap(s.required(s.record(x=>x),'kind',s.string()));assert.equal(s.tagged('kind',toList([s.variant('a',r,s.RecordPolicy$Strict$const)])) instanceof Ok,false);
+ r=unwrap(s.required(s.record(x=>y=>[x,y]),'x',s.string()));assert.equal(s.required(r,'x',s.string()) instanceof Ok,false);assert.equal(s.optional(r,'x',s.string()) instanceof Ok,false);
+ assert.equal(s.defaulted(s.record(x=>x),'x',s.string(),unwrap(s.parse('null'))) instanceof Ok,false);
 });
 
 test('safe-integer endpoints and repeated bound intersections are explicit',()=>{

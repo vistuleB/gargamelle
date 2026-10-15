@@ -595,7 +595,7 @@ pub fn null() -> Plan(Nil, r) {
 }
 
 /// Accept JSON strings.
-pub fn text() -> Plan(String, r) {
+pub fn string() -> Plan(String, r) {
   definition(StringNode(None, None, []), fn(_, v, _) {
     case v {
       JString(s) -> s
@@ -1346,7 +1346,7 @@ pub fn examples(def: Plan(a, r), values: List(Json)) -> Plan(a, r) {
 /// decoding or checking this sample against the definition. `defaulted` is the
 /// separate record-field operation for validated defaults applied on absence.
 /// A defaulted field's declared default takes precedence over child annotations.
-pub fn default(def: Plan(a, r), value: Json) -> Plan(a, r) {
+pub fn default_annotation(def: Plan(a, r), value: Json) -> Plan(a, r) {
   let Plan(node, convert) = def
   definition(AnnotatedNode(node, "default", value), convert)
 }
@@ -1354,7 +1354,7 @@ pub fn default(def: Plan(a, r), value: Json) -> Plan(a, r) {
 /// Attach a JSON Schema `format` annotation, such as "email" or "uuid".
 /// This does not check the format, change acceptance or invoke converters.
 /// Custom names are allowed. Names must contain only Unicode scalar values.
-pub fn format(def: Plan(a, r), name: String) -> Plan(a, r) {
+pub fn format_annotation(def: Plan(a, r), name: String) -> Plan(a, r) {
   let assert Ok(_) = scalar_argument(name)
     as "String argument must contain Unicode scalar values"
   let Plan(node, convert) = def
@@ -1373,11 +1373,11 @@ pub fn assert_format(
     Uuid -> {
       let assert Ok(uuid) =
         pattern(
-          text(),
+          string(),
           "^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$",
         )
       let assert Ok(uuid) = bounds(uuid, Some(36), Some(36))
-      if_then(def, text(), format(uuid, "uuid"))
+      if_then(def, string(), format_annotation(uuid, "uuid"))
     }
   }
 }

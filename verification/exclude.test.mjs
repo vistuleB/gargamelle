@@ -7,8 +7,8 @@ import * as docs from '../build/dev/javascript/gargamelle/gargamelle/documentati
 async function compare(d,cases){const schema=emitted(d),checks=[compileOracle(schema),await compileSupplementary(schema)];for(const [v,accepted,output] of cases){const actual=evaluate(d,v);assert.equal(actual.accepted,accepted,JSON.stringify(v));for(const check of checks)assert.equal(check(v).accepted,accepted);if(accepted&&output!==undefined)assert.deepEqual(actual.value,output);}}
 
 test('formula code exclusion forbids whitespace, backslash and Unicode punctuation',async()=>{
- const bad=unwrap(s.pattern(s.text(),String.raw`[\\\s\p{P}]`));
- const d=s.exclude(unwrap(s.bounds(s.text(),new Some(1),None)),bad);
+ const bad=unwrap(s.pattern(s.string(),String.raw`[\\\s\p{P}]`));
+ const d=s.exclude(unwrap(s.bounds(s.string(),new Some(1),None)),bad);
  const accepted=['alpha','α','a1','+','∞','😀','e\u0301','\u200b','\ue000'];
  const rejected=['',' ','a b','a\nb','a\tb','a\u00a0b','a\ufeffb','a\\b','a_b','a-b','a:b','a/b','a—b','a。b'];
  await compare(d,[...accepted.map(v=>[v,true,v]),...rejected.map(v=>[v,false]),[1,false],[null,false]]);
@@ -27,7 +27,7 @@ test('exclusion preserves output, intersects repeated constraints and suppresses
  assert.equal(emitted(repeated).allOf.length,2); // annotation preserves the nested first exclusion.
  const direct=s.exclude(s.exclude(s.number(),s.safe_integer()),unwrap(s.number_bounds(s.number(),None,new Some(new s.Inclusive(0)))));
  assert.equal(emitted(direct).allOf.length,3);
- await compare(s.exclude(s.text(),s.number()),[['x',true,'x'],[1,false]]);
+ await compare(s.exclude(s.string(),s.number()),[['x',true,'x'],[1,false]]);
  await compare(s.exclude(s.number(),s.number()),[[1,false],[0.5,false]]);
 });
 
@@ -48,5 +48,5 @@ test('exclusion collects forbidden references and rejects same-input recursive c
  assert.equal(s.recursive('loop',self=>new Ok(s.exclude(s.number(),self))) instanceof Ok,false);
  let escaped;assert.throws(()=>s.recursive('unbound',self=>{escaped=s.exclude(s.number(),self);throw new Error('stop');}),/stop/);
  assert.throws(()=>s.schema_string(escaped, s.JsonFormat$Compact$const),/unfinalized/);assert.throws(()=>evaluate(escaped,1),/unfinalized/);
- const conflict=s.exclude(unwrap(s.named('same',s.number())),unwrap(s.named('same',s.text())));assert.throws(()=>s.schema_string(conflict, s.JsonFormat$Compact$const),/Conflicting/);
+ const conflict=s.exclude(unwrap(s.named('same',s.number())),unwrap(s.named('same',s.string())));assert.throws(()=>s.schema_string(conflict, s.JsonFormat$Compact$const),/Conflicting/);
 });

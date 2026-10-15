@@ -8,7 +8,7 @@ pub type Tree {
 
 pub fn presence_and_null_test() {
   let assert Ok(definition) =
-    s.dependent_required(s.dictionary(s.nullable(s.text())), "token", [
+    s.dependent_required(s.dictionary(s.nullable(s.string())), "token", [
       "expires_at",
     ])
   let assert Ok(absent) = s.parse("{}")
@@ -26,7 +26,7 @@ pub fn presence_and_null_test() {
 pub fn defaults_do_not_trigger_dependencies_test() {
   let assert Ok(default) = s.parse("\"default\"")
   let assert Ok(record) =
-    s.defaulted(s.record(fn(token) { token }), "token", s.text(), default)
+    s.defaulted(s.record(fn(token) { token }), "token", s.string(), default)
   let assert Ok(definition) =
     s.dependent_required(s.finish(record, s.Open), "token", ["expires_at"])
   let assert Ok(empty) = s.parse("{}")
@@ -52,7 +52,7 @@ pub fn repeated_rules_and_modifiers_test() {
 }
 
 pub fn construction_and_recursive_composition_test() {
-  s.dependent_required(s.text(), "a", []) |> should.be_error
+  s.dependent_required(s.string(), "a", []) |> should.be_error
   let assert Ok(definition) =
     s.recursive("dependent-tree", fn(self) {
       let assert Ok(record) =
@@ -69,10 +69,10 @@ pub fn construction_and_recursive_composition_test() {
 
 pub fn alternating_object_modifiers_preserve_dependencies_test() {
   let assert Ok(definition) =
-    s.dependent_required(s.dictionary(s.text()), "a", ["b"])
-  let assert Ok(definition) = s.property_names(definition, s.text())
+    s.dependent_required(s.dictionary(s.string()), "a", ["b"])
+  let assert Ok(definition) = s.property_names(definition, s.string())
   let assert Ok(definition) = s.dependent_required(definition, "c", ["d"])
-  let assert Ok(definition) = s.property_names(definition, s.text())
+  let assert Ok(definition) = s.property_names(definition, s.string())
   let assert Ok(definition) = s.dependent_required(definition, "a", ["e"])
   let assert Ok(expected) =
     s.parse(

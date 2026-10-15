@@ -91,7 +91,7 @@ pub fn json() -> Plan(s.Json, r) {
 }
 
 /// Encode a Gleam string. Admission rejects unpaired Unicode surrogates.
-pub fn text() -> Plan(String, r) {
+pub fn string() -> Plan(String, r) {
   Plan(fn(_, value) {
     case scalar(value) {
       True -> Ok(json.string(value))
@@ -170,13 +170,13 @@ pub fn nullable(encoder: Plan(a, r)) -> Plan(Option(a), r) {
 }
 
 /// Encode the selected Result branch. A projection can adapt an application sum type.
-pub fn choice(first: Plan(a, r), second: Plan(b, r)) -> Plan(Result(a, b), r) {
-  let Plan(run_first) = first
-  let Plan(run_second) = second
+pub fn result(ok: Plan(a, r), error: Plan(b, r)) -> Plan(Result(a, b), r) {
+  let Plan(run_ok) = ok
+  let Plan(run_error) = error
   Plan(fn(environment, value) {
     case value {
-      Ok(value) -> run_first(environment, value)
-      Error(value) -> run_second(environment, value)
+      Ok(value) -> run_ok(environment, value)
+      Error(value) -> run_error(environment, value)
     }
   })
 }
@@ -295,7 +295,7 @@ pub fn codec(encoder: Encoder(a), contract: s.Contract(a)) -> Codec(a) {
 }
 
 /// Inspect the exact Contract used by checked encoding, without callbacks.
-pub fn codec_contract(codec: Codec(a)) -> s.Contract(a) {
+pub fn contract(codec: Codec(a)) -> s.Contract(a) {
   let Codec(_, contract) = codec
   contract
 }

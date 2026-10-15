@@ -18,7 +18,7 @@ boundary APIs.
 
 | Operation | API | Module |
 | --- | --- | --- |
-| Definition construction | `text`, `safe_integer`, `array`, `record`, … | [gargamelle][core-api] |
+| Definition construction | `string`, `safe_integer`, `array`, `record`, … | [gargamelle][core-api] |
 | Direct admitted JSON construction | `json_*` constructors | [gargamelle][core-api] |
 | JSON decoding into a Gleam value | `decode` | [gargamelle][core-api] |
 | Decoding or validation with semantic requirements | `decode_contract` / `validate_contract` | [gargamelle][core-api] |
@@ -83,7 +83,7 @@ import gleam/io
 import gleam/string
 
 pub fn main() {
-  let definition: gargamelle.Definition(List(String)) = gargamelle.array(gargamelle.text())
+  let definition: gargamelle.Definition(List(String)) = gargamelle.array(gargamelle.string())
   let schema: String = gargamelle.schema_string(definition, gargamelle.Pretty)
   let assert Ok(json): Result(gargamelle.Json, _) = gargamelle.parse("[\"Brainy\", \"Jokey\"]")
   let assert Ok(data): Result(List(String), _) = gargamelle.decode(definition, json)
@@ -132,7 +132,7 @@ import gleam/io
 import gleam/string
 
 pub fn main() {
-  let names: gargamelle.Definition(List(String)) = gargamelle.array(gargamelle.text())
+  let names: gargamelle.Definition(List(String)) = gargamelle.array(gargamelle.string())
   let assert Ok(json): Result(gargamelle.Json, _) = gargamelle.parse("[\"Brainy\", \"Jokey\"]")
 
   let receiver = gargamelle_boundary.new(
@@ -209,7 +209,7 @@ pub type User { User(name: String, active: Bool) }
 pub fn user_definition() -> gargamelle.Definition(User) {
   let assert Ok(fields) =
     gargamelle.record(fn(name) { fn(active) { User(name, active) } })
-    |> gargamelle.required("name", gargamelle.text())
+    |> gargamelle.required("name", gargamelle.string())
   let assert Ok(fields) = gargamelle.required(fields, "active", gargamelle.boolean())
   gargamelle.finish(fields, gargamelle.Strict)
 }
@@ -234,11 +234,11 @@ For input `{"name":"Brainy","active":true}`, `read_user` returns
 | Object key and presence constraints | `property_names`, `dependent_required` |
 | Conditional constraints and exclusion | `if_then`, `if_then_else`, `exclude` |
 | Numeric constraints | `bounds`, `number_bounds`, `integer_multiple_of` |
-| Schema metadata | `title`, `description`, `examples`, `default`, `format` |
+| Schema metadata | `title`, `description`, `examples`, `default_annotation`, `format_annotation` |
 | Explicit UUID validation | `assert_format(_, Uuid)` |
 
 Metadata does not change acceptance. A schema `default` annotation does not insert
-a value; a defaulted record field is a separate decoding feature. `format` is an
+a value; a defaulted record field is a separate decoding feature. `format_annotation` adds an
 annotation, while `assert_format` adds validation constraints.
 
 [Advanced definitions](https://hexdocs.pm/gargamelle/0.10.0/advanced.html)

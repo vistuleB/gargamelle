@@ -16,7 +16,7 @@ fn named(definition, name) {
 }
 
 pub fn named_string_modifiers_test() {
-  let text = s.map(s.text(), fn(x) { "decoded:" <> x })
+  let text = s.map(s.string(), fn(x) { "decoded:" <> x })
   let assert Ok(def) = s.bounds(named(text, "text"), Some(2), Some(4))
   let assert Ok(def) = s.pattern(def, "^a")
   s.decode(def, json("\"ab\"")) |> should.equal(Ok("decoded:ab"))
@@ -68,9 +68,9 @@ pub fn separated_array_modifiers_test() {
     },
   )
   s.schema_string(def, s.Compact) |> should.not_equal("")
-  let assert Ok(a) = s.pattern(s.text(), "^a")
-  let assert Ok(b) = s.pattern(s.text(), "^b")
-  let assert Ok(counted) = s.contains(s.array(s.text()), a, 1, Some(1))
+  let assert Ok(a) = s.pattern(s.string(), "^a")
+  let assert Ok(b) = s.pattern(s.string(), "^b")
+  let assert Ok(counted) = s.contains(s.array(s.string()), a, 1, Some(1))
   let assert Ok(counted) = s.unique_items(counted)
   let assert Ok(counted) = s.contains(counted, b, 1, None)
   s.decode(counted, json("[\"a\",\"b\"]")) |> should.equal(Ok(["a", "b"]))
@@ -78,9 +78,9 @@ pub fn separated_array_modifiers_test() {
 }
 
 pub fn object_wrappers_and_defaults_test() {
-  let assert Ok(key) = s.pattern(s.text(), "^[ab]$")
+  let assert Ok(key) = s.pattern(s.string(), "^[ab]$")
   let assert Ok(def) =
-    s.property_names(named(s.dictionary(s.text()), "object"), key)
+    s.property_names(named(s.dictionary(s.string()), "object"), key)
   let assert Ok(def) = s.dependent_required(def, "a", ["b"])
   let assert Ok(def) = s.bounds(s.map(def, list.length), Some(1), Some(2))
   s.decode(def, json("{\"a\":\"x\",\"b\":\"y\"}")) |> should.equal(Ok(2))
@@ -88,7 +88,7 @@ pub fn object_wrappers_and_defaults_test() {
     s.validate(def, json(source)) |> should.be_error
   })
   let assert Ok(child) =
-    s.bounds(named(s.text(), "default-text"), Some(2), None)
+    s.bounds(named(s.string(), "default-text"), Some(2), None)
   let assert Ok(record) =
     s.defaulted(s.record(fn(x) { x }), "a", child, json("\"ab\""))
   s.decode(s.finish(record, s.Strict), json("{}")) |> should.equal(Ok("ab"))
@@ -99,11 +99,12 @@ pub fn object_wrappers_and_defaults_test() {
 pub fn same_input_auxiliary_converters_test() {
   let forbidden =
     s.map(s.string_constant("bad"), fn(_) { panic as "forbidden conversion" })
-  let condition = s.map(s.text(), fn(_) { panic as "condition conversion" })
-  let consequence = s.map(s.text(), fn(_) { panic as "consequence conversion" })
+  let condition = s.map(s.string(), fn(_) { panic as "condition conversion" })
+  let consequence =
+    s.map(s.string(), fn(_) { panic as "consequence conversion" })
   let def =
     s.if_then(
-      s.exclude(named(s.text(), "guarded"), forbidden),
+      s.exclude(named(s.string(), "guarded"), forbidden),
       condition,
       consequence,
     )
@@ -116,22 +117,26 @@ pub fn same_input_auxiliary_converters_test() {
 }
 
 pub fn unsupported_modifier_combinations_test() {
-  s.bounds(s.nullable(s.text()), None, Some(3)) |> should.be_error
+  s.bounds(s.nullable(s.string()), None, Some(3)) |> should.be_error
   s.bounds(s.string_constant("x"), None, Some(3)) |> should.be_error
   let assert Ok(union) =
-    s.any_of([s.text(), s.map(s.boolean(), fn(_) { "boolean" })])
+    s.any_of([s.string(), s.map(s.boolean(), fn(_) { "boolean" })])
   s.bounds(named(union, "union"), None, Some(3)) |> should.be_error
   s.pattern(s.map(s.number(), fn(_) { "text" }), "a") |> should.be_error
-  s.number_bounds(s.map(s.text(), fn(_) { 1.0 }), None, Some(s.Inclusive(2.0)))
+  s.number_bounds(
+    s.map(s.string(), fn(_) { 1.0 }),
+    None,
+    Some(s.Inclusive(2.0)),
+  )
   |> should.be_error
   s.integer_multiple_of(s.number(), 2) |> should.be_error
-  s.property_names(s.nullable(s.dictionary(s.text())), s.text())
+  s.property_names(s.nullable(s.dictionary(s.string())), s.string())
   |> should.be_error
-  s.dependent_required(s.array(s.text()), "a", ["b"]) |> should.be_error
-  let tuple = s.finish_tuple(s.element(s.tuple(fn(x) { [x] }), s.text()))
+  s.dependent_required(s.array(s.string()), "a", ["b"]) |> should.be_error
+  let tuple = s.finish_tuple(s.element(s.tuple(fn(x) { [x] }), s.string()))
   s.bounds(tuple, None, Some(2)) |> should.be_error
   s.unique_items(tuple) |> should.be_error
-  s.contains(tuple, s.text(), 1, None) |> should.be_ok
+  s.contains(tuple, s.string(), 1, None) |> should.be_ok
 }
 
 type Tree {

@@ -28,9 +28,9 @@ pub type Named {
 }
 
 pub fn main() {
-  let assert Ok(fields) = gargamelle_encoding.field(gargamelle_encoding.record(), "name", gargamelle_encoding.text(), fn(value: Named) { value.name })
+  let assert Ok(fields) = gargamelle_encoding.field(gargamelle_encoding.record(), "name", gargamelle_encoding.string(), fn(value: Named) { value.name })
   let encoder: gargamelle_encoding.Encoder(Named) = gargamelle_encoding.finish(fields)
-  let assert Ok(fields) = s.required(s.record(Named), "name", s.text())
+  let assert Ok(fields) = s.required(s.record(Named), "name", s.string())
   let contract = s.contract(s.finish(fields, s.Strict))
     |> s.require("Name is nonempty", fn(value) {
       case value.name == "" {
@@ -65,7 +65,7 @@ Output:
 
 These are three independent operations. Plain encoding does not claim conformance
 with a schema or Contract. Checked encoding produces a certificate only after
-its stored Contract accepts the encoded JSON. `codec_contract` exposes that exact
+its stored Contract accepts the encoded JSON. `contract` exposes that exact
 Contract. Encoding and decoding need not be inverses: projection, defaults and
 maps may cause reconstructed data to differ from the original encoder input.
 Semantic requirements check reconstructed data, not the encoder input directly.
@@ -94,7 +94,7 @@ It preserves canonical JSON rather than source formatting or declaration order.
 omits its property for `None`. Required fields may use a nullable encoder when
 absence and null need distinct treatment. Duplicate record keys fail construction.
 
-`contramap` adapts an encoder with a getter or projection. `choice` encodes the
+`contramap` adapts an encoder with a getter or projection. `result` encodes the
 selected branch of a `Result`; a projection can adapt an application sum type.
 Getters run in declaration order and encoding stops at its first failure.
 Construction executes no getters or projections.
@@ -122,7 +122,7 @@ final JSON admission failures, and receiving `ContractError` values.
 Runtime paths refer to the output representation, not the source Gleam record.
 For example, an invalid score in the third answer is attributed to
 `/answers/2/score`. The root is `""`; an empty field name is `/`. Field-name tokens
-escape `~` as `~0` and `/` as `~1`. Nullable, choice and projection wrappers do not
+escape `~` as `~0` and `/` as `~1`. Nullable, Result and projection wrappers do not
 add artificial path segments. Recursive encoders retain the complete nested path.
 
 String-domain checks run at the leaf before serialization, so invalid string

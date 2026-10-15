@@ -29,7 +29,7 @@ pub fn json_formats_test() {
       s.to_string(reparsed, s.Pretty) |> should.equal(pretty)
     },
   )
-  let definition = s.array(s.text())
+  let definition = s.array(s.string())
   s.schema_string(definition, s.Pretty)
   |> should.equal(s.to_string(s.schema_json(definition), s.Pretty))
   let assert Ok(schema) = s.parse(s.schema_string(definition, s.Pretty))

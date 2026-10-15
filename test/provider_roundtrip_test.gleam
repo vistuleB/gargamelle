@@ -66,7 +66,7 @@ pub fn shared_contract_rejects_both_directions_without_handlers_test() {
 
 pub fn output_checks_reconstructed_value_and_retains_encoded_json_test() {
   let contract =
-    s.contract(s.map(s.text(), fn(text) { text <> "!" }))
+    s.contract(s.map(s.string(), fn(text) { text <> "!" }))
     |> s.require("Decoded value ends with exclamation", fn(text) {
       case text == "Brainy!" {
         True -> Ok(Nil)
@@ -81,7 +81,7 @@ pub fn output_checks_reconstructed_value_and_retains_encoded_json_test() {
     gargamelle_boundary.json(gargamelle_boundary.contract(loader), fn(verified) {
       s.to_string(s.verified_json(verified), s.Compact)
     })
-  let saver = gargamelle_boundary.output(gargamelle_encoding.text(), storage)
+  let saver = gargamelle_boundary.output(gargamelle_encoding.string(), storage)
   let assert Ok(json) = s.parse("\"Brainy\"")
   gargamelle_boundary.forward(loader, json)
   |> should.equal(Ok(#("Brainy!", "\"Brainy\"")))

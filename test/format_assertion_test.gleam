@@ -2,7 +2,7 @@ import gargamelle as s
 import gleeunit/should
 
 pub fn uuid_assertion_preserves_string_output_test() {
-  let definition = s.assert_format(s.text(), s.Uuid)
+  let definition = s.assert_format(s.string(), s.Uuid)
   let assert Ok(json) = s.parse("\"f81d4fae-7dec-11d0-a765-00a0c91e6bf6\"")
   s.decode(definition, json)
   |> should.equal(Ok("f81d4fae-7dec-11d0-a765-00a0c91e6bf6"))
@@ -14,7 +14,7 @@ pub fn uuid_assertion_preserves_string_output_test() {
 }
 
 pub fn uuid_assertion_rejects_trailing_line_breaks_and_urn_test() {
-  let definition = s.assert_format(s.text(), s.Uuid)
+  let definition = s.assert_format(s.string(), s.Uuid)
   let assert Ok(newline) =
     s.parse("\"f81d4fae-7dec-11d0-a765-00a0c91e6bf6\\n\"")
   s.validate(definition, newline) |> should.be_error
@@ -30,7 +30,7 @@ pub fn format_assertion_applies_only_to_strings_and_preserves_maps_test() {
   let assert Ok(boolean) = s.parse("true")
   s.decode(definition, boolean) |> should.equal(Ok(True))
   let mapped =
-    s.assert_format(s.map(s.text(), fn(text) { #(text, True) }), s.Uuid)
+    s.assert_format(s.map(s.string(), fn(text) { #(text, True) }), s.Uuid)
   let assert Ok(json) = s.parse("\"00000000-0000-0000-0000-000000000000\"")
   s.decode(mapped, json)
   |> should.equal(Ok(#("00000000-0000-0000-0000-000000000000", True)))

@@ -6,7 +6,7 @@ import {compileSupplementary} from './supplementary-oracle.mjs';
 
 test('asserted UUID agrees with ordinary schema constraints without optional format checking',async()=>{
   let calls=0;
-  const definition=s.assert_format(s.map(s.text(),text=>{calls++;return text;}),s.FormatAssertion$Uuid$const);
+  const definition=s.assert_format(s.map(s.string(),text=>{calls++;return text;}),s.FormatAssertion$Uuid$const);
   const schema=emitted(definition);
   assert.equal(schema.allOf[1].then.format,'uuid');
   const ajv=new Ajv2020({strict:true,validateFormats:false});

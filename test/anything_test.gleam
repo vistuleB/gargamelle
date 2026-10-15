@@ -26,7 +26,7 @@ pub fn anything_metadata_preserves_other_field_rules_test() {
     s.required(
       s.record(fn(name) { fn(metadata) { #(name, metadata) } }),
       "name",
-      s.text(),
+      s.string(),
     )
   let assert Ok(fields) = s.required(fields, "metadata", s.anything())
   let definition = s.finish(fields, s.Strict)
@@ -94,15 +94,15 @@ pub fn anything_default_and_boundary_semantics_test() {
 }
 
 pub fn anything_union_exclusion_and_recursion_test() {
-  let excluded = s.exclude(s.anything(), s.text())
+  let excluded = s.exclude(s.anything(), s.string())
   let assert Ok(text) = s.json_string("Brainy")
   s.validate(excluded, text) |> should.be_error()
   s.validate(excluded, s.json_null()) |> should.equal(Ok(Nil))
   let assert Ok(union) =
-    s.any_of([s.anything(), s.map(s.text(), fn(_) { s.json_null() })])
+    s.any_of([s.anything(), s.map(s.string(), fn(_) { s.json_null() })])
   s.decode(union, text) |> should.equal(Ok(text))
   let assert Ok(exclusive) =
-    s.one_of([s.anything(), s.map(s.text(), fn(_) { s.json_null() })])
+    s.one_of([s.anything(), s.map(s.string(), fn(_) { s.json_null() })])
   s.validate(exclusive, text) |> should.be_error()
   s.decode(exclusive, s.json_null()) |> should.equal(Ok(s.json_null()))
   let assert Ok(recursive) =

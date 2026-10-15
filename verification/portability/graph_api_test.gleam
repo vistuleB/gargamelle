@@ -112,7 +112,7 @@ pub fn operational_cleanup_test() {
 }
 
 pub fn conflict_cleanup_test() {
-  let assert Ok(a) = s.named("same", s.text())
+  let assert Ok(a) = s.named("same", s.string())
   let assert Ok(b) = s.named("same", s.boolean())
   let assert Ok(definition) =
     s.any_of([s.map(a, fn(_) { Nil }), s.map(b, fn(_) { Nil })])
@@ -125,11 +125,11 @@ pub fn shared_guard_layers_test() {
   let assert Ok(definition) =
     s.recursive("shared", fn(self) {
       use base <- result.try(
-        s.any_of([s.text(), s.map(s.array(self), fn(_) { "tree" })]),
+        s.any_of([s.string(), s.map(s.array(self), fn(_) { "tree" })]),
       )
       Ok(layers(base, 22))
     })
-  should.not_equal(definition, s.text())
+  should.not_equal(definition, s.string())
 }
 
 fn layers(

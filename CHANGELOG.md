@@ -2,6 +2,11 @@
 
 ## 0.10.0
 
+- Rename `text` to `string` in core and encoding, encoding `choice` to `result`,
+  and encoding `codec_contract` to `contract`.
+- Rename metadata-only constructors `default` and `format` to
+  `default_annotation` and `format_annotation`. Emitted schema keywords are unchanged.
+
 - Add `output_definition` and `paired_definition` for structural definition
   inspection on every boundary type.
 - Rename boundary accessors to `contract`, `definition`, `json_contract`,

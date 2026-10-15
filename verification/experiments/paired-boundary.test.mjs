@@ -32,20 +32,20 @@ test('private paired boundary compiles, preserves enforcement, and remains proce
 
     const compiled=name=>import(pathToFileURL(join(directory,'build/dev/javascript/gargamelle',name)).href);
     const [paired,s,e,b]=await Promise.all([compiled('paired_boundary.mjs'),compiled('gargamelle.mjs'),compiled('gargamelle/encoding.mjs'),compiled('gargamelle/boundary.mjs')]);
-    const contract=s.contract(s.text());
+    const contract=s.contract(s.string());
     let handled=0;
-    const receiver=paired.paired_boundary(contract,e.text(),x=>x,()=>{handled++;});
+    const receiver=paired.paired_boundary(contract,e.string(),x=>x,()=>{handled++;});
     assert.equal(paired.paired_contract(receiver),contract,'Inspector must return the original full contract');
 
     const failure=new Error('application failure');
-    const converter=s.map(s.text(),()=>{throw failure;});
-    const loadFailure=paired.paired_boundary(s.contract(converter),e.text(),()=>{handled++;},()=>{handled++;});
+    const converter=s.map(s.string(),()=>{throw failure;});
+    const loadFailure=paired.paired_boundary(s.contract(converter),e.string(),()=>{handled++;},()=>{handled++;});
     assert.throws(()=>paired.load(loadFailure,s.parse('"Brainy"')[0]),error=>error===failure);
-    const encoder=e.contramap(e.text(),()=>{throw failure;});
+    const encoder=e.contramap(e.string(),()=>{throw failure;});
     const saveFailure=paired.paired_boundary(contract,encoder,()=>{handled++;},()=>{handled++;});
     assert.throws(()=>paired.save(saveFailure,'Brainy'),error=>error===failure);
     assert.equal(handled,0);
-    const handlerFailure=paired.paired_boundary(contract,e.text(),()=>{throw failure;},()=>{throw failure;});
+    const handlerFailure=paired.paired_boundary(contract,e.string(),()=>{throw failure;},()=>{throw failure;});
     assert.throws(()=>paired.save(handlerFailure,'Brainy'),error=>error===failure);
 
     // Challenge the exact failure this convenience wrapper is meant to prevent:
@@ -66,7 +66,7 @@ test('private paired boundary compiles, preserves enforcement, and remains proce
 
     const declarations=`import gargamelle as s\nimport gargamelle/boundary as b\nimport gargamelle/encoding as e\nimport paired_boundary as paired\n`;
     const negatives=[
-      ['certificate',declarations+`pub fn main() {\n let contract = s.contract(s.text())\n let pair = paired.paired_boundary(contract, e.text(), fn(value, _) { value }, fn(_) { Nil })\n let assert Ok(json) = s.parse("\\\"Brainy\\\"")\n let assert Ok(verified) = s.verify(contract, json)\n paired.load(pair, verified)\n}\n`,/VerifiedJson/],
+      ['certificate',declarations+`pub fn main() {\n let contract = s.contract(s.string())\n let pair = paired.paired_boundary(contract, e.string(), fn(value, _) { value }, fn(_) { Nil })\n let assert Ok(json) = s.parse("\\\"Brainy\\\"")\n let assert Ok(verified) = s.verify(contract, json)\n paired.load(pair, verified)\n}\n`,/VerifiedJson/],
       ['opaque',declarations+`pub fn main() { paired.PairedBoundary(Nil, Nil) }\n`,/PairedBoundary/],
       ['old-constructor',declarations+`pub fn main() { paired.pair(Nil, Nil, Nil, Nil) }\n`,/pair/],
       ['old-inspector',declarations+`pub fn main() { paired.contract(Nil) }\n`,/contract/],

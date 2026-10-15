@@ -2,7 +2,7 @@ import gargamelle as s
 import gleeunit/should
 
 pub fn typed_keyed_dictionary_test() {
-  let assert Ok(keys) = s.pattern(s.text(), "^[a-z]{2}$")
+  let assert Ok(keys) = s.pattern(s.string(), "^[a-z]{2}$")
   let assert Ok(def) = s.property_names(s.dictionary(s.number()), keys)
   let assert Ok(value) = s.parse("{\"de\":1.5,\"en\":2.5}")
   s.decode(def, value) |> should.equal(Ok([#("de", 1.5), #("en", 2.5)]))
@@ -12,10 +12,10 @@ pub fn typed_keyed_dictionary_test() {
 }
 
 pub fn alternating_object_modifiers_preserve_key_constraints_test() {
-  let assert Ok(keys) = s.pattern(s.text(), "^a")
-  let assert Ok(definition) = s.property_names(s.dictionary(s.text()), keys)
+  let assert Ok(keys) = s.pattern(s.string(), "^a")
+  let assert Ok(definition) = s.property_names(s.dictionary(s.string()), keys)
   let assert Ok(definition) = s.dependent_required(definition, "a", [])
-  let assert Ok(definition) = s.property_names(definition, s.text())
+  let assert Ok(definition) = s.property_names(definition, s.string())
   let assert Ok(expected) =
     s.parse(
       "{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"type\":\"object\",\"additionalProperties\":{\"type\":\"string\"},\"propertyNames\":{\"type\":\"string\",\"pattern\":\"^a\"},\"dependentRequired\":{\"a\":[]},\"allOf\":[{\"type\":\"object\",\"propertyNames\":{\"type\":\"string\"}}]}",
