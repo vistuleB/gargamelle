@@ -7,7 +7,7 @@ import gargamelle/encoding as gargamelle_encoding
 import gleam/result
 
 /// A contract and a private handler invoked only after successful decoding and
-/// semantic checks. Construct with `boundary`, inspect with `boundary_contract`,
+/// semantic checks. Construct with `new`, inspect with `boundary_contract`,
 /// and submit JSON with `forward`.
 pub opaque type Boundary(a, response) {
   Boundary(gargamelle.Contract(a), fn(a, gargamelle.Json) -> response)
@@ -15,7 +15,7 @@ pub opaque type Boundary(a, response) {
 
 /// A contract and a private handler receiving verified JSON. Semantic checks
 /// require decoding once; contracts without checks validate without conversion.
-/// Construct with `json_boundary`, inspect with `json_boundary_contract`, and
+/// Construct with `json`, inspect with `json_boundary_contract`, and
 /// submit admitted JSON with `forward_json`.
 pub opaque type JsonBoundary(a, response) {
   JsonBoundary(
@@ -25,7 +25,7 @@ pub opaque type JsonBoundary(a, response) {
 }
 
 /// Bind a handler to its authoritative contract. Construction runs no callbacks.
-pub fn boundary(
+pub fn new(
   contract: gargamelle.Contract(a),
   handler: fn(a, gargamelle.Json) -> response,
 ) -> Boundary(a, response) {
@@ -60,7 +60,7 @@ pub fn forward(
 }
 
 /// Bind a JSON receiving handler to its authoritative contract.
-pub fn json_boundary(
+pub fn json(
   contract: gargamelle.Contract(a),
   handler: fn(gargamelle.VerifiedJson(a)) -> response,
 ) -> JsonBoundary(a, response) {
@@ -103,7 +103,7 @@ pub opaque type OutputBoundary(a, response) {
 
 /// Pair an encoder with an existing receiving boundary. Construction executes no
 /// callbacks. The receiver's Contract is the sole acceptance authority.
-pub fn output_boundary(
+pub fn output(
   encoder: gargamelle_encoding.Encoder(a),
   receiver: JsonBoundary(a, response),
 ) -> OutputBoundary(a, response) {
@@ -139,15 +139,15 @@ pub opaque type PairedBoundary(a, loaded, saved) {
 
 /// Register decoded ingress and typed egress against one full contract.
 /// Construction executes no encoder, converter, requirement, or handler callbacks.
-pub fn paired_boundary(
+pub fn paired(
   contract: gargamelle.Contract(a),
   encoder: gargamelle_encoding.Encoder(a),
   load_handler: fn(a, gargamelle.Json) -> loaded,
   save_handler: fn(gargamelle.VerifiedJson(a)) -> saved,
 ) -> PairedBoundary(a, loaded, saved) {
-  let loader = boundary(contract, load_handler)
-  let receiver = json_boundary(boundary_contract(loader), save_handler)
-  PairedBoundary(loader, output_boundary(encoder, receiver))
+  let loader = new(contract, load_handler)
+  let receiver = json(boundary_contract(loader), save_handler)
+  PairedBoundary(loader, output(encoder, receiver))
 }
 
 /// Inspect the exact full contract shared by both directions without callbacks.

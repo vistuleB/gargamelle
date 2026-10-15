@@ -15,10 +15,10 @@ pub fn paired_boundary(
   load_handler: fn(a, gargamelle.Json) -> loaded,
   save_handler: fn(gargamelle.VerifiedJson(a)) -> saved,
 ) -> PairedBoundary(a, loaded, saved) {
-  let loader = gargamelle_boundary.boundary(contract, load_handler)
+  let loader = gargamelle_boundary.new(contract, load_handler)
   let storage =
-    gargamelle_boundary.json_boundary(gargamelle_boundary.boundary_contract(loader), save_handler)
-  PairedBoundary(loader, gargamelle_boundary.output_boundary(encoder, storage))
+    gargamelle_boundary.json(gargamelle_boundary.boundary_contract(loader), save_handler)
+  PairedBoundary(loader, gargamelle_boundary.output(encoder, storage))
 }
 
 pub fn paired_boundary_contract(

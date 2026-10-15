@@ -33,14 +33,14 @@ pub fn main() {
     s.to_string(s.verified_json(verified), s.Compact)
     == s.to_string(json, s.Compact)
   let receiver =
-    gargamelle_boundary.json_boundary(s.contract(definition), fn(value) {
+    gargamelle_boundary.json(s.contract(definition), fn(value) {
       s.to_string(s.verified_json(value), s.Compact)
     })
   let assert Ok(response) =
     gargamelle_boundary.send(
-      gargamelle_boundary.output_boundary(
+      gargamelle_boundary.output(
         gargamelle_encoding.json(),
-        gargamelle_boundary.json_boundary(s.contract(s.anything()), fn(v) {
+        gargamelle_boundary.json(s.contract(s.anything()), fn(v) {
           s.to_string(s.verified_json(v), s.Compact)
         }),
       ),

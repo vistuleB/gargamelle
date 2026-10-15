@@ -31,12 +31,9 @@ pub fn construction_and_inspection_run_no_callbacks_test() {
       text
     })
   let pair =
-    gargamelle_boundary.paired_boundary(
-      contract,
-      encoder,
-      fn(_, _) { tick() },
-      fn(_) { tick() },
-    )
+    gargamelle_boundary.paired(contract, encoder, fn(_, _) { tick() }, fn(_) {
+      tick()
+    })
   let inspected = gargamelle_boundary.paired_boundary_contract(pair)
   s.contract_requirements(inspected) |> should.equal(["Registered check"])
   s.schema_string(s.contract_definition(inspected), s.Compact)
@@ -55,7 +52,7 @@ pub fn one_registered_contract_rejects_before_either_handler_test() {
       Ok(Nil)
     })
   let pair =
-    gargamelle_boundary.paired_boundary(
+    gargamelle_boundary.paired(
       contract,
       provider.evidence_encoder(),
       fn(data, _) {
@@ -94,7 +91,7 @@ pub fn one_registered_contract_rejects_before_either_handler_test() {
 
 pub fn independent_responses_preserve_nested_application_results_test() {
   let pair =
-    gargamelle_boundary.paired_boundary(
+    gargamelle_boundary.paired(
       s.contract(s.text()),
       gargamelle_encoding.text(),
       fn(_, _) { Error("load application failure") },
@@ -116,7 +113,7 @@ pub fn same_contract_does_not_imply_inverse_conversion_test() {
       }
     })
   let pair =
-    gargamelle_boundary.paired_boundary(
+    gargamelle_boundary.paired(
       contract,
       gargamelle_encoding.text(),
       fn(value, original) { #(value, s.to_string(original, s.Compact)) },
@@ -132,7 +129,7 @@ pub fn same_contract_does_not_imply_inverse_conversion_test() {
 pub fn pair_survives_transfer_and_creator_exit_test() {
   let pair =
     handoff(fn() {
-      gargamelle_boundary.paired_boundary(
+      gargamelle_boundary.paired(
         provider.evidence_contract(),
         provider.evidence_encoder(),
         fn(data, _) { data },
@@ -155,7 +152,7 @@ pub fn unchecked_encoding_failure_keeps_its_type_and_skips_checks_test() {
       Ok(Nil)
     })
   let pair =
-    gargamelle_boundary.paired_boundary(
+    gargamelle_boundary.paired(
       contract,
       gargamelle_encoding.safe_integer(),
       fn(_, _) { tick() },
@@ -181,7 +178,7 @@ pub fn check_free_saving_does_not_decode_test() {
       }),
     )
   let pair =
-    gargamelle_boundary.paired_boundary(
+    gargamelle_boundary.paired(
       contract,
       gargamelle_encoding.text(),
       fn(value, _) { value },

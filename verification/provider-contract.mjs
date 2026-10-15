@@ -65,8 +65,8 @@ try {
     const schema=JSON.parse(s.schema_string(definition,s.JsonFormat$Compact$const));
     const oracles=[compileOracle(schema),await compileSupplementary(schema)];
     let handled=0;
-    const receiver=b.json_boundary(contract,verified=>{handled++;return s.verified_json(verified);});
-    const typed=b.boundary(contract,(_value,json)=>json);
+    const receiver=b.json(contract,verified=>{handled++;return s.verified_json(verified);});
+    const typed=b.new$(contract,(_value,json)=>json);
     for(const {json:raw,accepted,structural=true} of cases){
       const json=admitted(raw),before=handled;
       for(const oracle of oracles)assert.equal(oracle(raw).accepted,structural,name+' schema acceptance');
@@ -103,21 +103,21 @@ try {
   // requirements. Neither changes the historical contract's captured authority.
   for(const [raw,historical,current] of [[cloze,adapters.cloze_historical(),adapters.cloze_current(newCard)],[diagram,adapters.diagram_historical(),adapters.diagram_current(toList([['t','new']]),toList(['new']))]]){
     const certificate=unwrap(s.verify(historical,admitted(raw)));
-    const receiver=b.json_boundary(current,()=>{throw Error('Rejected certificate reached handler');});
+    const receiver=b.json(current,()=>{throw Error('Rejected certificate reached handler');});
     assert.equal(b.forward_json(receiver,s.verified_json(certificate)).isOk(),false);
     assert.ok(s.verify(s.verified_contract(certificate),s.verified_json(certificate)).isOk());
     const weak=unwrap(s.verify(s.contract(s.contract_definition(current)),admitted(raw)));
     assert.equal(b.forward_json(receiver,s.verified_json(weak)).isOk(),false);
   }
   // Ensure the independently split current checks are reported separately.
-  const combined=b.forward_json(b.json_boundary(adapters.cloze_current(newCard),s.verified_json),admitted(inconsistent));
+  const combined=b.forward_json(b.json(adapters.cloze_current(newCard),s.verified_json),admitted(inconsistent));
   assert.deepEqual([...combined[0][0]].map(failure=>failure.index),[0,1]);
   const typedEvidence=new compiled.cloze.Evidence(toList([new compiled.cloze.Entry('a','old',toList(['old']),true)]),1,1);
   const typedInconsistent=new compiled.cloze.Evidence(typedEvidence.entries,0,1);
   let encoded=0,verified=0,stored=0;
   const encoder=encoding.contramap(producer.cloze_encoder(),value=>{encoded++;return value;});
   const receiving=s.require(compiled.cloze.evidence_for_contract(oldCard),'Observe verification',()=>{verified++;return new Ok(undefined);});
-  const output=b.output_boundary(encoder,b.json_boundary(receiving,certificate=>{stored++;return s.verified_json(certificate);}));
+  const output=b.output(encoder,b.json(receiving,certificate=>{stored++;return s.verified_json(certificate);}));
   const emitted=unwrap(b.send(output,typedEvidence));
   assert.deepEqual(JSON.parse(s.to_string(emitted,s.JsonFormat$Compact$const)),cloze);
   assert.deepEqual([encoded,verified,stored],[1,1,1]);
@@ -127,9 +127,9 @@ try {
   assert.equal(rejected.isOk(),false);assert.equal(rejected[0].constructor.name,'Contract');
   assert.equal(rejected[0][0].constructor.name,'Semantic');
   assert.deepEqual([encoded,verified,stored],[2,2,1]);
-  const changed=b.output_boundary(producer.cloze_encoder(),b.json_boundary(compiled.cloze.evidence_for_contract(newCard),()=>{throw Error('Changed-context output reached storage');}));
+  const changed=b.output(producer.cloze_encoder(),b.json(compiled.cloze.evidence_for_contract(newCard),()=>{throw Error('Changed-context output reached storage');}));
   assert.equal(b.send(changed,typedEvidence).isOk(),false);
-  const historical=b.output_boundary(producer.cloze_encoder(),b.json_boundary(compiled.cloze.evidence_contract(),s.verified_json));
+  const historical=b.output(producer.cloze_encoder(),b.json(compiled.cloze.evidence_contract(),s.verified_json));
   assert.equal(b.send(historical,typedEvidence).isOk(),true);
   const unsafe=new compiled.cloze.Evidence(typedEvidence.entries,9007199254740992,1);
   const primitive=b.send(output,unsafe);

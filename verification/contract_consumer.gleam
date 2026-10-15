@@ -32,14 +32,14 @@ pub fn main() {
   let assert [s.RequirementFailure(0, _, _), s.RequirementFailure(1, _, _)] =
     failures
   let receiver =
-    gargamelle_boundary.boundary(contract, fn(names, original) {
+    gargamelle_boundary.new(contract, fn(names, original) {
       #(names, original)
     })
   let assert Ok(#(["Brainy", "Jokey"], original)) =
     gargamelle_boundary.forward(receiver, json)
   let assert True = original == json
   let json_receiver =
-    gargamelle_boundary.json_boundary(contract, s.verified_json)
+    gargamelle_boundary.json(contract, s.verified_json)
   let assert Ok(original) =
     gargamelle_boundary.forward_json(json_receiver, json)
   let assert True = original == json

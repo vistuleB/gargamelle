@@ -1,8 +1,8 @@
 name = "gargamelle"
-version = "0.9.0"
+version = "0.10.0"
 licences = ["MIT"]
 description = "Generate typed JSON decoders and JSON Schema 2020-12 documents from the same Gleam definition."
-links = [{ title = "Repository", href = "https://github.com/vistuleB/gargamelle" }, { title = "Source archive", href = "https://repo.hex.pm/tarballs/gargamelle-0.9.0.tar" }]
+links = [{ title = "Repository", href = "https://github.com/vistuleB/gargamelle" }, { title = "Source archive", href = "https://repo.hex.pm/tarballs/gargamelle-0.10.0.tar" }]
 target = "javascript"
 gleam = ">= 1.18.1"
 

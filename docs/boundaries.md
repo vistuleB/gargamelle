@@ -36,7 +36,7 @@ import gleam/string
 
 // The component publishes a boundary; its handler stays private.
 pub fn names_boundary() -> gargamelle_boundary.Boundary(List(String), String) {
-  gargamelle_boundary.boundary(
+  gargamelle_boundary.new(
     gargamelle.contract(gargamelle.array(gargamelle.text())),
     fn(names, _) { string.join(names, ", ") },
   )
@@ -61,7 +61,7 @@ boundary.
 ## JSON-only receiving handlers
 
 For storage or transport that needs only JSON, use
-`json_boundary(contract, handler)` and `forward_json(receiver, json)`.
+`json(contract, handler)` and `forward_json(receiver, json)`.
 The private handler receives `VerifiedJson(a)` after the receiver's stored
 contract accepts the input. With no semantic requirements, no decoded value is
 constructed and no conversion callback runs. With requirements, decoding runs
@@ -75,7 +75,7 @@ import gargamelle
 import gleam/io
 
 pub fn main() {
-  let receiver = gargamelle_boundary.json_boundary(
+  let receiver = gargamelle_boundary.json(
     gargamelle.contract(gargamelle.array(gargamelle.text())),
     fn(verified) {
       gargamelle.to_string(gargamelle.verified_json(verified), gargamelle.Compact)
@@ -95,7 +95,7 @@ storage limits and other host policies are separate checks. Submission accepts
 the application result is nested inside the outer validation result. Handler
 exceptions and resource failures propagate as operational failures.
 
-For typed output, `gargamelle_boundary.output_boundary(encoder, receiver)` pairs an explicit
+For typed output, `gargamelle_boundary.output(encoder, receiver)` pairs an explicit
 encoder with this receiving boundary. `gargamelle_boundary.send` encodes to admitted
 unverified JSON and calls `forward_json` once. The receiving contract is
 authoritative; there is no separate codec contract to reconcile.
@@ -103,7 +103,7 @@ See [Typed JSON encoding](encoding.html).
 
 ## Paired loading and saving
 
-`paired_boundary(contract, encoder, load_handler, save_handler)` registers both
+`paired(contract, encoder, load_handler, save_handler)` registers both
 handlers against one stored full contract. `load` decodes incoming JSON before
 calling the loading handler; `save` encodes a value and checks the resulting JSON
 before calling the saving handler. Each submission performs one contract check.
@@ -124,7 +124,7 @@ import gleam/io
 pub fn main() {
   let contract = gargamelle.contract(gargamelle.array(gargamelle.text()))
   let encoder = gargamelle_encoding.array(gargamelle_encoding.text())
-  let registration = gargamelle_boundary.paired_boundary(
+  let registration = gargamelle_boundary.paired(
     contract,
     encoder,
     fn(names, _) { names },
@@ -185,7 +185,7 @@ pub fn main() {
         False -> Error([gargamelle.Violation("", "Unexpected name")])
       }
     })
-  let receiver = gargamelle_boundary.json_boundary(contract, fn(verified) {
+  let receiver = gargamelle_boundary.json(contract, fn(verified) {
     gargamelle.to_string(gargamelle.verified_json(verified), gargamelle.Compact)
   })
   let assert Ok(json) = gargamelle.parse("\"Brainy\"")

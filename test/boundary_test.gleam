@@ -18,7 +18,7 @@ pub fn decode_once_and_pass_both_test() {
       text <> "!"
     })
   let boundary =
-    gargamelle_boundary.boundary(s.contract(definition), fn(data, json) {
+    gargamelle_boundary.new(s.contract(definition), fn(data, json) {
       count() |> should.equal(1)
       tick()
       #(data, json)
@@ -40,7 +40,7 @@ pub fn invalid_input_skips_conversion_and_handler_test() {
       }),
     )
   let boundary =
-    gargamelle_boundary.boundary(s.contract(definition), fn(_, _) { tick() })
+    gargamelle_boundary.new(s.contract(definition), fn(_, _) { tick() })
   let assert Ok(json) = s.parse("[\"valid\", false, 42]")
   let assert Error(expected) = s.decode(definition, json)
   gargamelle_boundary.forward(boundary, json)
@@ -50,15 +50,14 @@ pub fn invalid_input_skips_conversion_and_handler_test() {
 
 pub fn same_output_type_different_contract_test() {
   let first =
-    gargamelle_boundary.boundary(
+    gargamelle_boundary.new(
       s.contract(s.string_constant("Brainy")),
       fn(data, _) { data },
     )
   let second =
-    gargamelle_boundary.boundary(
-      s.contract(s.string_constant("Jokey")),
-      fn(data, _) { data },
-    )
+    gargamelle_boundary.new(s.contract(s.string_constant("Jokey")), fn(data, _) {
+      data
+    })
   let assert Ok(json) = s.parse("\"Brainy\"")
   gargamelle_boundary.forward(first, json) |> should.equal(Ok("Brainy"))
   gargamelle_boundary.forward(second, json) |> should.be_error
@@ -71,7 +70,7 @@ pub fn original_json_and_defaulted_output_test() {
   let assert Ok(record) =
     s.defaulted(s.record(fn(name) { name }), "name", s.text(), default)
   let boundary =
-    gargamelle_boundary.boundary(
+    gargamelle_boundary.new(
       s.contract(s.finish(record, s.Open)),
       fn(data, json) { #(data, json) },
     )
@@ -85,7 +84,7 @@ pub fn original_json_and_defaulted_output_test() {
 
 pub fn handler_result_is_separate_test() {
   let boundary =
-    gargamelle_boundary.boundary(s.contract(s.text()), fn(_, _) {
+    gargamelle_boundary.new(s.contract(s.text()), fn(_, _) {
       Error("application error")
     })
   let assert Ok(json) = s.parse("\"Brainy\"")
@@ -107,7 +106,7 @@ pub fn recursive_boundary_and_output_transfer_test() {
         s.recursive("boundary-tree", fn(self) {
           s.any_of([s.map(s.number(), Leaf), s.map(s.array(self), Branch)])
         })
-      gargamelle_boundary.boundary(s.contract(definition), fn(data, json) {
+      gargamelle_boundary.new(s.contract(definition), fn(data, json) {
         #(data, json)
       })
     })

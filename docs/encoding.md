@@ -46,10 +46,10 @@ pub fn main() {
   let assert Ok(verified) = gargamelle_encoding.encode(codec, Named("Brainy"))
   io.println(s.to_string(s.verified_json(verified), s.Compact))
 
-  let receiver = gargamelle_boundary.json_boundary(contract, fn(verified) {
+  let receiver = gargamelle_boundary.json(contract, fn(verified) {
     s.to_string(s.verified_json(verified), s.Compact)
   })
-  let output = gargamelle_boundary.output_boundary(encoder, receiver)
+  let output = gargamelle_boundary.output(encoder, receiver)
   let assert Ok(response) = gargamelle_boundary.send(output, Named("Brainy"))
   io.println(response)
 }
@@ -72,7 +72,7 @@ Semantic requirements check reconstructed data, not the encoder input directly.
 
 ## Receiving authority and callback counts
 
-`output_boundary(encoder, receiver)` pairs an encoder with an existing
+`output(encoder, receiver)` pairs an encoder with an existing
 `JsonBoundary`. The receiver's Contract is the only acceptance authority;
 `output_contract` exposes it. No second Contract or definition is stored.
 

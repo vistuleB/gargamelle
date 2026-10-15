@@ -346,12 +346,12 @@ pub fn output_encodes_decodes_checks_and_handles_once_test() {
       Ok(Nil)
     })
   let receiver =
-    gargamelle_boundary.json_boundary(contract, fn(verified) {
+    gargamelle_boundary.json(contract, fn(verified) {
       count() |> should.equal(3)
       tick()
       Ok(s.to_string(s.verified_json(verified), s.Compact))
     })
-  let output = gargamelle_boundary.output_boundary(encoder, receiver)
+  let output = gargamelle_boundary.output(encoder, receiver)
   gargamelle_boundary.send(output, "Brainy")
   |> should.equal(Ok(Ok("\"Brainy\"")))
   count() |> should.equal(4)
@@ -366,11 +366,8 @@ pub fn structural_output_rejection_skips_conversion_and_handler_test() {
     )
     |> s.require("Never reached", fn(_) { panic as "Rejected requirement" })
   let receiver =
-    gargamelle_boundary.json_boundary(contract, fn(_) {
-      panic as "Rejected handler"
-    })
-  let output =
-    gargamelle_boundary.output_boundary(gargamelle_encoding.text(), receiver)
+    gargamelle_boundary.json(contract, fn(_) { panic as "Rejected handler" })
+  let output = gargamelle_boundary.output(gargamelle_encoding.text(), receiver)
   let assert Error(gargamelle_encoding.Contract(s.Structural(_))) =
     gargamelle_boundary.send(output, "Jokey")
 }
@@ -388,12 +385,10 @@ pub fn semantic_output_rejection_collects_failures_and_skips_handler_test() {
       Error([s.Violation("", "Second failure")])
     })
   let receiver =
-    gargamelle_boundary.json_boundary(contract, fn(_) {
-      panic as "Rejected handler"
-    })
+    gargamelle_boundary.json(contract, fn(_) { panic as "Rejected handler" })
   let assert Error(gargamelle_encoding.Contract(s.Semantic(failures))) =
     gargamelle_boundary.send(
-      gargamelle_boundary.output_boundary(gargamelle_encoding.text(), receiver),
+      gargamelle_boundary.output(gargamelle_encoding.text(), receiver),
       "Brainy",
     )
   let assert [
@@ -468,9 +463,9 @@ pub fn recursive_output_boundary_survives_creator_process_test() {
             False -> Error([s.Violation("/name", "Unexpected root")])
           }
         })
-      gargamelle_boundary.output_boundary(
+      gargamelle_boundary.output(
         encoder,
-        gargamelle_boundary.json_boundary(contract, s.verified_json),
+        gargamelle_boundary.json(contract, s.verified_json),
       )
     })
   let assert Ok(json) =

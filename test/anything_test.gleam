@@ -76,10 +76,9 @@ pub fn anything_default_and_boundary_semantics_test() {
   let assert Ok(empty) = s.json_object([])
   s.decode(definition, empty) |> should.equal(Ok(default))
   let receiver =
-    gargamelle_boundary.boundary(
-      s.contract(s.anything()),
-      fn(decoded, original) { #(decoded, original) },
-    )
+    gargamelle_boundary.new(s.contract(s.anything()), fn(decoded, original) {
+      #(decoded, original)
+    })
   gargamelle_boundary.forward(receiver, default)
   |> should.equal(Ok(#(default, default)))
   let contract =

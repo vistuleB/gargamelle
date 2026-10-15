@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.10.0 — Unreleased
+
+- Rename boundary constructors in `gargamelle/boundary`: `boundary` → `new`,
+  `json_boundary` → `json`, `output_boundary` → `output`, and
+  `paired_boundary` → `paired`. The old constructor names are removed.
+  Type names, arguments, inspection functions and submission operations are unchanged.
+
 ## 0.9.0
 
 - Move receiving and typed output boundaries to `gargamelle/boundary`.

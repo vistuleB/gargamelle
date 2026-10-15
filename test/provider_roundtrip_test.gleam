@@ -19,20 +19,19 @@ pub fn shared_contract_rejects_both_directions_without_handlers_test() {
       Ok(Nil)
     })
   let loader =
-    gargamelle_boundary.boundary(contract, fn(data, _) {
+    gargamelle_boundary.new(contract, fn(data, _) {
       loaded()
       data
     })
   let receiver =
-    gargamelle_boundary.json_boundary(
+    gargamelle_boundary.json(
       gargamelle_boundary.boundary_contract(loader),
       fn(verified) {
         stored()
         s.to_string(s.verified_json(verified), s.Compact)
       },
     )
-  let saver =
-    gargamelle_boundary.output_boundary(provider.evidence_encoder(), receiver)
+  let saver = gargamelle_boundary.output(provider.evidence_encoder(), receiver)
   s.contract_requirements(gargamelle_boundary.output_contract(saver))
   |> should.equal(
     s.contract_requirements(gargamelle_boundary.boundary_contract(loader)),
@@ -80,16 +79,15 @@ pub fn output_checks_reconstructed_value_and_retains_encoded_json_test() {
       }
     })
   let loader =
-    gargamelle_boundary.boundary(contract, fn(data, original) {
+    gargamelle_boundary.new(contract, fn(data, original) {
       #(data, s.to_string(original, s.Compact))
     })
   let storage =
-    gargamelle_boundary.json_boundary(
+    gargamelle_boundary.json(
       gargamelle_boundary.boundary_contract(loader),
       fn(verified) { s.to_string(s.verified_json(verified), s.Compact) },
     )
-  let saver =
-    gargamelle_boundary.output_boundary(gargamelle_encoding.text(), storage)
+  let saver = gargamelle_boundary.output(gargamelle_encoding.text(), storage)
   let assert Ok(json) = s.parse("\"Brainy\"")
   gargamelle_boundary.forward(loader, json)
   |> should.equal(Ok(#("Brainy!", "\"Brainy\"")))

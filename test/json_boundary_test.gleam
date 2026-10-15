@@ -14,7 +14,7 @@ pub fn receiver_verifies_without_conversion_test() {
   let #(tick, count) = counter(fn(tick, count) { #(tick, count) })
   let definition = s.map(s.text(), fn(_) { panic as "must not decode" })
   let receiver =
-    gargamelle_boundary.json_boundary(s.contract(definition), fn(verified) {
+    gargamelle_boundary.json(s.contract(definition), fn(verified) {
       tick()
       verified
     })
@@ -33,7 +33,7 @@ pub fn invalid_input_preserves_errors_and_skips_handler_test() {
   let #(tick, count) = counter(fn(tick, count) { #(tick, count) })
   let definition = s.array(s.text())
   let receiver =
-    gargamelle_boundary.json_boundary(s.contract(definition), fn(_) { tick() })
+    gargamelle_boundary.json(s.contract(definition), fn(_) { tick() })
   let assert Ok(json) = s.parse("[false,42]")
   let assert Error(expected) = s.validate(definition, json)
   gargamelle_boundary.forward_json(receiver, json)
@@ -45,7 +45,7 @@ pub fn receiver_contract_is_authoritative_test() {
   let assert Ok(json) = s.parse("\"Jokey\"")
   let assert Ok(other_certificate) = s.verify(s.contract(s.text()), json)
   let receiver =
-    gargamelle_boundary.json_boundary(
+    gargamelle_boundary.json(
       s.contract(s.string_constant("Brainy")),
       fn(verified) { s.verified_json(verified) },
     )
@@ -61,10 +61,9 @@ pub fn receiver_contract_is_authoritative_test() {
 pub fn application_errors_and_process_transfer_test() {
   let receiver =
     handoff(fn() {
-      gargamelle_boundary.json_boundary(
-        s.contract(s.string_constant("Brainy")),
-        fn(_) { Error("storage failure") },
-      )
+      gargamelle_boundary.json(s.contract(s.string_constant("Brainy")), fn(_) {
+        Error("storage failure")
+      })
     })
   let assert Ok(json) = s.parse("\"Brainy\"")
   gargamelle_boundary.forward_json(receiver, json)

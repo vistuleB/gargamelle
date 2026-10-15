@@ -56,11 +56,9 @@ pub fn evidence_encoder() -> gargamelle_encoding.Encoder(Evidence) {
 pub fn main() {
   // The provider supplies the contract and encoder; the host supplies handlers.
   let loader =
-    gargamelle_boundary.boundary(evidence_contract(), fn(evidence, _) {
-      evidence
-    })
+    gargamelle_boundary.new(evidence_contract(), fn(evidence, _) { evidence })
   let storage =
-    gargamelle_boundary.json_boundary(
+    gargamelle_boundary.json(
       gargamelle_boundary.boundary_contract(loader),
       fn(verified) {
         gargamelle.to_string(
@@ -69,7 +67,7 @@ pub fn main() {
         )
       },
     )
-  let saver = gargamelle_boundary.output_boundary(evidence_encoder(), storage)
+  let saver = gargamelle_boundary.output(evidence_encoder(), storage)
 
   let assert Ok(json) =
     gargamelle.parse("{\"answers\":[true,false],\"score\":1}")

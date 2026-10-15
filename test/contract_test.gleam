@@ -25,7 +25,7 @@ pub fn structural_rejection_skips_all_callbacks_test() {
       tick()
       Ok(Nil)
     })
-  let receiver = gargamelle_boundary.boundary(contract, fn(_, _) { tick() })
+  let receiver = gargamelle_boundary.new(contract, fn(_, _) { tick() })
   let assert Ok(json) = s.parse("false")
   let assert Error(errors) = s.validate(s.text(), json)
   gargamelle_boundary.forward(receiver, json)
@@ -55,7 +55,7 @@ pub fn conversion_checks_and_handler_run_once_in_order_test() {
       Ok(Nil)
     })
   let receiver =
-    gargamelle_boundary.boundary(contract, fn(text, _) {
+    gargamelle_boundary.new(contract, fn(text, _) {
       count() |> should.equal(3)
       tick()
       text
@@ -82,9 +82,7 @@ pub fn semantic_failures_are_collected_and_skip_handler_test() {
       Error([s.Violation("/field", "Third failure")])
     })
   let receiver =
-    gargamelle_boundary.boundary(contract, fn(_, _) {
-      panic as "Rejected handler"
-    })
+    gargamelle_boundary.new(contract, fn(_, _) { panic as "Rejected handler" })
   let assert Ok(json) = s.parse("\"Brainy\"")
   gargamelle_boundary.forward(receiver, json)
   |> should.equal(
@@ -132,8 +130,7 @@ pub fn json_checks_decode_once_and_preserve_original_test() {
       name |> should.equal("Brainy")
       Ok(Nil)
     })
-  let receiver =
-    gargamelle_boundary.json_boundary(contract, fn(verified) { verified })
+  let receiver = gargamelle_boundary.json(contract, fn(verified) { verified })
   let assert Ok(json) = s.parse("{\"name\":\"Brainy\",\"extra\":42}")
   let assert Ok(verified) = gargamelle_boundary.forward_json(receiver, json)
   count() |> should.equal(1)
@@ -156,7 +153,7 @@ pub fn semantic_contract_is_authoritative_and_transferable_test() {
             False -> Error([s.Violation("", "Unexpected name")])
           }
         })
-      gargamelle_boundary.json_boundary(contract, fn(verified) {
+      gargamelle_boundary.json(contract, fn(verified) {
         s.verified_json(verified)
       })
     })
@@ -177,8 +174,8 @@ pub fn typed_and_json_receivers_enforce_same_contract_test() {
         False -> Error([s.Violation("", "Unexpected name")])
       }
     })
-  let typed = gargamelle_boundary.boundary(contract, fn(_, json) { json })
-  let json_only = gargamelle_boundary.json_boundary(contract, s.verified_json)
+  let typed = gargamelle_boundary.new(contract, fn(_, json) { json })
+  let json_only = gargamelle_boundary.json(contract, s.verified_json)
   let assert Ok(accepted) = s.parse("\"Brainy\"")
   let assert Ok(rejected) = s.parse("\"Jokey\"")
   let assert Ok(invalid) = s.parse("false")

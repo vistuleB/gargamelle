@@ -27,7 +27,7 @@ for(const length of [10,1000]){
   const encoded=unwrap(e.encode_json(encoder,value));
   assert.deepEqual(JSON.parse(s.to_string(encoded,s.JsonFormat$Compact$const)),raw);
   const plain=e.codec(encoder,structural),checked=e.codec(encoder,semantic);
-  const receiver=b.output_boundary(encoder,b.json_boundary(semantic,s.verified_json));
+  const receiver=b.output(encoder,b.json(semantic,s.verified_json));
   rows.push({kind:'array-of-text',items:length,bytes:Buffer.byteLength(JSON.stringify(raw)),costs:{
     hostStringifyThenAdmission:measure(()=>s.parse(JSON.stringify(raw))),
     encodeJson:measure(()=>e.encode_json(encoder,value)),

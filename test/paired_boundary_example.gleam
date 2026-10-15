@@ -6,7 +6,7 @@ import provider_roundtrip as provider
 
 pub fn main() {
   let registration =
-    gargamelle_boundary.paired_boundary(
+    gargamelle_boundary.paired(
       provider.evidence_contract(),
       provider.evidence_encoder(),
       fn(evidence, _) { evidence },

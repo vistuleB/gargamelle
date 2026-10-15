@@ -323,12 +323,9 @@ pub fn encoding_failure_skips_receiving_callbacks_and_preserves_errors_test() {
       tick()
       Ok(Nil)
     })
-  let receiver = gargamelle_boundary.json_boundary(contract, fn(_) { tick() })
+  let receiver = gargamelle_boundary.json(contract, fn(_) { tick() })
   let output =
-    gargamelle_boundary.output_boundary(
-      gargamelle_encoding.safe_integer(),
-      receiver,
-    )
+    gargamelle_boundary.output(gargamelle_encoding.safe_integer(), receiver)
   gargamelle_boundary.send(output, 9_007_199_254_740_991 + 1)
   |> should.equal(
     Error(gargamelle_encoding.InvalidValue(

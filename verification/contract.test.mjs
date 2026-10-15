@@ -11,7 +11,7 @@ test('semantic callback exceptions remain operational and stop subsequent callba
   let contract=s.require(s.contract(definition),'Reject',()=>{events.push('reject');return new GleamError(toList([new s.Violation('','rejected')]));});
   contract=s.require(contract,'Throw',()=>{events.push('throw');throw failure;});
   contract=s.require(contract,'Later',()=>{events.push('later');return new Ok(undefined);});
-  const receiver=b.json_boundary(contract,()=>events.push('handler'));
+  const receiver=b.json(contract,()=>events.push('handler'));
   assert.throws(()=>b.forward_json(receiver,unwrap(s.parse('"Brainy"'))),error=>error===failure);
   assert.deepEqual(events,['decode','reject','throw']);
 });

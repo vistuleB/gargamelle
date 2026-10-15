@@ -48,9 +48,9 @@ pub fn metadata_encoding_still_obeys_receiving_contract_test() {
     s.required(s.record(fn(value) { value }), "metadata", s.anything())
   let contract = s.contract(s.finish(fields, s.Strict))
   let output =
-    gargamelle_boundary.output_boundary(
+    gargamelle_boundary.output(
       encoder,
-      gargamelle_boundary.json_boundary(contract, fn(verified) {
+      gargamelle_boundary.json(contract, fn(verified) {
         s.to_string(s.verified_json(verified), s.Compact)
       }),
     )
@@ -65,11 +65,11 @@ pub fn metadata_encoding_still_obeys_receiving_contract_test() {
       }
     })
   let strict_receiver =
-    gargamelle_boundary.json_boundary(strict_contract, fn(_) {
+    gargamelle_boundary.json(strict_contract, fn(_) {
       panic as "Rejected output invoked handler"
     })
   gargamelle_boundary.send(
-    gargamelle_boundary.output_boundary(encoder, strict_receiver),
+    gargamelle_boundary.output(encoder, strict_receiver),
     metadata,
   )
   |> should.be_error()
