@@ -82,8 +82,9 @@ type Pending {
 /// eight. Each line is limited to 160 graphemes; quoted paths/messages escape line
 /// breaks and control characters. The full input error remains unchanged.
 /// These limits bound presentation, not validation or the size of its error tree.
-/// Categories and wording may evolve before 1.0; match structured categories
-/// rather than parsing summary text. Application-authored messages are not redacted.
+/// Existing category meanings are stable; handle new categories for new cases.
+/// Human-readable wording is not stable. Match structured categories rather than
+/// parsing summary text. Application-authored messages are not redacted.
 pub fn summary(error: gargamelle.ContractError, max_details: Int) -> String {
   let pending = case error {
     gargamelle.Structural(errors) -> [Errors(errors, 0)]

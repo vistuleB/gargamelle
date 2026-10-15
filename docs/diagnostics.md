@@ -39,8 +39,10 @@ Union alternatives and semantic requirement headings count toward the detail
 budget. Indices are zero-based and retain declaration order. A zero limit returns
 only an omission marker for nonempty errors; an empty error produces empty text.
 Unknown categories retain their category with the explanation `Constraint failed`.
-Categories and message wording may evolve before 1.0. Applications should inspect
-structured fields rather than parse summary text.
+Existing category meanings follow the [compatibility commitments](contract.html#18-compatibility-from-10).
+New categories may be added for newly supported cases; applications should handle
+unknown categories. Human-readable wording is not a compatibility guarantee.
+Applications should inspect structured fields rather than parse summary text.
 
 ## Complete JSON reports
 

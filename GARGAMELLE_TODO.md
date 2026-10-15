@@ -1,6 +1,17 @@
 # Gargamelle handoff and next work
 
-## Latest scope — 0.9.0 preparation
+## Latest scope — 1.0.0 promotion
+
+Promote the published and audited 0.10.0 replacement from `bea1f72`, archive
+SHA-256 `b6c5cd09aceda103860bbd2a1f4d0ec7943a292d0ef22cbbb9206b41f8814b55`.
+No runtime code or public signatures change. Update version metadata, links,
+compatibility wording and the README layout argument label. The published audit
+verified all 27 archive files, 16 live pages and ten fresh consumers per target;
+Linux evidence passed on OTP 28.5.0.7 and 29.1.1.
+Preparation evidence belongs in ignored reports. Publication and release tags
+remain the maintainer's action.
+
+## Previous scope — 0.9.0 preparation
 
 Main includes the boundary module split, PairedBoundary, bounded diagnostic
 summaries, complete diagnostic JSON, and the provider load/save example.

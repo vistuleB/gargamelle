@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.0
+
+- Promote the audited 0.10.0 API and implementation without runtime changes.
+- Apply the compatibility commitments in technical contract section 18 to public
+  APIs, validation and conversion, schemas, diagnostics, and supported runtimes.
+- Update installation and documentation links for 1.0.0.
+
 ## 0.10.0
 
 - Rename `JsonFormat` to `JsonLayout`, `ConstructionError` to `DefinitionError`,
