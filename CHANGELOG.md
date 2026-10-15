@@ -2,6 +2,8 @@
 
 ## 0.10.0
 
+- Add `output_definition` and `paired_definition` for structural definition
+  inspection on every boundary type.
 - Rename boundary accessors to `contract`, `definition`, `json_contract`,
   `json_definition`, and `paired_contract`; retain `output_contract`.
 - Document compatibility commitments effective from 1.0 in the technical contract.

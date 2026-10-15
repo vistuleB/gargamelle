@@ -15,7 +15,7 @@ fn handoff(build: fn() -> a) -> a
 pub fn construction_and_inspection_run_no_callbacks_test() {
   let #(tick, count) = counter(fn(tick, count) { #(tick, count) })
   let definition =
-    s.map(s.text(), fn(text) {
+    s.map(s.string_constant("Brainy"), fn(text) {
       tick()
       text
     })
@@ -37,6 +37,15 @@ pub fn construction_and_inspection_run_no_callbacks_test() {
   let inspected = gargamelle_boundary.paired_contract(pair)
   s.contract_requirements(inspected) |> should.equal(["Registered check"])
   s.schema_string(s.contract_definition(inspected), s.Compact)
+  |> should.equal(s.schema_string(definition, s.Compact))
+  s.schema_string(gargamelle_boundary.paired_definition(pair), s.Compact)
+  |> should.equal(s.schema_string(definition, s.Compact))
+  let output =
+    gargamelle_boundary.output(
+      encoder,
+      gargamelle_boundary.json(contract, fn(_) { tick() }),
+    )
+  s.schema_string(gargamelle_boundary.output_definition(output), s.Compact)
   |> should.equal(s.schema_string(definition, s.Compact))
   count() |> should.equal(0)
 }

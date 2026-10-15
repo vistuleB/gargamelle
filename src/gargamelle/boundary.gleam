@@ -114,6 +114,13 @@ pub fn output_contract(
   json_contract(receiver)
 }
 
+/// Return the receiving contract's structural definition without running callbacks.
+pub fn output_definition(
+  output: OutputBoundary(a, response),
+) -> gargamelle.Definition(a) {
+  gargamelle.contract_definition(output_contract(output))
+}
+
 /// Encode once to unverified admitted JSON, then forward through the receiving
 /// boundary once. No checked encode is performed before forwarding. Invalid
 /// output invokes no handler; accepted output invokes it once. Handler Results
@@ -152,6 +159,13 @@ pub fn paired_contract(
 ) -> gargamelle.Contract(a) {
   let PairedBoundary(loader, _) = pair
   contract(loader)
+}
+
+/// Return the structural definition shared by both directions without callbacks.
+pub fn paired_definition(
+  pair: PairedBoundary(a, loaded, saved),
+) -> gargamelle.Definition(a) {
+  gargamelle.contract_definition(paired_contract(pair))
 }
 
 /// Decode and check once before invoking the loading handler. Application Results

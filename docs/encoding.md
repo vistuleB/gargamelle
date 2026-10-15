@@ -74,7 +74,9 @@ Semantic requirements check reconstructed data, not the encoder input directly.
 
 `output(encoder, receiver)` pairs an encoder with an existing
 `JsonBoundary`. The receiver's Contract is the only acceptance authority;
-`output_contract` exposes it. No second Contract or definition is stored.
+`output_contract` exposes it; `output_definition` exposes its structural definition
+for schema generation. Neither accessor runs callbacks. No second Contract or
+definition is stored.
 
 `send` performs plain encoding, then calls `forward_json` once. It does not use
 checked `encode` before forwarding. There is one Gargamelle Contract check. A

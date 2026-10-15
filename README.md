@@ -172,8 +172,8 @@ definition's output type, not its particular constraints: two definitions produc
 `String` can accept different inputs. Receiving boundaries always check their own
 stored contract; a certificate from another contract cannot bypass that check.
 
-`definition` and `json_definition` expose the receiving
-definition for inspection and schema generation.
+`definition`, `json_definition`, `output_definition` and `paired_definition`
+expose each boundary's structural definition for inspection and schema generation.
 [Verified JSON boundaries](https://hexdocs.pm/gargamelle/0.10.0/boundaries.html)
 documents certificate retention and application responses.
 

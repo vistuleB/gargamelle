@@ -14,6 +14,10 @@ test('boundary paired API retains contract identity and typed encoding diagnosti
   const contract=s.require(s.contract(s.safe_integer()),'Observe checks',()=>{checks++;throw Error('must not check');});
   const pair=b.paired(contract,e.safe_integer(),()=>{handled++;},()=>{handled++;});
   assert.equal(b.paired_contract(pair),contract);
+  const definition=s.contract_definition(contract);
+  assert.equal(b.paired_definition(pair),definition);
+  const output=b.output(e.safe_integer(),b.json(contract,()=>{handled++;}));
+  assert.equal(b.output_definition(output),definition);
   const result=b.save(pair,9007199254740992);
   assert.equal(result.isOk(),false);
   assert.ok(result[0] instanceof e.InvalidValue);

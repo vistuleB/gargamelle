@@ -99,6 +99,8 @@ For typed output, `gargamelle_boundary.output(encoder, receiver)` pairs an expli
 encoder with this receiving boundary. `gargamelle_boundary.send` encodes to admitted
 unverified JSON and calls `forward_json` once. The receiving contract is
 authoritative; there is no separate codec contract to reconcile.
+`output_contract` exposes that contract; `output_definition` exposes its structural
+definition for schema generation. Neither accessor runs callbacks.
 See [Typed JSON encoding](encoding.html).
 
 <a id="paired-loading-and-saving"></a>
@@ -152,7 +154,8 @@ also apply in both directions.
 
 `PairedBoundary(a, loaded, saved)` retains independent handler response types.
 `paired_contract` returns the exact full contract used at both sides,
-without invoking callbacks.
+while `paired_definition` returns its structural definition. Neither accessor
+invokes callbacks.
 
 `load` returns `Result(loaded, gargamelle.ContractError)`. `save` returns
 `Result(saved, gargamelle_encoding.EncodingError)`. Encoding failures retain their
