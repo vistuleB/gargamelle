@@ -2,6 +2,8 @@
 
 ## 0.10.0 — Unreleased
 
+- Document compatibility commitments effective from 1.0 in the technical contract.
+- Retain provider load/save regression checks independently of removed guide pages.
 - Rename boundary constructors in `gargamelle/boundary`: `boundary` → `new`,
   `json_boundary` → `json`, `output_boundary` → `output`, and
   `paired_boundary` → `paired`. The old constructor names are removed.

@@ -101,6 +101,8 @@ unverified JSON and calls `forward_json` once. The receiving contract is
 authoritative; there is no separate codec contract to reconcile.
 See [Typed JSON encoding](encoding.html).
 
+<a id="paired-loading-and-saving"></a>
+
 ## Paired loading and saving
 
 `paired(contract, encoder, load_handler, save_handler)` registers both

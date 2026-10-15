@@ -593,3 +593,74 @@ support self-recursion and typed pairs, not arbitrary heterogeneous recursion
 groups. Runtime qualification is limited to the documented JavaScript and native
 Erlang matrix. Formal or machine-checked correctness, bounded resource use and
 safety against hostile application code are not promised.
+
+## 18. Compatibility from 1.0
+
+The following commitments apply from 1.0.0 onward. Earlier releases remain
+subject to the documented pre-1.0 API changes. Compatibility concerns documented
+public behavior, not implementation details or generated compiler artifacts.
+
+### Public API and runtime support
+
+Within a major version, public module paths, function names, argument order and
+types, return types, public type constructors and their fields remain compatible.
+Removing or changing these requires a major release. Adding a variant to a public
+non-opaque type also requires a major release because callers can match it
+exhaustively. New functions and independent types may be added in minor releases.
+Opaque representations, private helpers and generated JavaScript/Erlang symbols
+are not public compatibility surfaces; use the public Gleam API.
+
+Removing a supported runtime baseline, raising the minimum Gleam version, or
+introducing incompatible native-helper installation requirements requires a major
+release. Newly qualified runtimes may be added without one. No fixed runtime or
+allocation bound is promised.
+
+### Acceptance, conversion and handlers
+
+Existing well-formed definitions and contracts retain their documented admission,
+structural acceptance, conversion, defaults and field-projection semantics.
+Callback suppression and ordering, handler invocation, and certificate retention
+guarantees are also preserved. Deliberately changing these requires a major
+release. Widening acceptance is not automatically compatible: it can change
+`one_of`, conditional or exclusion results. New opt-in constructors or constraints
+may be added in minor releases without changing existing definitions.
+
+A correction restoring behavior already required by the published contract may
+be released as a patch. Its release notes must identify changed acceptance or
+outputs, affected constructions and any consumer action required. A changed
+contract must not be presented as an implementation correction.
+
+### Emitted schemas and JSON text
+
+Generated schemas retain the documented dialect, structural acceptance rules,
+explicit metadata and user-supplied definition names. Schema/decoder agreement
+and the distinction between structural and semantic requirements remain binding.
+Equivalent schema representations, such as a different conjunctive `allOf`
+layout, may change in minor releases. Exact schema object layout, generated
+reference placement, and emitted bytes are not stable across releases.
+
+Canonical key ordering, number/string serialization and `Pretty` layout follow
+the documented rules for each release. Repeated-emission determinism does not
+promise byte-identical schemas or serialization across different releases.
+Applications using emitted text as a persistent hash or signature must pin the
+package version. Changes that violate the documented serialization rules require
+a major release unless they correct a contract violation as described above.
+
+### Diagnostics
+
+Public error constructors and fields, existing category meanings, JSON Pointer
+escaping and attribution rules, and zero-based branch/requirement indices remain
+compatible. Changing these requires a major release. New string categories may
+be added in minor releases for newly supported cases; consumers must handle
+unknown categories. This does not permit recategorizing existing documented
+failures without a major release or an explicitly identified contract correction.
+
+`diagnostics.to_json` preserves existing report fields, value types and meanings.
+Additional object fields may be added in minor releases; consumers must ignore
+unknown fields. Existing fields are not removed or repurposed. Reports and
+summaries do not include submitted JSON values automatically.
+
+Human-readable messages, summary prose and unspecified error enumeration order
+are not compatibility guarantees. Requirement order and branch indices continue
+to follow their documented declaration order. Application-authored messages are
+retained as supplied; no redaction guarantee is introduced.

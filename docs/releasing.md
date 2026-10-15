@@ -32,6 +32,12 @@ are separate work. Do not perform them as part of release preparation.
   explicitly checks the candidate version; update that guard for a new release.
 - [ ] Check compiler and dependency requirements against the evidence. Do not
   widen dependency ranges or runtime support claims without compatibility checks.
+- [ ] From 1.0 onward, classify changes using section 18 of the technical contract.
+  Review public signatures and error variants, acceptance and conversion,
+  callback/handler behavior, schema semantics, diagnostic fields/categories and
+  runtime baselines. Equivalent schema rewrites and additive JSON report fields
+  follow the documented exceptions; new public sum-type variants are breaking.
+  Identify contract-restoring fixes and their consumer impact in release notes.
 - [ ] Preserve the package license, vendored regex license and provenance, and
   the license for retained JSON Schema test-suite fixtures.
 
@@ -99,6 +105,9 @@ local links/anchors and renderer asset freshness. It does not publish.
 - [ ] Require passing Linux qualification for the release commit through
   `.github/workflows/native-qualification.yml` when claiming the Linux matrix.
   Inspect the retained reports, not just the presence of the workflow file.
+- [ ] Test the consumer app against the exact candidate commit or exported archive
+  and record its identity and archive hash. Use an isolated app copy for temporary
+  dependency changes; do not substitute a mutable neighboring library checkout.
 - [ ] Keep test evidence distinct from proof. `npm run check:release` checks
   JavaScript evidence only; it does not replace the full preparation command or
   independent review of the preservation arguments.
