@@ -118,7 +118,7 @@ function within(value,limits,depth=0,state={nodes:0}){
   return children.length<=limits.maxWidth&&children.every(child=>within(child,limits,depth+1,state));
 }
 function search(definition,accept,given){
-  const limits=options(given),text=s.schema_string(definition,s.JsonFormat$Compact$const),schema=JSON.parse(text);
+  const limits=options(given),text=s.schema_string(definition,s.JsonLayout$Compact$const),schema=JSON.parse(text);
   const replay={options:limits,schemaSha256:createHash('sha256').update(text).digest('hex')};
   const unknown=unsupported(schema);
   if(unknown.length)return {status:'unsupported',keywords:unknown,replay};
@@ -175,7 +175,7 @@ function minimize(accept,json,fails,budgets={}){
   const {maxSteps=100,maxCandidates=1000}=budgets;
   for(const n of [maxSteps,maxCandidates])if(!Number.isInteger(n)||n<0||n>10000)throw new Error('Invalid shrink budget');
   if(!accept(json).isOk()||!fails(json))throw new Error('Initial value must be accepted and retain the failing property');
-  let raw=JSON.parse(s.to_string(json,s.JsonFormat$Compact$const)),current=json,tried=0;
+  let raw=JSON.parse(s.to_string(json,s.JsonLayout$Compact$const)),current=json,tried=0;
   if(!within(raw,{maxDepth:64,maxNodes:10000,maxWidth:100,maxStringLength:1000}))throw new Error('Shrink input exceeds prototype size limits');
   for(let step=0;step<maxSteps;step++){
     let changed=false;

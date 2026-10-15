@@ -27,7 +27,7 @@ test('exact tuples include empty and arbitrary arity with positional validation'
 
 test('tuple conversion callbacks execute only after complete validation',()=>{
  let calls=0;const d=s.finish_tuple(s.element(s.tuple(x=>{calls++;return {value:x};}),s.map(s.string(),x=>{calls++;return x;})));
- assert.equal(calls,0);s.schema_string(d, s.JsonFormat$Compact$const);docs.render(d,'callbacks');assert.equal(calls,0);
+ assert.equal(calls,0);s.schema_string(d, s.JsonLayout$Compact$const);docs.render(d,'callbacks');assert.equal(calls,0);
  for(const v of [[],['x',true],[false]])assert.equal(evaluate(d,v).accepted,false);
  assert.equal(calls,0);assert.deepEqual(evaluate(d,['x']).value,{value:'x'});assert.equal(calls,2);
  const mapped=s.map(tuple([s.string()]),xs=>toList(xs));
@@ -48,8 +48,8 @@ test('tuple recursive edges descend and collection checks every position',async(
  await compare(d,[[['a',['b',0.5]],true,{tag:'a',next:{tag:'b',next:0.5}}],[['a',['b',false]],false]]);
  assert.equal(emitted(d).$defs['tuple-tree'].anyOf[1].prefixItems[1].$ref,'#/$defs/tuple-tree');
  let escaped;assert.throws(()=>unwrap(s.recursive('unfinished',self=>{escaped=tuple([self]);throw new Error('stop');})),/stop/);
- assert.throws(()=>evaluate(escaped,[]),/not finalized|unfinalized/);assert.throws(()=>s.schema_string(escaped, s.JsonFormat$Compact$const),/not finalized|unfinalized/);
- const conflict=tuple([unwrap(s.named('same',s.string())),unwrap(s.named('same',s.number()))]);assert.throws(()=>s.schema_string(conflict, s.JsonFormat$Compact$const),/conflict/i);
+ assert.throws(()=>evaluate(escaped,[]),/not finalized|unfinalized/);assert.throws(()=>s.schema_string(escaped, s.JsonLayout$Compact$const),/not finalized|unfinalized/);
+ const conflict=tuple([unwrap(s.named('same',s.string())),unwrap(s.named('same',s.number()))]);assert.throws(()=>s.schema_string(conflict, s.JsonLayout$Compact$const),/conflict/i);
  const defaults=unwrap(s.defaulted(s.record(x=>x),'entry',tuple([s.string(),s.number()]),unwrap(s.parse('["x",0.5]'))));
  assert.deepEqual(evaluate(s.finish(defaults,s.RecordPolicy$Strict$const),{}).value,['x',0.5]);
 });

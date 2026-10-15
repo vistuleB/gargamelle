@@ -62,7 +62,7 @@ try {
   const checks=[];
   const run=async(name,contract,cases)=>{
     const definition=s.contract_definition(contract);
-    const schema=JSON.parse(s.schema_string(definition,s.JsonFormat$Compact$const));
+    const schema=JSON.parse(s.schema_string(definition,s.JsonLayout$Compact$const));
     const oracles=[compileOracle(schema),await compileSupplementary(schema)];
     let handled=0;
     const receiver=b.json(contract,verified=>{handled++;return s.verified_json(verified);});
@@ -119,9 +119,9 @@ try {
   const receiving=s.require(compiled.cloze.evidence_for_contract(oldCard),'Observe verification',()=>{verified++;return new Ok(undefined);});
   const output=b.output(encoder,b.json(receiving,certificate=>{stored++;return s.verified_json(certificate);}));
   const emitted=unwrap(b.send(output,typedEvidence));
-  assert.deepEqual(JSON.parse(s.to_string(emitted,s.JsonFormat$Compact$const)),cloze);
+  assert.deepEqual(JSON.parse(s.to_string(emitted,s.JsonLayout$Compact$const)),cloze);
   assert.deepEqual([encoded,verified,stored],[1,1,1]);
-  const schema=JSON.parse(s.schema_string(s.contract_definition(b.output_contract(output)),s.JsonFormat$Compact$const));
+  const schema=JSON.parse(s.schema_string(s.contract_definition(b.output_contract(output)),s.JsonLayout$Compact$const));
   for(const oracle of [compileOracle(schema),await compileSupplementary(schema)])assert.equal(oracle(cloze).accepted,true);
   const rejected=b.send(output,typedInconsistent);
   assert.equal(rejected.isOk(),false);assert.equal(rejected[0].constructor.name,'Contract');

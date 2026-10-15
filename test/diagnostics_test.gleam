@@ -8,12 +8,14 @@ import gleeunit/should
 pub fn complete_structural_json_retains_branches_matches_and_keys_test() {
   let error =
     s.Structural([
-      s.DataError(
+      s.ValidationError(
         "union_no_match",
         "/a~1b",
         None,
         [
-          #(2, [s.DataError("missing_required", "/a~1b", Some("x/y"), [], [])]),
+          #(2, [
+            s.ValidationError("missing_required", "/a~1b", Some("x/y"), [], []),
+          ]),
         ],
         [0, 1],
       ),
@@ -88,7 +90,7 @@ pub fn recursive_union_failure_is_bounded_without_losing_structured_details_test
 pub fn wide_failures_and_limits_bound_output_test() {
   let errors =
     list.map(list.repeat(Nil, 1000), fn(_) {
-      s.DataError("integer_type", "/score", None, [], [])
+      s.ValidationError("integer_type", "/score", None, [], [])
     })
   let error = s.Structural(errors)
   diagnostics.summary(error, 3)
@@ -109,7 +111,13 @@ pub fn wide_failures_and_limits_bound_output_test() {
 pub fn labels_are_bounded_and_unknown_categories_remain_identifiable_test() {
   let error =
     s.Structural([
-      s.DataError("future_category", "", Some(string.repeat("😀", 500)), [], []),
+      s.ValidationError(
+        "future_category",
+        "",
+        Some(string.repeat("😀", 500)),
+        [],
+        [],
+      ),
     ])
   let summary = diagnostics.summary(error, 1)
   string.length(summary) |> should.equal(160)

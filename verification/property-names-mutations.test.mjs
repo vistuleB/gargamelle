@@ -9,7 +9,7 @@ const root=fileURLToPath(new URL('../',import.meta.url));
 const mutations=[
  ['key-validation-removed','return inspect(\n                    key,\n                    new JString(pair[0]),\n                    path(p, pair[0]),\n                    bindings,\n                  )[0];','return toList([]);',`assert.equal(s.validate(d,unwrap(s.parse('{"bad":1}'))) instanceof Ok,false);`],
  ['values-tested-instead-of-keys','return inspect(\n                    key,\n                    new JString(pair[0]),\n                    path(p, pair[0]),\n                    bindings,\n                  )[0];','return inspect(key, pair[1], path(p, pair[0]), bindings)[0];',`assert.equal(s.validate(d,unwrap(s.parse('{"en":1}'))) instanceof Ok,true);`],
- ['key-schema-emission-dropped','"propertyNames", key_schema','"x-propertyNames", key_schema',`assert.equal(JSON.parse(s.schema_string(d, s.JsonFormat$Compact$const)).propertyNames?.const,'en');`],
+ ['key-schema-emission-dropped','"propertyNames", key_schema','"x-propertyNames", key_schema',`assert.equal(JSON.parse(s.schema_string(d, s.JsonLayout$Compact$const)).propertyNames?.const,'en');`],
 ];
 test('key validation, key/value distinction, and schema emission mutants fail assertions',()=>{
  const dir=mkdtempSync(join(tmpdir(),'gargamelle-key-mutants-'));

@@ -30,7 +30,7 @@ test('static record helpers preserve schema, acceptance, output, and errors on b
     const s=await load('gargamelle'),e=await load('gargamelle/encoding'),shared=await load('shared_record'),fixture=await load('record_helpers_example');
     const unwrap=result=>{assert.ok(result.isOk(),JSON.stringify(result));return result[0];};
     const [baseline,encoder]=fixture.baseline(),[combined,combinedEncoder]=unwrap(fixture.shared());
-    const schema=JSON.parse(s.schema_string(baseline,s.JsonFormat$Compact$const));
+    const schema=JSON.parse(s.schema_string(baseline,s.JsonLayout$Compact$const));
     const oracles=[compileOracle(schema),await compileSupplementary(schema)];
     let accepted=0,rejected=0;
     // Fixed exhaustive product rather than probabilistic sampling.
@@ -42,7 +42,7 @@ test('static record helpers preserve schema, acceptance, output, and errors on b
       if(expected.isOk()){
         accepted++;const value=unwrap(s.decode(combined,json));
         const left=unwrap(e.encode_json(encoder,value)),right=unwrap(e.encode_json(combinedEncoder,value));
-        assert.equal(s.to_string(left,s.JsonFormat$Compact$const),s.to_string(right,s.JsonFormat$Compact$const));
+        assert.equal(s.to_string(left,s.JsonLayout$Compact$const),s.to_string(right,s.JsonLayout$Compact$const));
         assert.ok(s.validate(combined,right).isOk());
       }else rejected++;
     }

@@ -7,6 +7,10 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 const root=fileURLToPath(new URL('../',import.meta.url));
 const cases=[
+ ['removed_JsonFormat','pub fn main(x: s.JsonFormat) { x }','Unknown module type'],
+ ['removed_ConstructionError','pub fn main(x: s.ConstructionError) { x }','Unknown module type'],
+ ['removed_DataError','pub fn main(x: s.DataError) { x }','Unknown module type'],
+ ['removed_render_emitted','pub fn main() { documentation.render_emitted(Nil) }','Unknown module value'],
  ['removed_core_text','pub fn main() { s.text() }','Unknown module value'],
  ['removed_encoding_text','pub fn main() { e.text() }','Unknown module value'],
  ['removed_choice','pub fn main() { e.choice(Nil, Nil) }','Unknown module value'],

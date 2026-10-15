@@ -52,7 +52,7 @@ test('annotations, defaults and number-like property names retain canonical stru
  const value=JSON.parse('{"__proto__":"x","constructor":"y","toString":"z","10":"ten","2":"two"}');
  const recipe={kind:'record',fields:[{name:'defaults',presence:'defaulted',default:value,child:{kind:'dictionary',child:{kind:'string'}}}]};
  const definition=build(recipe);assert.deepEqual(emitted(definition).properties.defaults.default,value);success(recipe,{}, {defaults:value});
- const text=s.schema_string(definition, s.JsonFormat$Compact$const);assert.equal(text,s.schema_string(definition, s.JsonFormat$Compact$const));assert.equal(Object.getPrototypeOf(value),Object.prototype);
+ const text=s.schema_string(definition, s.JsonLayout$Compact$const);assert.equal(text,s.schema_string(definition, s.JsonLayout$Compact$const));assert.equal(Object.getPrototypeOf(value),Object.prototype);
 });
 
 test('callback instrumentation sees only actual decoded values, no discovery/default validation calls',()=>{
@@ -61,7 +61,7 @@ test('callback instrumentation sees only actual decoded values, no discovery/def
  let record=s.record(x=>{calls.push(['record',x]);return x;});
  record=unwrap(s.defaulted(record,'a',child,unwrap(s.parse('"fallback"'))));
  const d=s.finish(record,s.RecordPolicy$Strict$const);
- assert.deepEqual(calls,[]);s.schema_string(d, s.JsonFormat$Compact$const);s.validate(d,unwrap(s.parse('{}')));assert.deepEqual(calls,[]);
+ assert.deepEqual(calls,[]);s.schema_string(d, s.JsonLayout$Compact$const);s.validate(d,unwrap(s.parse('{}')));assert.deepEqual(calls,[]);
  const result=s.decode(d,unwrap(s.parse('{}')));assert.ok(result instanceof Ok);assert.equal(result[0],'FALLBACK');assert.deepEqual(calls,[['map','fallback'],['record','FALLBACK']]);
  calls=[];const overlap=unwrap(s.one_of(toList([child,child])));assert.equal(s.decode(overlap,unwrap(s.parse('"x"'))) instanceof Ok,false);assert.deepEqual(calls,[]);
 });

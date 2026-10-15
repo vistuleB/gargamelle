@@ -420,7 +420,7 @@ fn node(
 /// Supply a unique article ID when embedding multiple contracts on one page.
 pub fn render(definition: gargamelle.Definition(a), id: String) -> String {
   let assert Ok(html) =
-    render_emitted(
+    render_schema(
       gargamelle.schema_string(definition, gargamelle.Compact),
       id,
       [],
@@ -455,7 +455,7 @@ pub fn render_contract(contract: gargamelle.Contract(a), id: String) -> String {
 /// pairs (omitted definition, displayed definition); they must name existing
 /// definitions and point directly to a displayed definition. They do not change
 /// the schema or decoding. Explain any such compression in the surrounding page.
-pub fn render_emitted(
+pub fn render_schema(
   source: String,
   id: String,
   aliases: List(#(String, String)),
@@ -519,7 +519,7 @@ pub fn render_emitted(
 
 /// A rejected example's zero-based position and ordinary validation errors.
 pub type ExampleError {
-  ExampleError(index: Int, errors: List(gargamelle.DataError))
+  ExampleError(index: Int, errors: List(gargamelle.ValidationError))
 }
 
 /// Validate admitted input examples before displaying them. This never invokes

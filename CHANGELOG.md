@@ -2,6 +2,11 @@
 
 ## 0.10.0
 
+- Rename `JsonFormat` to `JsonLayout`, `ConstructionError` to `DefinitionError`,
+  and `DataError` to `ValidationError`.
+- Rename the HTML entry point `render_emitted` to `render_schema`; it accepts
+  Gargamelle-generated schema JSON text.
+
 - Rename `text` to `string` in core and encoding, encoding `choice` to `result`,
   and encoding `codec_contract` to `contract`.
 - Rename metadata-only constructors `default` and `format` to

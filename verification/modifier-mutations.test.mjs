@@ -16,7 +16,7 @@ test('modifier regressions detect rejected names and overwritten array conjuncti
   assert.equal(wrapper.body.split('} else if (node instanceof NamedNode) {').length,2);
   assert.equal(conjunction.body.split('_block = clauses;').length,2);
   const mutations=[
-   {name:'reject-named',...wrapper,modified:wrapper.body.replace('} else if (node instanceof NamedNode) {','} else if (node instanceof NamedNode) { return new Error(new ConstructionError(unsupported));')},
+   {name:'reject-named',...wrapper,modified:wrapper.body.replace('} else if (node instanceof NamedNode) {','} else if (node instanceof NamedNode) { return new Error(new DefinitionError(unsupported));')},
    {name:'overwrite-allOf',...conjunction,modified:conjunction.body.replace('_block = clauses;','_block = $List$Empty$const;')},
   ];
   writeFileSync(join(dir,'check.mjs'),`import assert from 'node:assert/strict';
@@ -31,7 +31,7 @@ let d=unwrap(s.contains(s.array(s.safe_integer()),unwrap(s.integer_constant(1)),
 d=unwrap(s.unique_items(d));d=s.exclude(d,s.array(unwrap(s.integer_constant(1))));
 d=unwrap(s.contains(d,unwrap(s.integer_constant(2)),1,None));
 d=unwrap(s.contains(d,unwrap(s.integer_constant(3)),1,None));
-const schema=JSON.parse(s.schema_string(d,s.JsonFormat$Compact$const));
+const schema=JSON.parse(s.schema_string(d,s.JsonLayout$Compact$const));
 // Keep this mutation check independent of external module resolution in the
 // temporary tree. A retained allOf base must contain its exclusion clause.
 assert.equal(schema.allOf.some(x=>x.not!==undefined),true);

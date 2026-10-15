@@ -116,21 +116,23 @@ pub fn tagged_diagnostics_test() {
   let assert Ok(v) = s.parse("{}")
   s.decode(d, v)
   |> should.equal(
-    Error([s.DataError("missing_required", "", Some("kind"), [], [])]),
+    Error([s.ValidationError("missing_required", "", Some("kind"), [], [])]),
   )
   let assert Ok(v) = s.parse("{\"kind\":4}")
   s.decode(d, v)
   |> should.equal(
-    Error([s.DataError("discriminator_type", "/kind", None, [], [])]),
+    Error([s.ValidationError("discriminator_type", "/kind", None, [], [])]),
   )
   let assert Ok(v) = s.parse("{\"kind\":\"y\"}")
   s.decode(d, v)
   |> should.equal(
-    Error([s.DataError("unknown_discriminator", "/kind", None, [], [])]),
+    Error([s.ValidationError("unknown_discriminator", "/kind", None, [], [])]),
   )
   let assert Ok(v) = s.parse("{\"kind\":\"x\",\"a/b~\":false}")
   s.decode(d, v)
-  |> should.equal(Error([s.DataError("string_type", "/a~1b~0", None, [], [])]))
+  |> should.equal(
+    Error([s.ValidationError("string_type", "/a~1b~0", None, [], [])]),
+  )
   let assert Ok(v) = s.parse("{\"kind\":\"x\",\"a/b~\":\"payload\"}")
   s.decode(d, v) |> should.equal(Ok("payload"))
   s.tagged("kind", [s.variant("x", r, s.Strict), s.variant("x", r, s.Strict)])
@@ -144,7 +146,7 @@ pub fn nullable_error_path_test() {
     s.record(fn(x) { x }) |> s.required("x", s.nullable(s.string()))
   let assert Ok(v) = s.parse("{\"x\":false}")
   s.decode(s.finish(r, s.Strict), v)
-  |> should.equal(Error([s.DataError("string_type", "/x", None, [], [])]))
+  |> should.equal(Error([s.ValidationError("string_type", "/x", None, [], [])]))
 }
 
 pub fn all_constants_test() {

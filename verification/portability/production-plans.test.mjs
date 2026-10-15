@@ -69,10 +69,10 @@ test('main library preserves baseline behavior with immutable recursive plans',(
     cpSync(join(root,'verification/portability/integration/baseline-runtime.mjs'),join(directory,'src/runtime.mjs'));
     // Adapt API names and omit the new Contract-only renderer in copied callers.
     // The baseline predates Contract; preserve its frozen source unchanged.
-    const callers=['schema_fixtures.gleam','integration_probe.gleam','gargamelle/documentation.gleam'];
+    const callers=['schema_fixtures.gleam','integration_probe.gleam','integration_benchmark.gleam','gargamelle/documentation.gleam'];
     const originals=callers.map(name=>[name,readFileSync(join(directory,'src',name),'utf8')]);
-    for(const [name,source] of originals)writeFileSync(join(directory,'src',name),source.replace(/\/\/\/ Render the structural definition and every semantic requirement description\.[\s\S]*?(?=\/\/\/ Render JSON emitted by Gargamelle\.)/, '').replaceAll('schema_string','emit_text').replaceAll('schema_json','emit_json').replaceAll('gargamelle.Json','gargamelle.Value').replaceAll('gargamelle.to_string','gargamelle.value_text').replaceAll('s.Strict','s.Closed').replaceAll(', s.Compact','').replaceAll(', gargamelle.Compact',''));
-    assert.deepEqual(probe('javascript'),integrated,'schema bytes, decoded outputs or full DataError structures changed');
+    for(const [name,source] of originals)writeFileSync(join(directory,'src',name),source.replace(/\/\/\/ Render the structural definition and every semantic requirement description\.[\s\S]*?(?=\/\/\/ Render JSON emitted by Gargamelle\.)/, '').replaceAll('s.string()','s.text()').replaceAll('gargamelle.string()','gargamelle.text()').replaceAll('s.ValidationError','s.DataError').replaceAll('gargamelle.ValidationError','gargamelle.DataError').replaceAll('s.DefinitionError','s.ConstructionError').replaceAll('gargamelle.DefinitionError','gargamelle.ConstructionError').replaceAll('schema_string','emit_text').replaceAll('schema_json','emit_json').replaceAll('gargamelle.Json','gargamelle.Value').replaceAll('gargamelle.to_string','gargamelle.value_text').replaceAll('s.Strict','s.Closed').replaceAll(', s.Compact','').replaceAll(', gargamelle.Compact',''));
+    assert.deepEqual(probe('javascript'),integrated,'schema bytes, decoded outputs or full ValidationError structures changed');
     for(const [name,source] of originals)writeFileSync(join(directory,'src',name),source);
     writeFileSync(join(directory,'src/gargamelle.gleam'),integratedSource);
     writeFileSync(join(directory,'src/gargamelle/encoding.gleam'),encodingSource);

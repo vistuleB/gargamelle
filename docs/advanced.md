@@ -74,7 +74,7 @@ Modifiers do not distribute over `nullable`, unions or tagged alternatives,
 and do not resolve recursive references. Apply them to the selected branch or
 recursive body during construction. A completed recursive definition can be
 composed normally, but these modifiers do not rewrite its referenced body after
-completion. Unsupported base shapes return `Error(ConstructionError(...))`;
+completion. Unsupported base shapes return `Error(DefinitionError(...))`;
 invalid reference graphs and conflicting names retain their operational graph
 errors during validation/emission. Constants, enums and `anything()` are not
 implicitly converted into one of the supported bases.
@@ -257,8 +257,8 @@ pub fn main() {
 ```
 
 `render(definition, id)` returns an `<article>` fragment. Give each article a unique
-ID. `render_emitted(schema_json, id, aliases)`
-accepts already-emitted Gargamelle schema JSON and returns `Result(String, String)`.
+ID. `render_schema(schema_string, id, aliases)`
+accepts Gargamelle-generated schema JSON text and returns `Result(String, String)`.
 This is a renderer for Gargamelle's schema vocabulary, not a general JSON Schema
 validator or documentation engine for arbitrary schema dialects.
 

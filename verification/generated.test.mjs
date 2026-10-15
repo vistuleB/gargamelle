@@ -32,7 +32,7 @@ async function run(recipe,values,context){
  const checkpoint=checkpointCase(recipe,values,context);
  let d,check,second,text;
  try {
-  d=build(recipe);text=s.schema_string(d, s.JsonFormat$Compact$const);assert.equal(s.schema_string(d, s.JsonFormat$Compact$const),text);assert.deepEqual(JSON.parse(s.to_string(s.schema_json(d), s.JsonFormat$Compact$const)),JSON.parse(text));assert.equal(s.schema_string(d, s.JsonFormat$Pretty$const),JSON.stringify(JSON.parse(text),null,2));
+  d=build(recipe);text=s.schema_string(d, s.JsonLayout$Compact$const);assert.equal(s.schema_string(d, s.JsonLayout$Compact$const),text);assert.deepEqual(JSON.parse(s.to_string(s.schema_json(d), s.JsonLayout$Compact$const)),JSON.parse(text));assert.equal(s.schema_string(d, s.JsonLayout$Pretty$const),JSON.stringify(JSON.parse(text),null,2));
   check=compileOracle(JSON.parse(text));second=await compileSupplementary(JSON.parse(text)); // includes selected meta-schema validation
  } catch(error) {
   const file=retainOperationalFailure({recipe,context:{...context,stage:'construction-emission-oracle'},error});

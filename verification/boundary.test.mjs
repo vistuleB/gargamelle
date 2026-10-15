@@ -65,7 +65,7 @@ test('README and boundary guide examples compile and run on both targets',()=>{
   try{
     mkdirSync(join(directory,'src'));
     writeFileSync(join(directory,'gleam.toml'),`name = "boundary_guide"\nversion = "0.1.0"\n[dependencies]\ngargamelle = { path = ${JSON.stringify(root)} }\ngleam_stdlib = { path = ${JSON.stringify(join(root,'build/packages/gleam_stdlib'))} }\ngleam_json = { path = ${JSON.stringify(join(root,'build/packages/gleam_json'))} }\n`);
-    const outputs=[s.schema_string(s.array(s.string()),s.JsonFormat$Pretty$const)+'\nBrainy, Jokey\n','["Brainy","Jokey"]\n','["Brainy","Jokey"]\n','"Brainy"\n','Brainy, Jokey\n["Brainy","Jokey"]\n'];
+    const outputs=[s.schema_string(s.array(s.string()),s.JsonLayout$Pretty$const)+'\nBrainy, Jokey\n','["Brainy","Jokey"]\n','["Brainy","Jokey"]\n','"Brainy"\n','Brainy, Jokey\n["Brainy","Jokey"]\n'];
     assert.equal(examples.length,outputs.length);
     for(const [index,code] of examples.entries()){
     writeFileSync(join(directory,'src/boundary_guide.gleam'),code+'\n');

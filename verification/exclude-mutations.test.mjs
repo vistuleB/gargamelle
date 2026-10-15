@@ -9,7 +9,7 @@ const root=fileURLToPath(new URL('../',import.meta.url));
 const mutations=[
  ['inverted-exclusion','let $ = inspect(probe, v, "", bindings)[0] instanceof $Empty;\n            if ($) {\n              return err("excluded", p);','let $ = !(inspect(probe, v, "", bindings)[0] instanceof $Empty);\n            if ($) {\n              return err("excluded", p);',`assert.equal(s.validate(d,unwrap(s.parse('1'))) instanceof Ok,true);`],
  ['exclusion-disabled','return err("excluded", p);','return $List$Empty$const;',`assert.equal(s.validate(d,unwrap(s.parse('0'))) instanceof Ok,false);`],
- ['not-emission-dropped','["not", emit(probe)]','["x-not", emit(probe)]',`assert.equal(JSON.parse(s.schema_string(d, s.JsonFormat$Compact$const)).allOf[1].not?.const,0);`],
+ ['not-emission-dropped','["not", emit(probe)]','["x-not", emit(probe)]',`assert.equal(JSON.parse(s.schema_string(d, s.JsonLayout$Compact$const)).allOf[1].not?.const,0);`],
 ];
 test('exclusion polarity, rejection, and not emission mutants fail assertions',()=>{
  const dir=mkdtempSync(join(tmpdir(),'gargamelle-exclude-mutants-'));

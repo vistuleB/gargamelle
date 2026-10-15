@@ -44,7 +44,7 @@ let splits=0,accepted=0,pairs=0;
 console.log('Checking generated Node baseline against independent validators and outputs…');
 const rows=[];
 for(const [index,row] of corpus().entries()){
- const definition=build(row.recipe),schema=s.schema_string(definition, s.JsonFormat$Compact$const),ajv=compileOracle(JSON.parse(schema)),hyperjump=await compileSupplementary(JSON.parse(schema));
+ const definition=build(row.recipe),schema=s.schema_string(definition, s.JsonLayout$Compact$const),ajv=compileOracle(JSON.parse(schema)),hyperjump=await compileSupplementary(JSON.parse(schema));
  const expected=[];
  for(const input of row.inputs){
   const value=JSON.parse(input),result=evaluate(definition,input),a=ajv(value),h=hyperjump(value),ref=reference(row.recipe,value);

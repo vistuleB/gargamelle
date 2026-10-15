@@ -24,8 +24,8 @@ test('public encoders agree with independent structural schema validators',async
     ['rejected constant',e.string(),s.string_constant('Brainy'),'Jokey',false],
   ]){
     const json=unwrap(e.encode_json(encoder,value));
-    const raw=JSON.parse(s.to_string(json,s.JsonFormat$Compact$const));
-    const schema=JSON.parse(s.schema_string(definition,s.JsonFormat$Compact$const));
+    const raw=JSON.parse(s.to_string(json,s.JsonLayout$Compact$const));
+    const schema=JSON.parse(s.schema_string(definition,s.JsonLayout$Compact$const));
     for(const oracle of [compileOracle(schema),await compileSupplementary(schema)])assert.equal(oracle(raw).accepted,accepted,name);
     assert.equal(e.encode(e.codec(encoder,s.contract(definition)),value).isOk(),accepted,name);
   }
@@ -38,7 +38,7 @@ test('encoding admission rejects nonfinite numbers and non-scalar strings and ke
   assert.equal(e.encode_json(e.array(e.string()),toList(['Brainy','\udfff'])).isOk(),false);
   assert.equal(e.field(e.record(),'\ud800',e.string(),x=>x).isOk(),false);
   const hostile=unwrap(e.field(e.record(),'__proto__',e.string(),x=>x));
-  const raw=JSON.parse(s.to_string(unwrap(e.encode_json(e.finish(hostile),'safe')),s.JsonFormat$Compact$const));
+  const raw=JSON.parse(s.to_string(unwrap(e.encode_json(e.finish(hostile),'safe')),s.JsonLayout$Compact$const));
   assert.equal(Object.getPrototypeOf(raw),Object.prototype);
   assert.equal(Object.hasOwn(raw,'__proto__'),true);
   assert.equal(raw.__proto__,'safe');
@@ -124,7 +124,7 @@ test('JSON passthrough preserves canonical values and does not bypass a receivin
   for(const source of ['null','false','-0','1.25','1e308','"💜"','[]','{}','{"__proto__":"safe","a":[null,true,{}]}']){
     const original=unwrap(s.parse(source));
     const encoded=unwrap(e.encode_json(e.json(),original));
-    assert.equal(s.to_string(encoded,s.JsonFormat$Compact$const),s.to_string(original,s.JsonFormat$Compact$const));
+    assert.equal(s.to_string(encoded,s.JsonLayout$Compact$const),s.to_string(original,s.JsonLayout$Compact$const));
     const checked=e.encode(e.codec(e.json(),s.contract(s.string())),original);
     assert.equal(checked.isOk(),typeof JSON.parse(source)==='string');
   }

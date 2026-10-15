@@ -37,7 +37,7 @@ pub opaque type Json {
 /// JSON text layout. `Compact` uses canonical JSON; `Pretty` adds two-space
 /// indentation without changing numbers, escaping or key order. Neither adds
 /// a trailing newline. Empty arrays and objects stay on one line.
-pub type JsonFormat {
+pub type JsonLayout {
   Compact
   Pretty
 }
@@ -58,19 +58,19 @@ pub type JsonError {
 }
 
 /// An invalid definition, constraint, default, or reference graph.
-pub type ConstructionError {
-  ConstructionError(String)
+pub type DefinitionError {
+  DefinitionError(String)
 }
 
 /// A structural validation failure. `path` is a JSON Pointer (empty at the root).
 /// `branches` contains indexed union errors and `matches` identifies matching
 /// branches. Categories and diagnostic wording may evolve before version 1.0.
-pub type DataError {
-  DataError(
+pub type ValidationError {
+  ValidationError(
     category: String,
     path: String,
     missing_key: Option(String),
-    branches: List(#(Int, List(DataError))),
+    branches: List(#(Int, List(ValidationError))),
     matches: List(Int),
   )
 }
@@ -93,7 +93,7 @@ pub type RequirementFailure {
 /// Structural decoding rejection or rejection by semantic requirements.
 /// Exceptions and resource failures are operational failures, not these values.
 pub type ContractError {
-  Structural(List(DataError))
+  Structural(List(ValidationError))
   Semantic(List(RequirementFailure))
 }
 
@@ -294,9 +294,9 @@ fn bare(n: Node) -> Node {
 // recursive bindings are retained; recursive references are never followed.
 fn rewrite_modifier_base(
   node: Node,
-  modify: fn(Node) -> Result(Node, ConstructionError),
+  modify: fn(Node) -> Result(Node, DefinitionError),
   unsupported: String,
-) -> Result(Node, ConstructionError) {
+) -> Result(Node, DefinitionError) {
   case node {
     IdentifiedNode(_, child) -> result.map(modify(child), identified)
     BoundNode(bindings, child) ->
@@ -317,7 +317,7 @@ fn rewrite_modifier_base(
       result.map(modify(child), ConditionalNode(_, checks))
     ExcludeNode(child, checks) ->
       result.map(modify(child), ExcludeNode(_, checks))
-    _ -> Error(ConstructionError(unsupported))
+    _ -> Error(DefinitionError(unsupported))
   }
 }
 
@@ -421,11 +421,11 @@ fn check_json_keys(fields, seen) {
 }
 
 // Schema text must inhabit the same String domain as admitted JSON. Constructors
-// with Result return ConstructionError; direct constructors assert this precondition.
-fn scalar_argument(text: String) -> Result(Nil, ConstructionError) {
+// with Result return DefinitionError; direct constructors assert this precondition.
+fn scalar_argument(text: String) -> Result(Nil, DefinitionError) {
   parse(json.to_string(json.string(text)))
   |> result.map(fn(_) { Nil })
-  |> result.map_error(fn(_) { ConstructionError("non-scalar string argument") })
+  |> result.map_error(fn(_) { DefinitionError("non-scalar string argument") })
 }
 
 @external(erlang, "gargamelle_runtime", "parse")
@@ -442,9 +442,9 @@ fn parse_runtime(
 
 /// Serialize any admitted JSON value in the chosen layout. Negative zero
 /// becomes `0`. `Compact` is canonical; `Pretty` changes only whitespace.
-pub fn to_string(value: Json, format: JsonFormat) -> String {
+pub fn to_string(value: Json, layout: JsonLayout) -> String {
   let compact = canonical(json.to_string(json_value(value)))
-  case format {
+  case layout {
     Compact -> compact
     Pretty -> {
       let assert Ok(text) =
@@ -635,9 +635,9 @@ pub fn number() -> Plan(Float, r) {
 pub fn integer_multiple_of(
   def: Plan(a, r),
   divisor: Int,
-) -> Result(Plan(a, r), ConstructionError) {
+) -> Result(Plan(a, r), DefinitionError) {
   case divisor > 0 && divisor <= 9_007_199_254_740_991 {
-    False -> Error(ConstructionError("divisor must be a positive safe integer"))
+    False -> Error(DefinitionError("divisor must be a positive safe integer"))
     True -> {
       let Plan(node, convert) = def
       use next <- result.try(integer_multiple_node(node, divisor))
@@ -724,9 +724,9 @@ pub fn number_bounds(
   def: Plan(Float, r),
   lower: Option(NumberBound),
   upper: Option(NumberBound),
-) -> Result(Plan(Float, r), ConstructionError) {
+) -> Result(Plan(Float, r), DefinitionError) {
   case valid_number_bounds(lower, upper) {
-    False -> Error(ConstructionError("invalid number bounds"))
+    False -> Error(DefinitionError("invalid number bounds"))
     True -> {
       let Plan(n, d) = def
       use next <- result.try(number_bound_node(n, lower, upper))
@@ -739,14 +739,14 @@ fn number_bound_node(
   n: Node,
   lower: Option(NumberBound),
   upper: Option(NumberBound),
-) -> Result(Node, ConstructionError) {
+) -> Result(Node, DefinitionError) {
   case n {
     NumberNode(lo, hi) -> {
       let lo = stricter_bound(lo, lower, True)
       let hi = stricter_bound(hi, upper, False)
       case valid_number_bounds(lo, hi) {
         True -> Ok(NumberNode(lo, hi))
-        False -> Error(ConstructionError("empty number interval"))
+        False -> Error(DefinitionError("empty number interval"))
       }
     }
     _ ->
@@ -779,12 +779,12 @@ fn number_ok(
 /// Accept one of the supplied strings. Empty or duplicate alternatives fail construction.
 pub fn string_enum(
   values: List(String),
-) -> Result(Plan(String, r), ConstructionError) {
+) -> Result(Plan(String, r), DefinitionError) {
   use _ <- result.try(
     list.try_fold(values, Nil, fn(_, text) { scalar_argument(text) }),
   )
   case values == [] || list.length(list.unique(values)) != list.length(values) {
-    True -> Error(ConstructionError("empty or duplicate enum"))
+    True -> Error(DefinitionError("empty or duplicate enum"))
     False ->
       Ok(
         definition(EnumNode(values), fn(_, v, _) {
@@ -815,13 +815,13 @@ pub fn null_constant() -> Plan(Nil, r) {
 }
 
 /// Accept exactly this safe integer; reject constants outside the safe range.
-pub fn integer_constant(v: Int) -> Result(Plan(Int, r), ConstructionError) {
+pub fn integer_constant(v: Int) -> Result(Plan(Int, r), DefinitionError) {
   case
     v < -9_007_199_254_740_991
     || v > 9_007_199_254_740_991
     || !integer(as_float(v))
   {
-    True -> Error(ConstructionError("unsafe integer"))
+    True -> Error(DefinitionError("unsafe integer"))
     False ->
       Ok(
         definition(ConstNode(JNumber(as_float(v)), "integer"), fn(_, _, _) { v }),
@@ -897,11 +897,11 @@ pub fn contains(
   matching: Plan(b, r),
   minimum: Int,
   maximum: Option(Int),
-) -> Result(Plan(a, r), ConstructionError) {
+) -> Result(Plan(a, r), DefinitionError) {
   let Plan(node, convert) = def
   let Plan(match_node, _) = matching
   case bad_bounds(Some(minimum), maximum, True) {
-    True -> Error(ConstructionError("invalid contains bounds"))
+    True -> Error(DefinitionError("invalid contains bounds"))
     False -> {
       use next <- result.try(contains_node(
         node,
@@ -929,7 +929,7 @@ fn array_node(node: Node) -> Bool {
 fn contains_node(
   node: Node,
   membership: Membership,
-) -> Result(Node, ConstructionError) {
+) -> Result(Node, DefinitionError) {
   case node {
     IdentifiedNode(_, child) ->
       result.map(contains_node(child, membership), identified)
@@ -942,8 +942,7 @@ fn contains_node(
     _ ->
       case array_node(node) {
         True -> Ok(ContainsNode(identified(node), [membership]))
-        False ->
-          Error(ConstructionError("contains requires an array definition"))
+        False -> Error(DefinitionError("contains requires an array definition"))
       }
   }
 }
@@ -1017,7 +1016,7 @@ pub fn dictionary(def: Plan(a, r)) -> Plan(List(#(String, a)), r) {
 pub fn property_names(
   def: Plan(a, r),
   keys: Plan(String, r),
-) -> Result(Plan(a, r), ConstructionError) {
+) -> Result(Plan(a, r), DefinitionError) {
   let Plan(node, convert) = def
   let Plan(key, _) = keys
   use next <- result.try(property_names_node(node, key))
@@ -1046,7 +1045,7 @@ pub fn dependent_required(
   def: Plan(a, r),
   trigger: String,
   required: List(String),
-) -> Result(Plan(a, r), ConstructionError) {
+) -> Result(Plan(a, r), DefinitionError) {
   use _ <- result.try(scalar_argument(trigger))
   use _ <- result.try(list.try_each(required, scalar_argument))
   let Plan(node, convert) = def
@@ -1083,17 +1082,14 @@ fn dependency_node(node: Node, trigger: String, required: List(String)) {
         True ->
           Ok(DependentRequiredNode(identified(node), [#(trigger, required)]))
         False ->
-          Error(ConstructionError(
+          Error(DefinitionError(
             "dependent_required requires an object definition",
           ))
       }
   }
 }
 
-fn property_names_node(
-  node: Node,
-  key: Node,
-) -> Result(Node, ConstructionError) {
+fn property_names_node(node: Node, key: Node) -> Result(Node, DefinitionError) {
   case node {
     IdentifiedNode(_, child) ->
       result.map(property_names_node(child, key), identified)
@@ -1107,9 +1103,7 @@ fn property_names_node(
       case object_node(node) {
         True -> Ok(PropertyNamesNode(identified(node), [key]))
         False ->
-          Error(ConstructionError(
-            "property_names requires an object definition",
-          ))
+          Error(DefinitionError("property_names requires an object definition"))
       }
   }
 }
@@ -1132,11 +1126,11 @@ pub fn lift(def: Definition(a)) -> Plan(a, r) {
 pub fn recursive(
   name: String,
   build: fn(Plan(a, Recursive(a))) ->
-    Result(Plan(a, Recursive(a)), ConstructionError),
-) -> Result(Definition(a), ConstructionError) {
+    Result(Plan(a, Recursive(a)), DefinitionError),
+) -> Result(Definition(a), DefinitionError) {
   use _ <- result.try(case valid_name(name) {
     True -> Ok(Nil)
-    False -> Error(ConstructionError("invalid definition name"))
+    False -> Error(DefinitionError("invalid definition name"))
   })
   let reference_id = fresh_identity()
   let self =
@@ -1177,16 +1171,16 @@ pub fn recursive_pair(
         Plan(a, #(Recursive(a), Recursive(b))),
         Plan(b, #(Recursive(a), Recursive(b))),
       ),
-      ConstructionError,
+      DefinitionError,
     ),
-) -> Result(#(Definition(a), Definition(b)), ConstructionError) {
+) -> Result(#(Definition(a), Definition(b)), DefinitionError) {
   use _ <- result.try(
     case
       !valid_name(first_name)
       || !valid_name(second_name)
       || first_name == second_name
     {
-      True -> Error(ConstructionError("invalid or duplicate recursive names"))
+      True -> Error(DefinitionError("invalid or duplicate recursive names"))
       False -> Ok(Nil)
     },
   )
@@ -1279,11 +1273,11 @@ fn run_second(
 pub fn named(
   name: String,
   def: Plan(a, r),
-) -> Result(Plan(a, r), ConstructionError) {
+) -> Result(Plan(a, r), DefinitionError) {
   let Plan(node, convert) = def
   case valid_name(name) {
     True -> Ok(definition(NamedNode(name, node), convert))
-    False -> Error(ConstructionError("invalid definition name"))
+    False -> Error(DefinitionError("invalid definition name"))
   }
 }
 
@@ -1292,12 +1286,12 @@ pub fn named(
 /// Uniqueness is checked before mapping, not on decoded outputs.
 pub fn unique_items(
   def: Plan(List(a), r),
-) -> Result(Plan(List(a), r), ConstructionError) {
+) -> Result(Plan(List(a), r), DefinitionError) {
   let Plan(node, convert) = def
   case homogeneous_array_node(node) {
     True -> Ok(definition(UniqueNode(node), convert))
     False ->
-      Error(ConstructionError(
+      Error(DefinitionError(
         "unique_items requires a homogeneous array definition",
       ))
   }
@@ -1393,7 +1387,7 @@ fn add_field(
   name: String,
   child: Plan(a, r),
   presence: Presence,
-) -> Result(Record(b, r), ConstructionError) {
+) -> Result(Record(b, r), DefinitionError) {
   use _ <- result.try(scalar_argument(name))
   let Record(fs, construct) = r
   let Plan(node, convert) = child
@@ -1403,7 +1397,7 @@ fn add_field(
       k == name
     })
   {
-    True -> Error(ConstructionError("duplicate field: " <> name))
+    True -> Error(DefinitionError("duplicate field: " <> name))
     False ->
       Ok(
         Record(
@@ -1431,7 +1425,7 @@ pub fn required(
   r: Record(fn(a) -> b, r),
   name: String,
   child: Plan(a, r),
-) -> Result(Record(b, r), ConstructionError) {
+) -> Result(Record(b, r), DefinitionError) {
   add_field(r, name, child, Required)
 }
 
@@ -1443,7 +1437,7 @@ pub fn defaulted(
   name: String,
   child: Plan(a, r),
   value: Json,
-) -> Result(Record(b, r), ConstructionError) {
+) -> Result(Record(b, r), DefinitionError) {
   use <- with_walk
   let Plan(n, _) = child
   // Defaults are checked during construction. A recursive placeholder cannot
@@ -1456,7 +1450,7 @@ pub fn defaulted(
   let inspected = inspect(n, value, "", [])
   case inspected.0 {
     [] -> add_field(r, name, child, Default(value, inspected.1))
-    _ -> Error(ConstructionError("invalid default"))
+    _ -> Error(DefinitionError("invalid default"))
   }
 }
 
@@ -1466,7 +1460,7 @@ pub fn optional(
   r: Record(fn(Option(a)) -> b, r),
   name: String,
   child: Plan(a, r),
-) -> Result(Record(b, r), ConstructionError) {
+) -> Result(Record(b, r), DefinitionError) {
   use _ <- result.try(scalar_argument(name))
   let Record(fs, construct) = r
   let Plan(n, d) = child
@@ -1476,7 +1470,7 @@ pub fn optional(
       k == name
     })
   {
-    True -> Error(ConstructionError("duplicate field: " <> name))
+    True -> Error(DefinitionError("duplicate field: " <> name))
     False ->
       Ok(
         Record(
@@ -1536,7 +1530,7 @@ pub fn variant_map(v: Variant(a, r), f: fn(a) -> b) -> Variant(b, r) {
 pub fn tagged(
   discriminator: String,
   variants: List(Variant(a, r)),
-) -> Result(Plan(a, r), ConstructionError) {
+) -> Result(Plan(a, r), DefinitionError) {
   use _ <- result.try(scalar_argument(discriminator))
   let tags =
     list.map(variants, fn(v) {
@@ -1555,9 +1549,7 @@ pub fn tagged(
     })
   {
     True ->
-      Error(ConstructionError(
-        "empty/duplicate tags or redeclared discriminator",
-      ))
+      Error(DefinitionError("empty/duplicate tags or redeclared discriminator"))
     False -> {
       let branches =
         list.map(variants, fn(v) {
@@ -1598,22 +1590,22 @@ pub fn tagged(
 
 /// Accept one or more matching branches and decode with the first matching
 /// branch in list order. Empty unions fail construction.
-pub fn any_of(defs: List(Plan(a, r))) -> Result(Plan(a, r), ConstructionError) {
+pub fn any_of(defs: List(Plan(a, r))) -> Result(Plan(a, r), DefinitionError) {
   union(defs, False)
 }
 
 /// Accept exactly one structurally matching branch and decode with it.
 /// Overlapping matches are rejected. Empty unions fail construction.
-pub fn one_of(defs: List(Plan(a, r))) -> Result(Plan(a, r), ConstructionError) {
+pub fn one_of(defs: List(Plan(a, r))) -> Result(Plan(a, r), DefinitionError) {
   union(defs, True)
 }
 
 fn union(
   defs: List(Plan(a, r)),
   exclusive: Bool,
-) -> Result(Plan(a, r), ConstructionError) {
+) -> Result(Plan(a, r), DefinitionError) {
   case defs {
-    [] -> Error(ConstructionError("empty union"))
+    [] -> Error(DefinitionError("empty union"))
     _ -> {
       let nodes =
         list.map(defs, fn(d) {
@@ -1690,7 +1682,7 @@ pub fn bounds(
   def: Plan(a, r),
   lower: Option(Int),
   upper: Option(Int),
-) -> Result(Plan(a, r), ConstructionError) {
+) -> Result(Plan(a, r), DefinitionError) {
   let Plan(n, d) = def
   use next <- result.try(bound_node(n, lower, upper))
   Ok(definition(next, d))
@@ -1700,7 +1692,7 @@ fn bound_node(
   n: Node,
   lo: Option(Int),
   hi: Option(Int),
-) -> Result(Node, ConstructionError) {
+) -> Result(Node, DefinitionError) {
   case n {
     IntegerNode(a, b) -> {
       let l = max_lower(Some(a), lo)
@@ -1712,7 +1704,7 @@ fn bound_node(
           x < -9_007_199_254_740_991 || x > 9_007_199_254_740_991
         })
       {
-        True -> Error(ConstructionError("invalid integer bounds"))
+        True -> Error(DefinitionError("invalid integer bounds"))
         False -> {
           let assert Some(x) = l
           let assert Some(y) = h
@@ -1755,7 +1747,7 @@ fn bound_node(
 
 fn sizes(lo, hi, make, raw_lo, raw_hi) {
   case bad_bounds(lo, hi, True) || bad_bounds(raw_lo, raw_hi, True) {
-    True -> Error(ConstructionError("invalid size bounds"))
+    True -> Error(DefinitionError("invalid size bounds"))
     False -> Ok(make(lo, hi))
   }
 }
@@ -1767,16 +1759,16 @@ fn sizes(lo, hi, make, raw_lo, raw_hi) {
 pub fn pattern(
   def: Plan(String, r),
   p: String,
-) -> Result(Plan(String, r), ConstructionError) {
+) -> Result(Plan(String, r), DefinitionError) {
   use _ <- result.try(scalar_argument(p))
   let Plan(n, d) = def
   case pattern_valid(p) {
-    False -> Error(ConstructionError("invalid regex"))
+    False -> Error(DefinitionError("invalid regex"))
     True -> result.map(pattern_node(n, p), fn(next) { definition(next, d) })
   }
 }
 
-fn pattern_node(n: Node, p: String) -> Result(Node, ConstructionError) {
+fn pattern_node(n: Node, p: String) -> Result(Node, DefinitionError) {
   case n {
     StringNode(a, b, ps) ->
       Ok(StringNode(a, b, list.unique(list.append(ps, [p]))))
@@ -1795,7 +1787,7 @@ fn pattern_node(n: Node, p: String) -> Result(Node, ConstructionError) {
 pub fn validate(
   def: Definition(a),
   value: Json,
-) -> Result(Nil, List(DataError)) {
+) -> Result(Nil, List(ValidationError)) {
   case inspect_definition(def, value).0 {
     [] -> Ok(Nil)
     errors -> Error(errors)
@@ -1804,7 +1796,10 @@ pub fn validate(
 
 /// Validate the entire input before running typed conversion. Invalid inputs
 /// run no converters; exceptions from trusted callbacks propagate.
-pub fn decode(def: Definition(a), value: Json) -> Result(a, List(DataError)) {
+pub fn decode(
+  def: Definition(a),
+  value: Json,
+) -> Result(a, List(ValidationError)) {
   let inspected = inspect_definition(def, value)
   case inspected.0 {
     [] -> {
@@ -1962,8 +1957,8 @@ fn path(parent: String, key: String) -> String {
   parent <> "/" <> string.replace(string.replace(key, "~", "~0"), "/", "~1")
 }
 
-fn err(category: String, p: String) -> List(DataError) {
-  [DataError(category, p, None, [], [])]
+fn err(category: String, p: String) -> List(ValidationError) {
+  [ValidationError(category, p, None, [], [])]
 }
 
 fn size_ok(n: Int, lo: Option(Int), hi: Option(Int)) -> Bool {
@@ -1978,18 +1973,21 @@ fn size_ok(n: Int, lo: Option(Int), hi: Option(Int)) -> Bool {
   low && high
 }
 
-fn atomic(errors: List(DataError)) {
+fn atomic(errors: List(ValidationError)) {
   #(errors, Atomic)
 }
 
-fn inspected_children(outcomes: List(#(List(DataError), Evidence))) {
+fn inspected_children(outcomes: List(#(List(ValidationError), Evidence))) {
   #(
     list.flat_map(outcomes, fn(pair) { pair.0 }),
     Children(list.map(outcomes, fn(pair) { pair.1 })),
   )
 }
 
-fn with_errors(base: #(List(DataError), Evidence), errors: List(DataError)) {
+fn with_errors(
+  base: #(List(ValidationError), Evidence),
+  errors: List(ValidationError),
+) {
   #(list.append(base.0, errors), base.1)
 }
 
@@ -1998,7 +1996,7 @@ fn inspect(
   v: Json,
   p: String,
   bindings: Bindings,
-) -> #(List(DataError), Evidence) {
+) -> #(List(ValidationError), Evidence) {
   case n, v {
     IdentifiedNode(_, child), _ -> inspect(child, v, p, bindings)
     BoundNode(local, child), _ -> inspect(child, v, p, local)
@@ -2117,7 +2115,15 @@ fn inspect(
                   case member(v, name) {
                     Some(_) -> Error(Nil)
                     None ->
-                      Ok(DataError("dependent_required", p, Some(name), [], []))
+                      Ok(
+                        ValidationError(
+                          "dependent_required",
+                          p,
+                          Some(name),
+                          [],
+                          [],
+                        ),
+                      )
                   }
                 })
             }
@@ -2190,7 +2196,7 @@ fn inspect(
           let outcome = case member(v, k), presence {
             Some(x), _ -> inspect(child, x, path(p, k), bindings)
             None, Required ->
-              atomic([DataError("missing_required", p, Some(k), [], [])])
+              atomic([ValidationError("missing_required", p, Some(k), [], [])])
             None, Default(_, receipt) -> #([], receipt)
             None, Optional -> atomic([])
           }
@@ -2231,7 +2237,7 @@ fn inspect(
       case matches {
         [] ->
           atomic([
-            DataError(
+            ValidationError(
               "union_no_match",
               p,
               None,
@@ -2242,7 +2248,7 @@ fn inspect(
         [index, ..rest] ->
           case exclusive && rest != [] {
             True ->
-              atomic([DataError("one_of_ambiguous", p, None, [], matches)])
+              atomic([ValidationError("one_of_ambiguous", p, None, [], matches)])
             False -> {
               let assert Ok(outcome) = list.first(list.drop(outcomes, index))
               #([], Selected(index, outcome.1.1))
@@ -2252,7 +2258,8 @@ fn inspect(
     }
     TaggedNode(k, branches), JObject(_) ->
       case member(v, k) {
-        None -> atomic([DataError("missing_required", p, Some(k), [], [])])
+        None ->
+          atomic([ValidationError("missing_required", p, Some(k), [], [])])
         Some(JString(tag)) ->
           case list.find(branches, fn(b) { b.0 == tag }) {
             Error(_) -> atomic(err("unknown_discriminator", path(p, k)))
@@ -2299,8 +2306,8 @@ pub fn schema_json(def: Definition(a)) -> Json {
 }
 
 /// Return a JSON Schema 2020-12 string in the chosen layout, including local references.
-pub fn schema_string(def: Definition(a), format: JsonFormat) -> String {
-  to_string(schema_json(def), format)
+pub fn schema_string(def: Definition(a), layout: JsonLayout) -> String {
+  to_string(schema_json(def), layout)
 }
 
 fn put(v: Json, k: String, x: Json) -> Json {
@@ -2356,12 +2363,12 @@ fn same_reference(a: Node, b: Node) -> Bool {
   identity(a) == identity(b)
 }
 
-fn node_children(n: Node) -> Result(List(Node), ConstructionError) {
+fn node_children(n: Node) -> Result(List(Node), DefinitionError) {
   case n {
     IdentifiedNode(_, child) -> node_children(child)
     BoundNode(bindings, child) -> node_children_in(child, bindings)
     ReferenceNode(name, _) ->
-      Error(ConstructionError("unfinalized recursive reference: " <> name))
+      Error(DefinitionError("unfinalized recursive reference: " <> name))
     NamedNode(_, child)
     | ArrayNode(child, _, _)
     | DictNode(child, _, _)
@@ -2407,7 +2414,7 @@ fn node_children(n: Node) -> Result(List(Node), ConstructionError) {
 fn node_children_in(
   n: Node,
   bindings: Bindings,
-) -> Result(List(Node), ConstructionError) {
+) -> Result(List(Node), DefinitionError) {
   case n {
     IdentifiedNode(_, child) -> node_children_in(child, bindings)
     BoundNode(local, child) -> node_children_in(child, local)
@@ -2415,7 +2422,7 @@ fn node_children_in(
       list.key_find(bindings, id)
       |> result.map(fn(child) { [BoundNode(bindings, child)] })
       |> result.map_error(fn(_) {
-        ConstructionError("unfinalized recursive reference: " <> name)
+        DefinitionError("unfinalized recursive reference: " <> name)
       })
     _ ->
       node_children(n)
@@ -2426,7 +2433,7 @@ fn node_children_in(
 fn same_input_children_in(
   n: Node,
   bindings: Bindings,
-) -> Result(List(Node), ConstructionError) {
+) -> Result(List(Node), DefinitionError) {
   case n {
     IdentifiedNode(_, child) -> same_input_children_in(child, bindings)
     BoundNode(local, child) -> same_input_children_in(child, local)
@@ -2443,7 +2450,7 @@ fn merge_definition(
   name: String,
   child: Node,
   definitions: List(#(String, Node)),
-) -> Result(List(#(String, Node)), ConstructionError) {
+) -> Result(List(#(String, Node)), DefinitionError) {
   case list.key_find(definitions, name) {
     Error(_) -> Ok([#(name, child), ..definitions])
     Ok(existing) ->
@@ -2453,7 +2460,7 @@ fn merge_definition(
       {
         True -> Ok(definitions)
         False ->
-          Error(ConstructionError(
+          Error(DefinitionError(
             "Conflicting named schema definitions: " <> name,
           ))
       }
@@ -2464,7 +2471,7 @@ fn collect_definitions_result(
   pending: List(Node),
   definitions: List(#(String, Node)),
   seen: Seen(Node),
-) -> Result(List(#(String, Node)), ConstructionError) {
+) -> Result(List(#(String, Node)), DefinitionError) {
   case pending {
     [] -> Ok(definitions)
     [node, ..rest] ->
@@ -2496,7 +2503,7 @@ fn collect_definitions_result(
 
 // These wrappers check the same input. Arrays, dictionary values and record
 // fields instead descend into a strict child value and therefore break cycles.
-fn same_input_children(n: Node) -> Result(List(Node), ConstructionError) {
+fn same_input_children(n: Node) -> Result(List(Node), DefinitionError) {
   case n {
     IdentifiedNode(_, child) -> same_input_children(child)
     BoundNode(bindings, child) -> same_input_children_in(child, bindings)
@@ -2526,10 +2533,10 @@ fn new_guard(
 fn guard_same_input(
   n: Node,
   state: Guard(Node),
-) -> Result(Nil, ConstructionError) {
+) -> Result(Nil, DefinitionError) {
   let Guard(enter, finish) = state
   case enter(n) {
-    1 -> Error(ConstructionError("non-progressing recursive definition"))
+    1 -> Error(DefinitionError("non-progressing recursive definition"))
     2 -> Ok(Nil)
     _ -> {
       use children <- result.try(same_input_children(n))
@@ -2544,7 +2551,7 @@ fn guard_same_input(
   }
 }
 
-fn guard_graph(root: Node) -> Result(Nil, ConstructionError) {
+fn guard_graph(root: Node) -> Result(Nil, DefinitionError) {
   with_walk(fn() {
     use definitions <- result.try(collect_definitions_result(
       [root],

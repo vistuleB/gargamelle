@@ -43,7 +43,7 @@ export async function runCompositionSuite({s,unwrap,toList},seeds=compositionSee
     }
   };
   const snapshot=async(definition,label)=>{
-    const schema=JSON.parse(s.schema_string(definition,s.JsonFormat$Compact$const));
+    const schema=JSON.parse(s.schema_string(definition,s.JsonLayout$Compact$const));
     const ajv=new Ajv2020(compositionOracleOptions);
     assert.equal(ajv.validateSchema(schema),true);
     const validate=ajv.compile(schema);

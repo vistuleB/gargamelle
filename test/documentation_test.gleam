@@ -48,14 +48,14 @@ pub fn alias_validation_test() {
   let schema =
     "{\"$defs\":{\"old\":{\"type\":\"string\"},\"shown\":{\"type\":\"string\"}},\"$ref\":\"#/$defs/old\"}"
   let assert Ok(html) =
-    docs.render_emitted(schema, "example", [#("old", "shown")])
+    docs.render_schema(schema, "example", [#("old", "shown")])
   string.contains(html, "<code>old</code>") |> should.be_false
   string.contains(html, "<code>shown</code>") |> should.be_true
-  docs.render_emitted(schema, "example", [#("old", "missing")])
+  docs.render_schema(schema, "example", [#("old", "missing")])
   |> should.be_error
-  docs.render_emitted(schema, "example", [#("old", "shown"), #("shown", "old")])
+  docs.render_schema(schema, "example", [#("old", "shown"), #("shown", "old")])
   |> should.be_error
-  docs.render_emitted("not JSON", "example", []) |> should.be_error
+  docs.render_schema("not JSON", "example", []) |> should.be_error
 }
 
 pub fn arbitrary_tag_test() {
@@ -74,7 +74,7 @@ pub fn integer_schema_values_test() {
   string.contains(html, "Invalid schema JSON") |> should.be_false
   string.contains(html, "each item") |> should.be_true
   let assert Ok(html) =
-    docs.render_emitted(
+    docs.render_schema(
       "{\"const\":3,\"default\":9007199254740991,\"minimum\":0.5}",
       "numbers",
       [],

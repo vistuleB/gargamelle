@@ -7,7 +7,7 @@ import * as diagnostics from '../build/dev/javascript/gargamelle/gargamelle/diag
 import {s,toList,None} from './generated-api.mjs';
 
 test('diagnostic JSON rejects non-scalar application strings',()=>{
-  const error=new s.Structural(toList([new s.DataError('custom','\ud800',None,toList([]),toList([]))]));
+  const error=new s.Structural(toList([new s.ValidationError('custom','\ud800',None,toList([]),toList([]))]));
   assert.equal(diagnostics.to_json(error).isOk(),false);
 });
 

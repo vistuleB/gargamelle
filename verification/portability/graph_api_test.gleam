@@ -80,7 +80,7 @@ pub fn foreign_context_composition_test() {
 
 pub fn failure_cleanup_test() {
   s.recursive("invalid", fn(self) { Ok(self) }) |> should.be_error
-  s.recursive("early", fn(_) { Error(s.ConstructionError("early")) })
+  s.recursive("early", fn(_) { Error(s.DefinitionError("early")) })
   |> should.be_error
   let assert Ok(definition) = tree()
   let assert Ok(value) = s.parse("[]")

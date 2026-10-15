@@ -49,7 +49,7 @@ pub fn to_json(
   gargamelle.parse(json.to_string(value))
 }
 
-fn structural_json(error: gargamelle.DataError) -> json.Json {
+fn structural_json(error: gargamelle.ValidationError) -> json.Json {
   json.object([
     #("category", json.string(error.category)),
     #("path", json.string(error.path)),
@@ -71,8 +71,8 @@ fn structural_json(error: gargamelle.DataError) -> json.Json {
 }
 
 type Pending {
-  Errors(List(gargamelle.DataError), Int)
-  Branches(List(#(Int, List(gargamelle.DataError))), Int)
+  Errors(List(gargamelle.ValidationError), Int)
+  Branches(List(#(Int, List(gargamelle.ValidationError))), Int)
   Requirements(List(gargamelle.RequirementFailure))
   Violations(List(gargamelle.Violation))
 }

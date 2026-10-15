@@ -18,7 +18,7 @@ test('self recursion emits finite refs, decodes deep trees and agrees with indep
  const d=tree(),schema=emitted(d),checks=await validators(d);
  assert.equal(schema.$ref,'#/$defs/tree');assert.deepEqual(Object.keys(schema.$defs),['tree']);
  assert.equal(schema.$defs.tree.anyOf[1].items.$ref,'#/$defs/tree');
- assert.ok(s.schema_string(d, s.JsonFormat$Compact$const).length<500);
+ assert.ok(s.schema_string(d, s.JsonLayout$Compact$const).length<500);
  compare(d,checks,[-1.25,[],[1,[2.5,[]]]],true);
  for(const value of [null,true,'0',{},[1,false],[[],['bad']]])compare(d,checks,value,false);
  let valid=1.25,bad='bad';
@@ -72,21 +72,21 @@ test('construction rejects unresolved, non-progressing and conflicting recursion
  assert.equal(s.recursive_pair('a','b',(a,b)=>new Ok([b,a])) instanceof Ok,false);
  let escaped;
  assert.equal(s.recursive('invalid',self=>{escaped=s.array(self);return new Ok(self);}) instanceof Ok,false);
- assert.throws(()=>s.schema_string(escaped, s.JsonFormat$Compact$const),/unfinalized recursive/);
+ assert.throws(()=>s.schema_string(escaped, s.JsonLayout$Compact$const),/unfinalized recursive/);
  assert.throws(()=>s.decode(escaped,unwrap(s.parse('[]'))),/unfinalized recursive/);
  let builderCalls=0,decoded=[];
  const d=unwrap(s.recursive('callback-tree',self=>{builderCalls++;return s.any_of(toList([s.map(s.number(),x=>{decoded.push(x);return x;}),s.map(s.array(self),xs=>[...xs])]));}));
- assert.equal(builderCalls,1);assert.deepEqual(decoded,[]);s.schema_string(d, s.JsonFormat$Compact$const);s.validate(d,unwrap(s.parse('[1,[2]]')));assert.deepEqual(decoded,[]);
+ assert.equal(builderCalls,1);assert.deepEqual(decoded,[]);s.schema_string(d, s.JsonLayout$Compact$const);s.validate(d,unwrap(s.parse('[1,[2]]')));assert.deepEqual(decoded,[]);
  assert.deepEqual(evaluate(d,[1,[2]]).value,[1,[2]]);assert.deepEqual(decoded,[1,2]);assert.equal(builderCalls,1);
  const conflict=s.recursive('same',()=>new Ok(unwrap(s.named('same',s.string()))));assert.equal(conflict instanceof Ok,false);
  const independent=tree('other');assert.equal(evaluate(independent,[1]).accepted,true);
- let unbound;const marker=new s.ConstructionError('builder failure');
+ let unbound;const marker=new s.DefinitionError('builder failure');
  const failed=s.recursive('failed',self=>{unbound=self;return new GleamError(marker);});
  assert.equal(failed instanceof Ok,false);assert.equal(failed[0],marker);
- assert.throws(()=>s.schema_string(unbound, s.JsonFormat$Compact$const),/unfinalized recursive/);
+ assert.throws(()=>s.schema_string(unbound, s.JsonLayout$Compact$const),/unfinalized recursive/);
  const textTree=unwrap(s.recursive('tree',self=>s.any_of(toList([s.string(),s.map(s.array(self),xs=>[...xs])]))));
  const wrapper=d=>unwrap(s.named('wrapper',s.array(d)));
- assert.throws(()=>s.schema_string(unwrap(s.any_of(toList([wrapper(tree()),wrapper(textTree)]))), s.JsonFormat$Compact$const),/Conflicting named schema definitions/);
+ assert.throws(()=>s.schema_string(unwrap(s.any_of(toList([wrapper(tree()),wrapper(textTree)]))), s.JsonLayout$Compact$const),/Conflicting named schema definitions/);
 });
 
 test('unfinished placeholders cannot supply defaults or be decoded before finalization',()=>{
@@ -145,7 +145,7 @@ test('shared union layers finalize without exponential guard traversal',()=>{
  const code=`import {s,Ok,unwrap,toList} from ${JSON.stringify(new URL('./generated-api.mjs',import.meta.url).href)};
  const start=performance.now();
  const d=unwrap(s.recursive('tree',self=>{let d=s.map(s.array(self),()=>0);for(let i=0;i<32;i++)d=unwrap(s.named('layer-'+i,unwrap(s.any_of(toList([d,d])))));return new Ok(d);}));
- console.log(JSON.stringify({ms:performance.now()-start,bytes:s.schema_string(d, s.JsonFormat$Compact$const).length}));`;
+ console.log(JSON.stringify({ms:performance.now()-start,bytes:s.schema_string(d, s.JsonLayout$Compact$const).length}));`;
  const run=spawnSync(process.execPath,['--input-type=module','-e',code],{encoding:'utf8',timeout:5000});
  assert.ifError(run.error);assert.equal(run.status,0,run.stderr);
  const report=JSON.parse(run.stdout);assert.ok(report.bytes<4000);

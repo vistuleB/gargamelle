@@ -105,7 +105,7 @@ fn definition(name: String) -> s.Definition(String) {
   }
 }
 
-fn error_json(error: s.DataError) -> json.Json {
+fn error_json(error: s.ValidationError) -> json.Json {
   json.object([
     #("category", json.string(error.category)),
     #("path", json.string(error.path)),

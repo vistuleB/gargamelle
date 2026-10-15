@@ -244,7 +244,7 @@ and the handler. Semantic rejection skips the handler. Every normal requirement
 result is collected in declaration order. Exceptions propagate and may stop later
 checks. Conversion callbacks, requirements and handlers are trusted code.
 
-`ContractError.Structural` contains structural `DataError` values;
+`ContractError.Structural` contains structural `ValidationError` values;
 `ContractError.Semantic` contains `RequirementFailure` values with zero-based
 requirement indices, descriptions and `Violation(path, message)` diagnostics.
 See [Diagnostic presentation](diagnostics.html) for bounded summaries and complete

@@ -25,7 +25,7 @@ for(const length of [10,1000]){
   const structural=s.contract(definition);
   const semantic=s.require(structural,'Names nonempty',names=>[...names].every(name=>name.length>0)?new Ok(undefined):new Rejected(toList([new s.Violation('','Empty name')])));
   const encoded=unwrap(e.encode_json(encoder,value));
-  assert.deepEqual(JSON.parse(s.to_string(encoded,s.JsonFormat$Compact$const)),raw);
+  assert.deepEqual(JSON.parse(s.to_string(encoded,s.JsonLayout$Compact$const)),raw);
   const plain=e.codec(encoder,structural),checked=e.codec(encoder,semantic);
   const receiver=b.output(encoder,b.json(semantic,s.verified_json));
   rows.push({kind:'array-of-text',items:length,bytes:Buffer.byteLength(JSON.stringify(raw)),costs:{

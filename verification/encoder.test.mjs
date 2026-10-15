@@ -42,31 +42,31 @@ test('isolated typed encoder prototype works on both targets',async(t)=>{
     const {Some,Option$None$const:None}=await import(pathToFileURL(join(directory,'build/dev/javascript/gleam_stdlib/gleam/option.mjs')));
     const unwrap=result=>{assert.equal(result.isOk(),true);return result[0];};
     for(const [name,encoder,definition,value,accepted] of [
-      ['text',e.string(),s.string(),'Brainy',true],
-      ['nullable array',e.array(e.nullable(e.string())),s.array(s.nullable(s.string())),toList([new Some('Jokey'),None]),true],
+      ['text',e.text(),s.string(),'Brainy',true],
+      ['nullable array',e.array(e.nullable(e.text())),s.array(s.nullable(s.string())),toList([new Some('Jokey'),None]),true],
       ['record absent',examples.person_encoder(),examples.person_definition(),new examples.Person('Brainy',None,None),true],
       ['record present',examples.person_encoder(),examples.person_definition(),new examples.Person('Jokey',new Some(100),new Some('J')),true],
       ['recursive record',unwrap(examples.tree_encoder()),unwrap(examples.tree_definition()),new examples.Tree('Brainy',toList([new examples.Tree('Jokey',toList([]))])),true],
-      ['rejected constraint',e.string(),s.string_constant('Brainy'),'Jokey',false],
+      ['rejected constraint',e.text(),s.string_constant('Brainy'),'Jokey',false],
     ]){
       const json=unwrap(e.encode_json(encoder,value));
-      const wire=JSON.parse(s.to_string(json,s.JsonFormat$Compact$const));
-      const schema=JSON.parse(s.schema_string(definition,s.JsonFormat$Compact$const));
+      const wire=JSON.parse(s.to_string(json,s.JsonLayout$Compact$const));
+      const schema=JSON.parse(s.schema_string(definition,s.JsonLayout$Compact$const));
       for(const check of [compileOracle(schema),await compileSupplementary(schema)])assert.equal(check(wire).accepted,accepted,name);
       assert.equal(e.encode(e.codec(encoder,definition),value).isOk(),accepted,name);
     }
     t.diagnostic('6 output cases agree with both independent schema validators');
     for(const value of [Infinity,-Infinity,NaN])assert.equal(e.encode_json(e.number(),value).isOk(),false,'Nonfinite number must not silently become null');
-    assert.equal(e.encode_json(e.string(),'\ud800').isOk(),false,'Unpaired surrogate must not be admitted');
-    const key=e.field(e.record(),'\ud800',e.string(),x=>x);
+    assert.equal(e.encode_json(e.text(),'\ud800').isOk(),false,'Unpaired surrogate must not be admitted');
+    const key=e.field(e.record(),'\ud800',e.text(),x=>x);
     assert.equal(key.isOk(),false,'Unpaired surrogate key must be rejected');
     const failure=new Error('getter failed');
-    assert.throws(()=>e.encode_json(e.contramap(e.string(),()=>{throw failure;}),'Brainy'),error=>error===failure);
+    assert.throws(()=>e.encode_json(e.contramap(e.text(),()=>{throw failure;}),'Brainy'),error=>error===failure);
     const cases=[
       ['unfinished_encode','pub fn main() { e.recursive(fn(self) { e.encode_json(self, "x") Ok(self) }) }','Type mismatch'],
       ['opaque_encoder','pub fn main() { e.Plan(fn(_,_) { Ok(Nil) }) }','Unknown module value'],
       ['opaque_recursion','pub fn main() { e.Recursive(fn(_) { Ok(Nil) }) }','Unknown module value'],
-      ['mismatched_codec','pub fn main() { e.codec(e.string(), s.number()) }','Type mismatch'],
+      ['mismatched_codec','pub fn main() { e.codec(e.text(), s.number()) }','Type mismatch'],
       ['wrong_getter','pub fn main() { e.field(e.record(), "age", e.safe_integer(), fn(_: String) { "x" }) }','Type mismatch'],
     ];
     for(const [name,body,diagnostic] of cases){

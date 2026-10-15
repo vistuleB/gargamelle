@@ -16,13 +16,13 @@ try{
   }
   for(const [index,row] of fixture.rows.entries()){
     checkpoint={stage:'generated',index};
-    const definition=build(row.recipe),schema=s.schema_string(definition, s.JsonFormat$Compact$const),cases=[];
+    const definition=build(row.recipe),schema=s.schema_string(definition, s.JsonLayout$Compact$const),cases=[];
     equal(schema,row.schema,'Schema mismatch at '+index);
     for(const [inputIndex,input] of row.inputs.entries()){
       checkpoint={stage:'generated',index,inputIndex};
       const actual=evaluate(definition,input);equal(actual,row.expected[inputIndex],'Acceptance/output/diagnostic mismatch at '+index+':'+inputIndex);cases.push(actual);
     }
-    equal(s.schema_string(definition, s.JsonFormat$Compact$const),schema,'Definition changed after decoding at '+index);
+    equal(s.schema_string(definition, s.JsonLayout$Compact$const),schema,'Definition changed after decoding at '+index);
     report.generated.push({index,schema,cases});
     if(index%40===0){status.textContent=`Running generated definitions: ${index+1}/${fixture.rows.length}`;await new Promise(resolve=>requestAnimationFrame(resolve));}
   }

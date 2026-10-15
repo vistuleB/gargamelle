@@ -9,7 +9,7 @@ test('anything agrees with independent schema validators for every admitted JSON
   const definitions=[s.anything(),s.description(s.anything(),'arbitrary admitted JSON'),named,s.array(s.anything()),s.dictionary(named)];
   const values=[null,true,false,0,1.25,-0,Number.MAX_VALUE,'💜',[],{},[1,null,{nested:[true]}],JSON.parse('{"__proto__":"safe"}')];
   for(const definition of definitions){
-    const schema=JSON.parse(s.schema_string(definition,s.JsonFormat$Compact$const));
+    const schema=JSON.parse(s.schema_string(definition,s.JsonLayout$Compact$const));
     const oracles=[compileOracle(schema),await compileSupplementary(schema)];
     for(const value of values){
       const json=unwrap(s.parse(JSON.stringify(value))),accepted=s.validate(definition,json).isOk();

@@ -10,7 +10,7 @@ import { s,Ok,unwrap } from './generated-api.mjs';
 test('JSON text admission distinguishes syntax/nonfinite from validation',()=>{
  for(const text of ['','{','undefined','NaN','[1,]','{"a":}', '1e400','-1e400','{"nested":[1e400]}']) assert.equal(s.parse(text) instanceof Ok,false,text);
  for(const text of ['null','true','-0','1.0','"\\ud83d\\udc9c"','"\\u0000"','{"x":1,"x":2}'])assert.ok(s.parse(text) instanceof Ok,text);
- assert.equal(s.to_string(unwrap(s.parse('{"x":1,"x":2}')), s.JsonFormat$Compact$const),'{"x":2}');
+ assert.equal(s.to_string(unwrap(s.parse('{"x":1,"x":2}')), s.JsonLayout$Compact$const),'{"x":2}');
  const x=unwrap(s.parse('false'));assert.equal(s.decode(s.string(),x) instanceof Ok,false);
 });
 
@@ -19,7 +19,7 @@ test('callback and resource exceptions remain operational failures, not schema r
  const d=s.map(s.string(),()=>{throw marker;});
  const input=unwrap(s.parse('"x"'));
  assert.ok(s.validate(d,input) instanceof Ok);
- assert.doesNotThrow(()=>s.schema_string(d, s.JsonFormat$Compact$const));
+ assert.doesNotThrow(()=>s.schema_string(d, s.JsonLayout$Compact$const));
  assert.throws(()=>s.decode(d,input),e=>e===marker);
  const source=`import {parse} from ${JSON.stringify(new URL('../build/dev/javascript/gargamelle/gargamelle.mjs',import.meta.url).href)};
  try { const r=parse('['.repeat(10000)+'null'+']'.repeat(10000)); console.error('incorrectly returned',r.constructor.name); process.exit(3); }

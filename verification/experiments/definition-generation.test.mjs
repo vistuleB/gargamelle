@@ -13,7 +13,7 @@ import {classifySplit} from '../oracle-classification.mjs';
 import * as provider from '../../build/dev/javascript/gargamelle/provider_roundtrip.mjs';
 import {generate,generateContract,shrink,shrinkContract} from './definition-generation.mjs';
 
-const raw=json=>JSON.parse(s.to_string(json,s.JsonFormat$Compact$const));
+const raw=json=>JSON.parse(s.to_string(json,s.JsonLayout$Compact$const));
 const seedOptions=seed=>({seed,attempts:200,maxDepth:5,maxNodes:60,maxWidth:4,maxStringLength:10});
 
 test('fixed seeds replay samples and metadata exactly, including seed zero',()=>{
@@ -48,7 +48,7 @@ test('accepted samples agree with Ajv and Hyperjump without invoking converters'
   ];
   let samples=0;
   for(const definition of definitions){
-    const schema=JSON.parse(s.schema_string(definition,s.JsonFormat$Compact$const));
+    const schema=JSON.parse(s.schema_string(definition,s.JsonLayout$Compact$const));
     const ajv=compileOracle(schema),hyperjump=await compileSupplementary(schema);
     for(let seed=0;seed<20;seed++){
       const result=generate(definition,seedOptions(seed));
@@ -68,7 +68,7 @@ test('hostile object keys remain ordinary keys, with the retained Ajv discrepanc
   const definition=s.finish(fields,s.RecordPolicy$Strict$const);
   const result=generate(definition,seedOptions(1));
   assert.equal(result.status,'generated');
-  const value=raw(result.json),schema=JSON.parse(s.schema_string(definition,s.JsonFormat$Compact$const));
+  const value=raw(result.json),schema=JSON.parse(s.schema_string(definition,s.JsonLayout$Compact$const));
   assert.equal(Object.hasOwn(value,'__proto__'),true);
   const ajv=compileOracle(schema)(value),hyperjump=(await compileSupplementary(schema))(value);
   assert.equal(hyperjump.accepted,true);
@@ -102,7 +102,7 @@ test('100 seeded samples are admitted and accepted by native Erlang validation',
   const values=Array.from({length:100},(_,seed)=>{
     const result=generate(definition,seedOptions(seed));
     assert.equal(result.status,'generated');
-    return s.to_string(result.json,s.JsonFormat$Compact$const);
+    return s.to_string(result.json,s.JsonLayout$Compact$const);
   });
   const directory=mkdtempSync(join(tmpdir(),'gargamelle-generation-native-'));
   const root=fileURLToPath(new URL('../../',import.meta.url));

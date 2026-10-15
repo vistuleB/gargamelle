@@ -44,7 +44,7 @@ test('named and every annotation preserve modifier support, acceptance and mappe
   const after=c.modify(wrap(mapped(c.base()),`after-${i}`));
   for(const [label,d] of [['before',before],['after',after]]){
    assert.equal(calls,0);
-   s.schema_string(d,s.JsonFormat$Compact$const);assert.equal(calls,0);
+   s.schema_string(d,s.JsonLayout$Compact$const);assert.equal(calls,0);
    for(const value of c.values){const json=unwrap(s.parse(JSON.stringify(value)));s.validate(d,json);assert.equal(calls,0);}
    await check(d,c.values,c.expected,c.name+' '+label);
    assert.equal(calls,c.expected.filter(Boolean).length,c.name+' map invocation count');
@@ -121,7 +121,7 @@ test('shape-rewriting modifiers preserve names and reject conflicting reuse expl
  const changed=unwrap(s.bounds(original,new Some(2),None));
  assert.equal(emitted(changed).$defs.shared.minLength,2);
  const combined=unwrap(s.any_of(toList([original,changed])));
- assert.throws(()=>s.schema_string(combined,s.JsonFormat$Compact$const),/Conflicting named schema definitions/);
+ assert.throws(()=>s.schema_string(combined,s.JsonLayout$Compact$const),/Conflicting named schema definitions/);
  assert.throws(()=>s.validate(combined,unwrap(s.parse('"ab"'))),/conflicting names/);
  assert.equal(s.bounds(changed,None,new Some(1)).isOk(),false);
  // Assertion-only modifiers remain local to a use of a shared named definition.

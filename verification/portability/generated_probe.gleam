@@ -6,7 +6,7 @@ import gleam/list
 import gleam/option.{None, Some}
 import gleam/result
 
-fn error_json(error: s.DataError) -> json.Json {
+fn error_json(error: s.ValidationError) -> json.Json {
   json.object([
     #("category", json.string(error.category)),
     #("path", json.string(error.path)),

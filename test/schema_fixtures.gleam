@@ -171,7 +171,7 @@ pub fn fixture_schema(name: String) -> String {
 pub fn fixture_decode(
   name: String,
   text: String,
-) -> Result(Result(String, List(s.DataError)), s.AdmissionError) {
+) -> Result(Result(String, List(s.ValidationError)), s.AdmissionError) {
   case s.parse(text) {
     Error(e) -> Error(e)
     Ok(v) -> Ok(s.decode(definition(name), v))

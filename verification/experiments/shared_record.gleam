@@ -6,7 +6,7 @@ import gleam/option.{type Option}
 import gleam/result
 
 pub type BuildError {
-  Definition(gargamelle.ConstructionError)
+  Definition(gargamelle.DefinitionError)
   Encoding(gargamelle_encoding.EncodingError)
 }
 

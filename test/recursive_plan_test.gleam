@@ -20,7 +20,7 @@ pub type Tree {
 // Annotation does not expose Evidence or the actual recursion functions.
 pub fn children(
   child: s.Plan(a, r),
-) -> Result(s.Plan(List(a), r), s.ConstructionError) {
+) -> Result(s.Plan(List(a), r), s.DefinitionError) {
   use constrained <- result.try(s.contains(
     s.array(child),
     s.map(s.string(), fn(_) -> Nil { panic as "auxiliary conversion" }),

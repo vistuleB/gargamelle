@@ -30,7 +30,7 @@ index, description and callback-supplied `Violation` diagnostics. Violation path
 are JSON Pointers supplied by trusted application code; the library does not
 infer or validate their relationship to the original JSON. `Error([])` remains
 rejection and receives a root diagnostic. `ContractError` distinguishes
-`Structural(List(DataError))` from `Semantic(List(RequirementFailure))`.
+`Structural(List(ValidationError))` from `Semantic(List(RequirementFailure))`.
 Exceptions and resource failures remain operational failures and may prevent
 later checks from running. Semantic errors are not structural errors.
 
@@ -307,7 +307,7 @@ compositions, overlapping branches or patterns.
 
 `schema_json` returns an opaque JSON value describing the definition;
 `schema_string` returns compact canonical JSON or its pretty-printed layout,
-as selected by `JsonFormat`. Emission must not depend on
+as selected by `JsonLayout`. Emission must not depend on
 conversion callbacks or process history. The schematic forms are:
 
 | Construct | Emitted form (schematic) |

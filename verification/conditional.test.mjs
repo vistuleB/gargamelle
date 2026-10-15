@@ -53,6 +53,6 @@ test('conditional graphs collect all branches and reject same-input cycles',asyn
  assert.equal(s.recursive('loop',self=>new Ok(s.if_then(s.number(),self,s.number()))) instanceof Ok,false);
  assert.equal(s.recursive('loop',self=>new Ok(s.if_then_else(s.number(),s.number(),s.number(),self))) instanceof Ok,false);
  let escaped;assert.throws(()=>s.recursive('unbound',self=>{escaped=s.if_then(s.number(),s.string(),self);throw new Error('stop');}),/stop/);
- assert.throws(()=>s.schema_string(escaped, s.JsonFormat$Compact$const),/unfinalized/);assert.throws(()=>evaluate(escaped,1),/unfinalized/);
- const conflict=s.if_then(s.number(),unwrap(s.named('same',s.string())),unwrap(s.named('same',s.number())));assert.throws(()=>s.schema_string(conflict, s.JsonFormat$Compact$const),/Conflicting/);
+ assert.throws(()=>s.schema_string(escaped, s.JsonLayout$Compact$const),/unfinalized/);assert.throws(()=>evaluate(escaped,1),/unfinalized/);
+ const conflict=s.if_then(s.number(),unwrap(s.named('same',s.string())),unwrap(s.named('same',s.number())));assert.throws(()=>s.schema_string(conflict, s.JsonLayout$Compact$const),/Conflicting/);
 });

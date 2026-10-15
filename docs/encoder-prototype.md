@@ -49,7 +49,7 @@ pub fn main() {
     gargamelle_encoding.field(gargamelle_encoding.record(), "name", gargamelle_encoding.text(), fn(value: Named) { value.name })
   let encoder = gargamelle_encoding.finish(record)
   let assert Ok(record) =
-    s.required(s.record(Named), "name", s.text())
+    s.required(s.record(Named), "name", s.string())
   let definition = s.finish(record, s.Strict)
   let codec = gargamelle_encoding.codec(encoder, definition)
   let assert Ok(verified) = gargamelle_encoding.encode(codec, Named("Brainy"))

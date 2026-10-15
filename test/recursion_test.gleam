@@ -10,7 +10,7 @@ pub type Tree {
   Branch(List(Tree))
 }
 
-fn tree_definition() -> Result(s.Definition(Tree), s.ConstructionError) {
+fn tree_definition() -> Result(s.Definition(Tree), s.DefinitionError) {
   s.recursive("tree", fn(self) {
     use leaf <- result.try(s.required(s.record(Leaf), "value", s.number()))
     use branch <- result.try(s.required(
