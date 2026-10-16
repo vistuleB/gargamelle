@@ -370,13 +370,24 @@ Defaults, projection and maps can deliberately lose the original representation.
 
 ## 9. Errors and boundaries
 
-Admission errors concern JSON syntax, nonfinite parsed values and non-scalar
-strings or object keys. Construction
-errors concern invalid definitions: duplicate fields/tags/enums, empty enums or
-unions, invalid bounds, constants, defaults, names, regexes or recursion graphs,
-and unsupported constraint/definition combinations. Some invalid combinations
-are excluded by static types. Data errors concern admitted values rejected by a
-well-formed definition. Operational failures are distinct from all three.
+`AdmissionError` reports JSON text rejected for syntax, nonfinite parsed values,
+or non-scalar strings or object keys. Direct JSON constructors instead return
+`JsonError` for nonfinite numbers, unsafe integers, non-scalar strings or keys,
+and duplicate object keys. Neither operation establishes definition acceptance.
+
+`DefinitionError` concerns invalid definitions: duplicate fields/tags/enums,
+empty enums or unions, invalid bounds, constants, defaults, names, regexes or
+recursion graphs, and unsupported constraint/definition combinations. Some
+invalid combinations are excluded by static types.
+
+`ValidationError` concerns admitted JSON rejected by a well-formed structural
+definition. `ContractError` distinguishes `Structural` validation failures from
+`Semantic` requirement failures on decoded values. Encoding failures use
+`EncodingError` from `gargamelle/encoding`, distinguishing invalid values, invalid field
+declarations, admission failures and rejection by the receiving contract.
+
+Callback or handler exceptions, resource exhaustion and native-helper failures
+remain operational failures. They are not converted into validation rejections.
 
 Data paths are JSON Pointers: root is the empty string, array indices are decimal,
 `~` becomes `~0` and `/` becomes `~1`. Missing required fields point to the containing
@@ -433,7 +444,7 @@ completed encoder to a construction environment. Recursion and callback
 termination are trusted-code assumptions; immediate encoder recursion can diverge.
 Mutual encoder pairs and resource bounds are not provided.
 
-Encoding currently serializes an intermediate gleam/json.Json representation
+Encoding serializes an intermediate gleam/json.Json representation
 and admits its text once. No fused single-pass encoding/certification or allocation
 bound is claimed. Nonfinite Float and unsafe Int inputs must fail rather than be
 silently normalized to null or rounded integer output. Encoding failures stop at

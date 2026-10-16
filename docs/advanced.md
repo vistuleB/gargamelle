@@ -33,7 +33,7 @@ It emits explicit length and pattern constraints, so schema consumers enforce
 the same checks without enabling optional format assertions. It does not restrict
 UUID version or variant bits. As in JSON Schema, format constraints apply only
 to string inputs; the base definition governs other types. UUID is the only
-asserted format currently supplied. Email, URI and date/time remain annotation-only.
+supported format assertion. Email, URI and date/time are annotation-only.
 On a string base, primitive bounds and patterns can be applied before or after
 `assert_format`; its conditional assertion is retained.
 

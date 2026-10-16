@@ -2,6 +2,9 @@
 
 ## 1.0.0
 
+- Correct the validation-error compatibility documentation and clarify the error
+  taxonomy. Remove speculative wording from the JSON-construction guide.
+
 - Promote the audited 0.10.0 API and implementation without runtime changes.
 - Apply the compatibility commitments in technical contract section 18 to public
   APIs, validation and conversion, schemas, diagnostics, and supported runtimes.

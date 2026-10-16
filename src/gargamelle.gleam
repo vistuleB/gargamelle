@@ -64,7 +64,9 @@ pub type DefinitionError {
 
 /// A structural validation failure. `path` is a JSON Pointer (empty at the root).
 /// `branches` contains indexed union errors and `matches` identifies matching
-/// branches. Categories and diagnostic wording may evolve before version 1.0.
+/// branches. Existing category meanings follow the compatibility commitments;
+/// new categories may be added for newly supported cases. Human-readable wording
+/// is not a compatibility guarantee.
 pub type ValidationError {
   ValidationError(
     category: String,

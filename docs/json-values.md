@@ -51,9 +51,8 @@ These values can be supplied to schema annotations, decoded defaults, validation
 decoding or receiving boundaries. Construction establishes the admitted JSON
 domain, not acceptance by any particular definition or Contract.
 
-Typed encoders remain a separate API: they describe how to convert a Gleam value
-into JSON. The current encoder implementation still serializes and reparses its
-intermediate representation; it does not yet use these direct constructors.
+[Typed encoders](encoding.html) are a separate API for converting Gleam values
+into JSON.
 
 ## Arbitrary admitted JSON
 

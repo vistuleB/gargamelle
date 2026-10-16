@@ -1,6 +1,15 @@
 # Gargamelle handoff and next work
 
-## Latest scope — 1.0.0 promotion
+## Latest scope — 1.0.0 documentation replacement
+
+The maintainer published 1.0.0. Prepare a documentation-only replacement:
+correct the stale ValidationError pre-1.0 caveat, complete the error taxonomy,
+and remove speculative implementation wording. No API or runtime changes.
+Validate documentation links and archive contents without rerunning runtime
+suites. Record the replacement archive and retained runtime evidence in ignored
+reports; the maintainer runs `gleam publish --replace`.
+
+## Previous scope — 1.0.0 promotion
 
 Promote the published and audited 0.10.0 replacement from `bea1f72`, archive
 SHA-256 `b6c5cd09aceda103860bbd2a1f4d0ec7943a292d0ef22cbbb9206b41f8814b55`.
