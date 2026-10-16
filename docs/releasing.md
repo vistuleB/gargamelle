@@ -8,7 +8,8 @@ before reporting that the package is ready.
 
 The agent prepares the source, documentation, archive and verification evidence.
 **The maintainer publishes the package.** Do not run `gleam publish`, use publishing
-credentials, or replace a release on the maintainer's behalf.
+credentials, or replace a release on the maintainer's behalf. Documentation
+publication with `gleam docs publish` also remains the maintainer's action.
 
 Keep preparation status, unresolved decisions, commit IDs and archive checksums in
 internal release records such as `docs/release-<version>.md` and
@@ -78,6 +79,21 @@ not a substitute for tests and not a sequence of isolated wording fixes.
   Inspect paragraph separation, headings, code blocks, navigation and links.
   Passing source checks alone does not establish a readable rendered page.
 
+### Documentation-only updates
+
+For prose, doc comments or documentation-link changes with no executable or
+public-signature changes, build with `gleam docs build`, inspect the changed
+pages, and check links and anchors. Verify that source changes are limited to
+comments or documentation configuration. Retain the existing runtime evidence
+with that comparison; do not label it a fresh full-suite run or repeat the full
+runtime/Linux matrix solely for these edits.
+
+Gleam 1.18.1 supports `gleam docs publish`, which updates HexDocs independently
+of the package archive. Documentation publication is separate from Hex package
+replacement and its time window. It does not update the source archive already
+on Hex. Packaged changes outside the replacement window require a new release.
+Do not claim updated documentation and the existing archive are byte-identical.
+
 ## 3. Run the package checks
 
 Install pinned dependencies with `npm ci` and `gleam deps download` on first setup.
@@ -143,5 +159,9 @@ original archive when preparing a replacement.
   any remaining mismatch precisely.
 - [ ] Build a fresh consumer pinned to the published Hex version and exercise
   documented behavior. Verify each claimed target with its required setup.
+- [ ] After verifying the final published archive against its source commit,
+  create and push an annotated `v<version>` tag when authorized. The tag identifies
+  the published package, not subsequent documentation-only commits. Record the
+  archive checksum with the source commit; do not move an existing tag silently.
 - [ ] Record publication and replacement history in the internal release record
   and update the changelog date. Do not add publication bookkeeping to the README.

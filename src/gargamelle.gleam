@@ -43,6 +43,8 @@ pub type JsonLayout {
 }
 
 /// JSON syntax, nonfinite-number or non-scalar-string admission failure.
+/// The message is human-readable and its wording is not stable. Do not parse it
+/// or use exact message matching to classify failures.
 pub type AdmissionError {
   AdmissionError(String)
 }
@@ -58,6 +60,8 @@ pub type JsonError {
 }
 
 /// An invalid definition, constraint, default, or reference graph.
+/// The message is human-readable and its wording is not stable. Do not parse it
+/// or use exact message matching to classify failures.
 pub type DefinitionError {
   DefinitionError(String)
 }

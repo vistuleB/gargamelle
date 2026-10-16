@@ -1,6 +1,14 @@
 # Gargamelle handoff and next work
 
-## Latest scope — 1.0.0 documentation replacement
+## Latest scope — post-1.0.0 documentation upkeep
+
+Published 1.0.0 matches all 27 package files at `69a17c7`; tag `v1.0.0` identifies
+that commit. Pending documentation updates explain rendering failures and error
+message stability, add a changelog sidebar link and document `gleam docs publish`.
+No runtime, public-signature or package-version changes. Use documentation-only
+checks; these updates are not part of the tagged package archive.
+
+## Previous scope — 1.0.0 documentation replacement
 
 The maintainer published 1.0.0. Prepare a documentation-only replacement:
 correct the stale ValidationError pre-1.0 caveat, complete the error taxonomy,

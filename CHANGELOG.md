@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Document rendering failures and the human-readable admission/definition error
+  messages. Add a changelog link to the documentation sidebar.
+
 ## 1.0.0
 
 - Correct the validation-error compatibility documentation and clarify the error

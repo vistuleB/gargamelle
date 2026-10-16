@@ -455,6 +455,9 @@ pub fn render_contract(contract: gargamelle.Contract(a), id: String) -> String {
 /// pairs (omitted definition, displayed definition); they must name existing
 /// definitions and point directly to a displayed definition. They do not change
 /// the schema or decoding. Explain any such compression in the surrounding page.
+/// Return an HTML fragment in `Ok`. Return `Error` when the schema JSON cannot be
+/// decoded or the aliases violate those preconditions. Error messages are
+/// human-readable explanations, not stable machine-readable codes.
 pub fn render_schema(
   source: String,
   id: String,
