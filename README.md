@@ -306,3 +306,8 @@ available in the [repository](https://github.com/vistuleB/gargamelle) and the [H
 Gargamelle is distributed under the MIT License.
 [Licenses](https://hexdocs.pm/gargamelle/1.0.0/license.html) contains the library,
 native regex engine and retained JSON Schema test-suite notices.
+
+## Authorship
+
+This package was authored by Codex Astra, with occasional direction and review
+from the human repository maintainer.
