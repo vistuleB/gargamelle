@@ -26,6 +26,7 @@ try {
   const pkg=JSON.parse(readFileSync(join(root,'package.json'))),lock=JSON.parse(readFileSync(join(root,'package-lock.json')));
   assert.equal(pkg.version,version);assert.equal(lock.version,version);assert.equal(lock.packages[''].version,version);
   assert.equal(pkg.private,true);
+  run('npm',['run','check:record'],root,'release-record-generation.log');
   console.log('Checking JavaScript evidence…');
   run('npm',['run','verify'],root,'release-javascript.log');
   run('npm',['run','check:release'],root,'release-review.log');
@@ -57,7 +58,7 @@ try {
     assert.ok(!/(^|\/)(?:build|node_modules|reports|\.git|\.aws)(?:\/|$)|\.(?:beam|o|dylib|so|exe)$|(^|\/)gargamelle_regex_port$/.test(path),`Generated/private artifact: ${path}`);
     assert.ok(!/(^|\/)\.env(?:\.|$)|(?:^|\/)(?:credentials|id_rsa|id_ed25519)$/.test(path),`Credential path: ${path}`);
   }
-  for(const path of ['gleam.toml','README.md','LICENSE','src/gargamelle.gleam','src/gargamelle/encoding.gleam','src/gargamelle/boundary.gleam','src/gargamelle/diagnostics.gleam','src/gargamelle/encoding_runtime.mjs','src/gargamelle_encoding_runtime.erl','src/runtime.mjs','src/gargamelle_runtime.erl','src/gargamelle_regex.erl','priv/regex-src/Makefile','priv/regex-src/PROVENANCE.json','priv/regex-src/LICENSE.quickjs'])assert.ok(entries.includes(path),`Missing archive member: ${path}`);
+  for(const path of ['gleam.toml','README.md','LICENSE','src/gargamelle.gleam','src/gargamelle/record.gleam','src/gargamelle/encoding.gleam','src/gargamelle/boundary.gleam','src/gargamelle/diagnostics.gleam','src/gargamelle/encoding_runtime.mjs','src/gargamelle_encoding_runtime.erl','src/runtime.mjs','src/gargamelle_runtime.erl','src/gargamelle_regex.erl','priv/regex-src/Makefile','priv/regex-src/PROVENANCE.json','priv/regex-src/LICENSE.quickjs'])assert.ok(entries.includes(path),`Missing archive member: ${path}`);
   assert.ok(!entries.includes('src/schema_fixtures.gleam'),'Verification fixtures must not ship');
   assert.ok(!entries.some(path=>path.startsWith('test/')),'Test modules must not ship');
   assert.ok(!entries.some(path=>path.startsWith('verification/experiments/')),'Private experiments must not ship');
@@ -87,6 +88,9 @@ pub fn main() {
 }
 `);
   const advanced=readFileSync(join(root,'docs/advanced.md'),'utf8');
+  const recordGuide=advanced.split('## Pipe-friendly record construction')[1].split('## Schema annotations')[0];
+  writeFileSync(join(consumer,'src/record_guide.gleam'),recordGuide.match(/```gleam\n([\s\S]*?)\n```/)[1]);
+  const recordOutput=recordGuide.match(/```text\n([\s\S]*?)\n```/)[1];
   const recipe=advanced.split('## Optional HTML documentation')[1].match(/```gleam\n([\s\S]*?)\n```/)[1];
   writeFileSync(join(consumer,'src/preferences_reference.gleam'),recipe);
   const expectedArticle=readFileSync(join(root,'documentation/example.html'),'utf8').match(/<article[\s\S]*?<\/article>/)[0];
@@ -129,7 +133,7 @@ pub fn main() {
     if(target==='erlang')run('make',['-C','priv/regex-src'],library,'release-consumer-helper.log');
     const output=run('gleam',['run','--target',target],consumer,`release-consumer-${target}.log`);
     assert.equal(output.trim(),'release consumer passed');
-    for(const [module,expected] of [['contract_consumer','release contract consumer passed'],['readme_names',expectedNames],['readme_boundaries',expectedBoundaries],['readme_user','README user passed'],['preferences_reference',expectedArticle],...encodingConsumers,...jsonConsumers,...boundaryConsumers,['json_consumer','release JSON consumer passed']]){
+    for(const [module,expected] of [['contract_consumer','release contract consumer passed'],['record_guide',recordOutput],['readme_names',expectedNames],['readme_boundaries',expectedBoundaries],['readme_user','README user passed'],['preferences_reference',expectedArticle],...encodingConsumers,...jsonConsumers,...boundaryConsumers,['json_consumer','release JSON consumer passed']]){
       const result=run('gleam',['run','--target',target,'--module',module],consumer,`release-${module}-${target}.log`);
       assert.equal(result.trim(),expected,`${module} output differs on ${target}`);
     }

@@ -215,6 +215,15 @@ all keys and decode their values to a Gleam list of key/value pairs; key order h
 no semantic meaning. Keys including `__proto__`, `constructor`, `toString`, empty
 strings and Unicode must be handled as data.
 
+`gargamelle/record` is a Result-aware adapter over these same static builders.
+`start` wraps the core curried builder in `Ok`; `start1` through `start32` curry
+ordinary constructors without invoking them. Each field retains the core
+remaining-constructor and recursion-environment types. A failed stage returns
+the first `DefinitionError` unchanged and skips subsequent underlying builder
+operations; ordinary argument expressions still evaluate eagerly. Completion
+maps core `finish` over success. No acceptance, conversion, defaulting, extra-key,
+callback or schema-emission rule changes.
+
 Presence is independent of nullability. For child output a:
 
 | Field | Missing | Present null | Present non-null |

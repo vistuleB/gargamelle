@@ -1,5 +1,19 @@
 # Gargamelle handoff and next work
 
+## Latest scope — optional record pipelines (unreleased)
+
+Add `gargamelle/record` as a Result-aware adapter over the existing core record
+builders. Generate `start1` through `start32` reproducibly; keep `start` for
+explicit currying and retain remaining-constructor and recursion-environment
+types throughout. No core acceptance, conversion or schema rules change.
+Generator commands are `npm run generate:record` and `npm run check:record`.
+Tests cover both targets, all arities, the motivating thirteen-field shape,
+first-error propagation and skipped underlying operations, static errors,
+presence/defaults, both policies, recursion, and equivalence with core builders.
+The historical-model consumer is read-only context and stays on Hex 1.0.0.
+This is additive unreleased work for a future minor release, not a replacement
+of published 1.0.0. Package version and publication remain unchanged.
+
 ## Latest scope — post-1.0.0 documentation upkeep
 
 Published 1.0.0 matches all 27 package files at `69a17c7`; tag `v1.0.0` identifies

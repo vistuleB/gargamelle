@@ -224,6 +224,12 @@ For input `{"name":"Brainy","active":true}`, `read_user` returns
 `Ok(User("Brainy", True))`. `gargamelle.Strict` rejects undeclared fields.
 `gargamelle.schema_string(user_definition(), gargamelle.Pretty)` generates the record’s schema.
 
+`gargamelle/record` provides an optional Result pipeline for the same builders.
+`start1` through `start32` accept ordinary constructors without explicit currying;
+`required`, `optional`, `defaulted`, and `finish` preserve the existing semantics
+and propagate the first construction error. `start` accepts an explicitly
+curried constructor.
+
 ## More definitions
 
 | Feature | Constructors |

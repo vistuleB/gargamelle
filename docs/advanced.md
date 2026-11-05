@@ -6,6 +6,66 @@ semantics are specified in the [technical contract](contract.html).
 To bind a component handler to its input definition, see
 [Verified JSON boundaries](boundaries.html).
 
+## Pipe-friendly record construction
+
+The additive [gargamelle/record](gargamelle/record.html) module adapts the existing
+static record builders to a Result pipeline. `start` accepts an explicitly
+curried constructor; `start1` through `start32` accept ordinary constructors with
+the corresponding number of arguments. Construction does not invoke them.
+
+```gleam
+import gargamelle
+import gargamelle/record
+import gleam/io
+import gleam/option.{type Option, None}
+
+pub type Person {
+  Person(name: String, nickname: Option(String), active: Bool)
+}
+
+pub fn person_definition() -> gargamelle.Definition(Person) {
+  let assert Ok(definition) =
+    record.start3(Person)
+    |> record.required("name", gargamelle.string())
+    |> record.optional("nickname", gargamelle.string())
+    |> record.defaulted("active", gargamelle.boolean(), gargamelle.json_bool(True))
+    |> record.finish(gargamelle.Strict)
+  definition
+}
+
+pub fn main() {
+  let assert Ok(json) = gargamelle.parse("{\"name\":\"Azrael\"}")
+  let assert Ok(Person("Azrael", None, True)) =
+    gargamelle.decode(person_definition(), json)
+  io.println("record pipeline passed")
+}
+```
+
+Output:
+
+```text
+record pipeline passed
+```
+
+Each field consumes the next constructor argument. Optional fields consume
+`Option(a)`; defaulted fields consume `a`. The recursion environment is retained,
+so these builders can also be used inside `recursive` and `recursive_pair`.
+As with core `finish`, the remaining constructor type becomes the decoded output
+type. An explicit `Definition(Person)` annotation checks that the declared fields
+produce a `Person`; no runtime constructor probing is performed.
+
+`required`, `optional`, and `defaulted` call their core operation only after a
+successful preceding stage. The first `DefinitionError` is returned unchanged;
+`finish` maps core completion over success. Argument expressions are still
+evaluated eagerly, even after an earlier error. Field definitions are static;
+later definitions do not depend on earlier decoded values.
+
+Defaults are checked without conversion during construction, then decoded on
+absence. Present invalid input still fails. `Strict` rejects extra fields;
+`Open` accepts them and omits them from decoded output. Validation, decoding and
+schema emission have the same semantics as the core builder API. Construction
+failures remain separate from input `ValidationError` results.
+
 ## Schema annotations
 
 `examples(definition, values)` adds the standard JSON Schema `examples`

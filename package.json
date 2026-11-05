@@ -4,6 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "generate:record": "node verification/generate-record.mjs",
+    "check:record": "node verification/generate-record.mjs --check",
     "test": "gleam test && node --test verification/*.test.mjs",
     "check:release": "node verification/check-release.mjs",
     "verify": "node verification/run-evidence.mjs",

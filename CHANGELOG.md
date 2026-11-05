@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Add `gargamelle/record`: Result-aware field pipelines and generated `start1`
+  through `start32` adapters for ordinary constructors. Existing APIs and record
+  semantics are unchanged.
+
 - Document rendering failures and the human-readable admission/definition error
   messages. Add a changelog link to the documentation sidebar.
 

@@ -40,7 +40,8 @@ test('main library preserves baseline behavior with immutable recursive plans',(
     const run=(args)=>spawnSync('gleam',args,{cwd:directory,encoding:'utf8',timeout:60000,maxBuffer:5*1024*1024,env:{...process.env,GIT_DIR:'',GIT_WORK_TREE:''}});
     const javascript=run(['test','--target','javascript']);
     assert.equal(javascript.status,0,javascript.stderr+'\n'+javascript.stdout);
-    assert.match(javascript.stdout,/144 passed, no failures/);
+    const mainTests=Number(javascript.stdout.match(/(\d+) passed, no failures/)?.[1]);
+    assert.ok(mainTests>=144,'main-source baseline tests must remain included');
     const probe=target=>{
       const result=run(['run','--target',target,'-m','integration_probe']);
       assert.equal(result.status,0,result.stderr+'\n'+result.stdout);
@@ -58,6 +59,7 @@ test('main library preserves baseline behavior with immutable recursive plans',(
     const encodingSource=readFileSync(join(directory,'src/gargamelle/encoding.gleam'));
     const diagnosticsSource=readFileSync(join(directory,'src/gargamelle/diagnostics.gleam'));
     const boundarySource=readFileSync(join(directory,'src/gargamelle/boundary.gleam'));
+    const recordSource=readFileSync(join(directory,'src/gargamelle/record.gleam'));
     const integratedSource=readFileSync(join(directory,'src/gargamelle.gleam'));
     const currentRuntime=readFileSync(join(directory,'src/runtime.mjs'));
     // Old sources cannot compile migrated tests; a run also compiles test modules.
@@ -65,6 +67,7 @@ test('main library preserves baseline behavior with immutable recursive plans',(
     rmSync(join(directory,'src/gargamelle/encoding.gleam'));
     rmSync(join(directory,'src/gargamelle/diagnostics.gleam'));
     rmSync(join(directory,'src/gargamelle/boundary.gleam'));
+    rmSync(join(directory,'src/gargamelle/record.gleam'));
     cpSync(join(root,'verification/portability/integration/baseline.gleam'),join(directory,'src/gargamelle.gleam'));
     cpSync(join(root,'verification/portability/integration/baseline-runtime.mjs'),join(directory,'src/runtime.mjs'));
     // Adapt API names and omit the new Contract-only renderer in copied callers.
@@ -78,6 +81,7 @@ test('main library preserves baseline behavior with immutable recursive plans',(
     writeFileSync(join(directory,'src/gargamelle/encoding.gleam'),encodingSource);
     writeFileSync(join(directory,'src/gargamelle/diagnostics.gleam'),diagnosticsSource);
     writeFileSync(join(directory,'src/gargamelle/boundary.gleam'),boundarySource);
+    writeFileSync(join(directory,'src/gargamelle/record.gleam'),recordSource);
     writeFileSync(join(directory,'src/runtime.mjs'),currentRuntime);
     cpSync(join(root,'test'),join(directory,'test'),{recursive:true});
     rmSync(join(directory,'test/schema_fixtures.gleam'));
@@ -95,7 +99,7 @@ test('main library preserves baseline behavior with immutable recursive plans',(
     assert.equal(build.status,0,build.stdout+'\n'+build.stderr);
     const erlang=run(['test','--target','erlang']);
     assert.equal(erlang.status,0,erlang.stderr+'\n'+erlang.stdout);
-    assert.match(erlang.stdout,/152 passed, no failures/);
+    assert.equal(Number(erlang.stdout.match(/(\d+) passed, no failures/)?.[1]),mainTests+8);
     assert.deepEqual(probe('erlang'),integrated,'cross-target schema/output/diagnostic mismatch');
     benchmark('erlang');
     for(const [name,body,privateValue] of [
@@ -143,6 +147,6 @@ pub fn forbidden() {
     }
     t.diagnostic('32 compile-negative checks passed on the integrated API');
     t.diagnostic(`${integrated.length} schemas, ${integrated.reduce((sum,row)=>sum+row.cases.length,0)} independent cases; exact historical JavaScript and native comparison`);
-    t.diagnostic('144 main-source tests and eight native process/graph tests passed');
+    t.diagnostic(`${mainTests} main-source tests and eight native process/graph tests passed`);
   } finally {rmSync(directory,{recursive:true,force:true});}
 });
