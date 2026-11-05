@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.1.0
 
 - Add `gargamelle/record`: Result-aware field pipelines and generated `start1`
   through `start32` adapters for ordinary constructors. Existing APIs and record

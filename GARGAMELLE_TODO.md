@@ -1,6 +1,15 @@
 # Gargamelle handoff and next work
 
-## Latest scope — optional record pipelines (unreleased)
+## Latest scope — 1.1.0 release preparation
+
+Prepare a new minor release from record-builder commit `a5d363c`. Align release
+metadata, installation instructions and versioned links, then qualify the exact
+archive on both targets and Linux. New functions/module are additive; no existing
+public signatures, error variants or runtime support requirements change.
+The historical-model consumer stays untouched on published 1.0.0. Use isolated
+archive consumers for qualification. Publication remains the maintainer's action.
+
+## Previous scope — optional record pipelines (unreleased)
 
 Add `gargamelle/record` as a Result-aware adapter over the existing core record
 builders. Generate `start1` through `start32` reproducibly; keep `start` for
@@ -14,7 +23,7 @@ The historical-model consumer is read-only context and stays on Hex 1.0.0.
 This is additive unreleased work for a future minor release, not a replacement
 of published 1.0.0. Package version and publication remain unchanged.
 
-## Latest scope — post-1.0.0 documentation upkeep
+## Previous scope — post-1.0.0 documentation upkeep
 
 Published 1.0.0 matches all 27 package files at `69a17c7`; tag `v1.0.0` identifies
 that commit. Pending documentation updates explain rendering failures and error
