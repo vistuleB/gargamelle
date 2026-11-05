@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtempSync,cpSync,readFileSync,writeFileSync,rmSync} from 'node:fs';
+import {mkdtempSync,cpSync,readFileSync,readdirSync,writeFileSync,rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {spawnSync} from 'node:child_process';
@@ -21,6 +21,10 @@ test('actual Erlang Gleam API preserves typed recursion and process-independent 
       env:{...process.env,GIT_DIR:'',GIT_WORK_TREE:''},
     });
     assert.equal(result.status,0,result.stderr+'\n'+result.stdout);
-    assert.match(result.stdout,/152 passed, no failures/);
+    const tests=readdirSync(join(directory,'test'),{recursive:true})
+      .filter(name=>name.endsWith('.gleam'))
+      .reduce((count,name)=>count+[...readFileSync(join(directory,'test',name),'utf8').matchAll(/\bpub\s+fn\s+\w+_test\s*\(/g)].length,0);
+    assert.ok(tests>=152,'the baseline and eight native graph tests must remain included');
+    assert.equal(Number(result.stdout.match(/(\d+) passed, no failures/)?.[1]),tests);
   } finally {rmSync(directory,{recursive:true,force:true});}
 });
