@@ -203,17 +203,41 @@ specifies the JSON domain, external validator settings, decoded-value semantics 
 
 ## Typed records
 
+The core builders consume a curried constructor: each field supplies an argument
+to a one-argument function. [gargamelle/record][record-api] accepts an ordinary
+constructor and chains the construction Results into one pipeline.
+
+These two definitions accept the same JSON, produce the same `User` values and
+generate identical schemas:
+
 ```gleam
 import gargamelle
+import gargamelle/record
 
-pub type User { User(name: String, active: Bool) }
+pub type User { User(name: String, age: Int, active: Bool) }
 
-pub fn user_definition() -> gargamelle.Definition(User) {
+// Without gargamelle/record: explicit currying and separate Result handling.
+pub fn curried_user_definition() -> gargamelle.Definition(User) {
+  let constructor = fn(name) {
+    fn(age) { fn(active) { User(name, age, active) } }
+  }
   let assert Ok(fields) =
-    gargamelle.record(fn(name) { fn(active) { User(name, active) } })
+    gargamelle.record(constructor)
     |> gargamelle.required("name", gargamelle.string())
+  let assert Ok(fields) = gargamelle.required(fields, "age", gargamelle.safe_integer())
   let assert Ok(fields) = gargamelle.required(fields, "active", gargamelle.boolean())
   gargamelle.finish(fields, gargamelle.Strict)
+}
+
+// With gargamelle/record: the ordinary constructor and one Result pipeline.
+pub fn user_definition() -> gargamelle.Definition(User) {
+  let assert Ok(definition) =
+    record.start3(User)
+    |> record.required("name", gargamelle.string())
+    |> record.required("age", gargamelle.safe_integer())
+    |> record.required("active", gargamelle.boolean())
+    |> record.finish(gargamelle.Strict)
+  definition
 }
 
 pub fn read_user(source: String) {
@@ -222,15 +246,15 @@ pub fn read_user(source: String) {
 }
 ```
 
-For input `{"name":"Brainy","active":true}`, `read_user` returns
-`Ok(User("Brainy", True))`. `gargamelle.Strict` rejects undeclared fields.
+For input `{"name":"Brainy","age":42,"active":true}`, `read_user` returns
+`Ok(User("Brainy", 42, True))`. `gargamelle.Strict` rejects undeclared fields.
 `gargamelle.schema_string(user_definition(), gargamelle.Pretty)` generates the record’s schema.
 
-[gargamelle/record][record-api] provides an optional Result pipeline for the same builders.
-`start1` through `start32` accept ordinary constructors without explicit currying;
+`start1` through `start32` accept ordinary constructors without explicit currying.
 `required`, `optional`, `defaulted`, and `finish` preserve the existing semantics
-and propagate the first construction error. `start` accepts an explicitly
-curried constructor.
+and propagate the first construction error. The generated range is not a limit
+on record size: larger records can use `record.start` with an explicitly curried
+constructor. Field definitions remain static in both APIs.
 
 ## More definitions
 

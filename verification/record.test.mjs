@@ -18,6 +18,54 @@ test('record wrappers are reproducibly generated', () => {
   assert.equal(result.status, 0, result.output);
 });
 
+test('README curried and ordinary constructors have identical schemas, outputs and errors', () => {
+  const directory = mkdtempSync(join(tmpdir(), 'gargamelle-readme-record-'));
+  try {
+    mkdirSync(join(directory, 'src'));
+    writeFileSync(join(directory, 'gleam.toml'), `name = "readme_record"
+version = "0.1.0"
+[dependencies]
+gargamelle = { path = ${JSON.stringify(root)} }
+gleam_stdlib = { path = ${JSON.stringify(join(root, 'build/packages/gleam_stdlib'))} }
+gleam_json = { path = ${JSON.stringify(join(root, 'build/packages/gleam_json'))} }
+`);
+    const readme = readFileSync(join(root, 'README.md'), 'utf8');
+    const snippet = readme.split('## Typed records')[1].match(/```gleam\n([\s\S]*?)\n```/)[1];
+    const inputs = [
+      {name: 'Brainy', age: 42, active: true},
+      {name: 'Jokey', age: 0, active: false},
+      {name: 'Brainy', active: true},
+      {name: 'Brainy', age: '42', active: true},
+      {name: 'Brainy', age: 42, active: null},
+      {name: 'Brainy', age: 42, active: true, extra: 1},
+      {}, [], null,
+    ];
+    const comparisons = inputs.map(input => `
+let assert Ok(json) = gargamelle.parse(${JSON.stringify(JSON.stringify(input))})
+let assert True = gargamelle.decode(curried, json) == gargamelle.decode(pipeline, json)
+let assert True = gargamelle.validate(curried, json) == gargamelle.validate(pipeline, json)
+`).join('');
+    writeFileSync(join(directory, 'src/readme_record.gleam'), 'import gleam/io\n' + snippet + `
+pub fn main() {
+let curried = curried_user_definition()
+let pipeline = user_definition()
+let assert True = gargamelle.schema_string(curried, gargamelle.Compact)
+  == gargamelle.schema_string(pipeline, gargamelle.Compact)
+let assert Ok(User("Brainy", 42, True)) = read_user("{\\\"name\\\":\\\"Brainy\\\",\\\"age\\\":42,\\\"active\\\":true}")
+${comparisons}
+io.println("README record comparison passed")
+}
+`);
+    for (const target of ['javascript', 'erlang']) {
+      const result = run('gleam', ['run', '--target', target], directory);
+      assert.equal(result.status, 0, result.output);
+      assert.equal(result.stdout.trim(), 'README record comparison passed');
+    }
+  } finally {
+    rmSync(directory, {recursive: true, force: true});
+  }
+});
+
 test('all arities, consumer-shaped output, static errors and short-circuiting on both targets', () => {
   const directory = mkdtempSync(join(tmpdir(), 'gargamelle-record-'));
   const library = join(directory, 'library');

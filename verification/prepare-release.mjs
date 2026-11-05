@@ -83,7 +83,9 @@ try {
   writeFileSync(join(consumer,'src/readme_user.gleam'),snippets[2]+`
 import gleam/io
 pub fn main() {
-  let assert Ok(User("Brainy", True)) = read_user("{\\\"name\\\":\\\"Brainy\\\",\\\"active\\\":true}")
+  let assert Ok(User("Brainy", 42, True)) = read_user("{\\\"name\\\":\\\"Brainy\\\",\\\"age\\\":42,\\\"active\\\":true}")
+  let assert True = gargamelle.schema_string(user_definition(), gargamelle.Compact)
+    == gargamelle.schema_string(curried_user_definition(), gargamelle.Compact)
   io.println("README user passed")
 }
 `);
