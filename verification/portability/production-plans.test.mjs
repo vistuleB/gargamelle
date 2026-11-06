@@ -60,6 +60,7 @@ test('main library preserves baseline behavior with immutable recursive plans',(
     const diagnosticsSource=readFileSync(join(directory,'src/gargamelle/diagnostics.gleam'));
     const boundarySource=readFileSync(join(directory,'src/gargamelle/boundary.gleam'));
     const recordSource=readFileSync(join(directory,'src/gargamelle/record.gleam'));
+    const codecRecordSource=readFileSync(join(directory,'src/gargamelle/codec_record.gleam'));
     const integratedSource=readFileSync(join(directory,'src/gargamelle.gleam'));
     const currentRuntime=readFileSync(join(directory,'src/runtime.mjs'));
     // Old sources cannot compile migrated tests; a run also compiles test modules.
@@ -68,6 +69,7 @@ test('main library preserves baseline behavior with immutable recursive plans',(
     rmSync(join(directory,'src/gargamelle/diagnostics.gleam'));
     rmSync(join(directory,'src/gargamelle/boundary.gleam'));
     rmSync(join(directory,'src/gargamelle/record.gleam'));
+    rmSync(join(directory,'src/gargamelle/codec_record.gleam'));
     cpSync(join(root,'verification/portability/integration/baseline.gleam'),join(directory,'src/gargamelle.gleam'));
     cpSync(join(root,'verification/portability/integration/baseline-runtime.mjs'),join(directory,'src/runtime.mjs'));
     // Adapt API names and omit the new Contract-only renderer in copied callers.
@@ -82,6 +84,7 @@ test('main library preserves baseline behavior with immutable recursive plans',(
     writeFileSync(join(directory,'src/gargamelle/diagnostics.gleam'),diagnosticsSource);
     writeFileSync(join(directory,'src/gargamelle/boundary.gleam'),boundarySource);
     writeFileSync(join(directory,'src/gargamelle/record.gleam'),recordSource);
+    writeFileSync(join(directory,'src/gargamelle/codec_record.gleam'),codecRecordSource);
     writeFileSync(join(directory,'src/runtime.mjs'),currentRuntime);
     cpSync(join(root,'test'),join(directory,'test'),{recursive:true});
     rmSync(join(directory,'test/schema_fixtures.gleam'));
