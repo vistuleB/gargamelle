@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.0
+
+- Add `gargamelle/codec_record`: shared field declarations construct an existing
+  encoding codec with typed construction errors, required/optional/defaulted
+  fields and selectable record policy. Child semantic requirements are rejected.
+- Add `gargamelle/encoding.encoder` to extract an unchecked encoder from a codec.
+
 ## 1.1.0
 
 - Add `gargamelle/record`: Result-aware field pipelines and generated `start1`

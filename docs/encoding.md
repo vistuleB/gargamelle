@@ -70,6 +70,112 @@ Contract. Encoding and decoding need not be inverses: projection, defaults and
 maps may cause reconstructed data to differ from the original encoder input.
 Semantic requirements check reconstructed data, not the encoder input directly.
 
+## Shared record declarations
+
+`gargamelle/codec_record` declares each field's name, child codec and getter once.
+It builds the definition and encoder together, returning the existing
+`gargamelle_encoding.Codec(a)`. The existing encoding and boundary APIs apply.
+`gargamelle/record` supplies the ordinary-constructor adapters.
+
+**Child semantic requirements are unsupported.** Every required, optional and
+defaulted child must have a contract with no semantic requirements. Construction
+returns `SemanticRequirements(field_name, descriptions)` otherwise, including
+when a default is structurally valid or an optional field might be absent.
+Requirements are never silently discarded by the builder. This restriction is
+checked on each supplied child's stored contract; manually extracting a definition
+and wrapping it in a new contract explicitly removes that contract's requirements.
+
+```gleam
+import gargamelle
+import gargamelle/codec_record
+import gargamelle/encoding as gargamelle_encoding
+import gargamelle/record
+import gleam/io
+
+pub type Source {
+  Source(path: String, sha256: String)
+}
+
+fn text() -> gargamelle_encoding.Codec(String) {
+  gargamelle_encoding.codec(
+    gargamelle_encoding.string(),
+    gargamelle.contract(gargamelle.string()),
+  )
+}
+
+pub fn source_codec() -> Result(
+  gargamelle_encoding.Codec(Source),
+  codec_record.BuildError,
+) {
+  codec_record.start(record.start2(Source))
+  |> codec_record.required("path", text(), fn(source: Source) { source.path })
+  |> codec_record.required("sha256", text(), fn(source: Source) { source.sha256 })
+  |> codec_record.finish(gargamelle.Strict)
+}
+
+pub fn main() {
+  let assert Ok(codec) = source_codec()
+  let definition = gargamelle.contract_definition(gargamelle_encoding.contract(codec))
+  let assert Ok(verified) = gargamelle_encoding.encode(codec, Source("data.json", "example-hash"))
+  let json = gargamelle.verified_json(verified)
+  let assert Ok(Source("data.json", "example-hash")) = gargamelle.decode(definition, json)
+  let _schema = gargamelle.schema_string(definition, gargamelle.Pretty)
+  io.println(gargamelle.to_string(json, gargamelle.Compact))
+}
+```
+
+Output:
+
+```text
+{"path":"data.json","sha256":"example-hash"}
+```
+
+The example constrains both fields to strings; it does not assert that `sha256`
+contains a hash. The getter parameter annotation identifies the whole
+record type for field access. Construction runs no constructors or getters.
+
+`Fields(remaining, whole)` tracks the constructor arguments still required and
+the getters' whole-record input. `finish` requires `Fields(a, a)`, so completing
+an incompatible constructor is a compile-time error. Existing `start1`–`start32`
+adapters and explicitly curried `record.start` constructors can be used.
+
+| Field operation | Decoding | Encoding |
+| --- | --- | --- |
+| `required` | Key must exist; decode its child | Always write the getter value |
+| `optional` | Absent key becomes `None`; present child becomes `Some` | `None` omits the key; `Some` encodes its child |
+| `defaulted` | Absent key decodes the supplied JSON default | Always write the actual getter value, including values equal to the default |
+
+Omission differs from JSON null. An optional nullable child can distinguish
+`None` (absent), `Some(None)` (null), and `Some(Some(value))`. Present invalid
+values are not replaced with defaults. Defaults undergo the existing structural
+construction checks without decoding conversions.
+
+`Strict` rejects unknown input fields. `Open` accepts and discards them during
+decoding; encoding writes declared fields only. For example, an open version of
+the codec accepts `{"path":"data.json","sha256":"example-hash","extra":42}`,
+but decoding and re-encoding produces the output above without `extra`.
+Schema-valid encoding does not prove that constructors and getters are inverses;
+round-trip properties require separate tests.
+
+Construction returns `BuildError`, distinct from runtime `EncodingError` and
+input validation failures. `FieldDefinition` and `FieldEncoding` retain the
+field name and original cause. `Definition` retains an error supplied to `start`.
+Operations preserve the first error and skip subsequent builder work. Gleam
+still evaluates argument expressions eagerly: `make_child()` in a later field
+call executes even after an earlier error. Runtime field/index diagnostics are
+provided by the existing encoders. Callback exceptions remain operational failures.
+
+Only completed definitions and encoders are accepted; recursive construction
+environments are outside this helper. Completed recursive codecs can be children
+when their contracts have no semantic requirements.
+
+Semantic requirements can be attached to the completed record's contract with
+`gargamelle.require`, then paired with its encoder using
+`gargamelle_encoding.codec`. `gargamelle_encoding.encoder(codec)` extracts an
+**unchecked** encoder: `encode_json` does not enforce that codec's contract.
+When used with an output boundary, the receiving boundary's contract is authoritative.
+Checked `encode` should not precede boundary submission, which would repeat checking.
+
 ## Receiving authority and callback counts
 
 `output(encoder, receiver)` pairs an encoder with an existing

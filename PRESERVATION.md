@@ -365,6 +365,28 @@ produces admitted output; checked encoding enforces its stored Contract as befor
 Canonical JSON is preserved, not source text or zero-sign representation. The
 public one-way conversion cannot construct or forge Gargamelle Json.
 
+## Shared codec record declarations
+
+`codec_record.Fields(remaining, whole)` stores the existing decoding record and
+encoding record. Each operation adds the same key and child definition/encoder
+to those records; `finish` requires the remaining constructor result to equal the
+encoder input type. It delegates to the existing finish operations and wraps the
+resulting definition in a structural Contract. No acceptance node, conversion
+interpreter, certificate construction or runtime cast is added.
+
+Every field operation checks the supplied child Contract for semantic requirements
+before extracting its definition. Required, optional and defaulted fields reject
+such requirements, so this helper never implicitly erases them. Completed-record
+semantic checks remain explicit Contract operations. The first construction error
+skips all subsequent builder work; argument evaluation remains eager. Definition
+and encoder failures retain their original causes and declared field names.
+
+Optional omission and default insertion use the original field operations;
+defaulted encoding always writes the getter value. Open-record decoding still
+projects away unknown keys. No constructor/getter inversion is claimed. Encoder
+extraction does not certify its output: checked encoding and receiving boundaries
+retain their existing, independent Contract authority.
+
 
 ## Modifier wrapper policy
 

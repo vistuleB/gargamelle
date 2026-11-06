@@ -6,7 +6,7 @@
 Gargamelle generates typed JSON decoders and JSON Schema 2020-12 documents
 from the same Gleam definition.
 
-[Technical contract](https://hexdocs.pm/gargamelle/1.1.0/contract.html).
+[Technical contract](https://hexdocs.pm/gargamelle/1.2.0/contract.html).
 
 Gargamelle also provides `gargamelle/boundary` APIs that bind a contract to a handler.
 A contract combines a definition with optional semantic checks of decoded values.
@@ -25,6 +25,7 @@ boundary APIs.
 | JSON Schema generation | `schema_json` / `schema_string` | [gargamelle][core-api] |
 | JSON retention with the accepting contract | `verify` → `VerifiedJson` | [gargamelle][core-api] |
 | Pipe-friendly record definitions | `start` / `start1`–`start32` + field pipeline | [gargamelle/record][record-api] |
+| Shared record definitions and encoders | `start` + `required` / `optional` / `defaulted` + `finish` | [gargamelle/codec_record][codec-record-api] |
 | Validated handler invocation with decoded data | `new` → `Boundary` + `forward` | [gargamelle/boundary][boundary-api] |
 | Validated handler invocation with original JSON | `json` → `JsonBoundary` + `forward_json` | [gargamelle/boundary][boundary-api] |
 | Typed output through a receiving boundary | `output` + `send` | [gargamelle/boundary][boundary-api] |
@@ -33,11 +34,12 @@ boundary APIs.
 | Encoding checked against a Contract | `encode` | [gargamelle/encoding][encoding-api] |
 | Contract error summaries and JSON reports | `summary` / `to_json` | [gargamelle/diagnostics][diagnostics-api] |
 
-[core-api]: https://hexdocs.pm/gargamelle/1.1.0/gargamelle.html
-[record-api]: https://hexdocs.pm/gargamelle/1.1.0/gargamelle/record.html
-[boundary-api]: https://hexdocs.pm/gargamelle/1.1.0/gargamelle/boundary.html
-[encoding-api]: https://hexdocs.pm/gargamelle/1.1.0/gargamelle/encoding.html
-[diagnostics-api]: https://hexdocs.pm/gargamelle/1.1.0/gargamelle/diagnostics.html
+[core-api]: https://hexdocs.pm/gargamelle/1.2.0/gargamelle.html
+[record-api]: https://hexdocs.pm/gargamelle/1.2.0/gargamelle/record.html
+[codec-record-api]: https://hexdocs.pm/gargamelle/1.2.0/gargamelle/codec_record.html
+[boundary-api]: https://hexdocs.pm/gargamelle/1.2.0/gargamelle/boundary.html
+[encoding-api]: https://hexdocs.pm/gargamelle/1.2.0/gargamelle/encoding.html
+[diagnostics-api]: https://hexdocs.pm/gargamelle/1.2.0/gargamelle/diagnostics.html
 
 ## Getting started
 
@@ -46,7 +48,7 @@ Requires Gleam 1.18.1 or later.
 Package installation:
 
 ```sh
-gleam add gargamelle@1.1.0
+gleam add gargamelle@1.2.0
 ```
 
 ### JavaScript
@@ -72,7 +74,7 @@ gleam deps download
 make -C build/packages/gargamelle/priv/regex-src
 ```
 
-[Native Erlang setup](https://hexdocs.pm/gargamelle/1.1.0/native-erlang.html)
+[Native Erlang setup](https://hexdocs.pm/gargamelle/1.2.0/native-erlang.html)
 documents tested runtimes and deployment requirements.
 
 ## Basic example
@@ -176,7 +178,7 @@ stored contract; a certificate from another contract cannot bypass that check.
 
 `definition`, `json_definition`, `output_definition` and `paired_definition`
 expose each boundary's structural definition for inspection and schema generation.
-[Verified JSON boundaries](https://hexdocs.pm/gargamelle/1.1.0/boundaries.html)
+[Verified JSON boundaries](https://hexdocs.pm/gargamelle/1.2.0/boundaries.html)
 documents certificate retention and application responses.
 
 ## Guarantees and scope
@@ -198,14 +200,14 @@ documents certificate retention and application responses.
 - The opaque Gleam APIs enforce access through public operations. They are not a
   sandbox against hostile code in the same runtime.
 
-The [technical contract](https://hexdocs.pm/gargamelle/1.1.0/contract.html)
+The [technical contract](https://hexdocs.pm/gargamelle/1.2.0/contract.html)
 specifies the JSON domain, external validator settings, decoded-value semantics and limits.
 
 ## Typed records
 
-The core builders consume a curried constructor: each field supplies an argument
-to a one-argument function. [gargamelle/record][record-api] accepts an ordinary
-constructor and chains the construction Results into one pipeline.
+The core builders consume a curried constructor. During decoding, each field
+supplies an argument to a one-argument function. [gargamelle/record][record-api]
+accepts an ordinary constructor and chains the construction Results into one pipeline.
 
 These two definitions accept the same JSON, produce the same `User` values and
 generate identical schemas:
@@ -256,6 +258,12 @@ and propagate the first construction error. The generated range is not a limit
 on record size: larger records can use `record.start` with an explicitly curried
 constructor. Field definitions remain static in both APIs.
 
+For records that also require encoding, `gargamelle/codec_record` shares field
+names and child codecs between the definition and encoder. It returns the existing
+encoding codec and rejects child semantic requirements. The
+[encoding guide](https://hexdocs.pm/gargamelle/1.2.0/encoding.html)
+shows the paired declarations and optional/defaulted field policies.
+
 ## More definitions
 
 | Feature | Constructors |
@@ -273,7 +281,7 @@ Metadata does not change acceptance. A schema `default` annotation does not inse
 a value; a defaulted record field is a separate decoding feature. `format_annotation` adds an
 annotation, while `assert_format` adds validation constraints.
 
-[Advanced definitions](https://hexdocs.pm/gargamelle/1.1.0/advanced.html)
+[Advanced definitions](https://hexdocs.pm/gargamelle/1.2.0/advanced.html)
 documents these features and the HTML documentation recipe.
 
 ## Limitations
@@ -281,14 +289,14 @@ documents these features and the HTML documentation recipe.
 JavaScript is tested on Node 24.10.0, Chrome 155, Firefox 157 and Safari 27.
 Native Erlang requires a C regex helper and is tested on macOS arm64 with OTP 29
 and Ubuntu 24.04 x86_64 with OTP 28.5.0.7 and 29.1.1.
-[Browser compatibility](https://hexdocs.pm/gargamelle/1.1.0/browser-support.html)
-and [Native Erlang setup](https://hexdocs.pm/gargamelle/1.1.0/native-erlang.html)
+[Browser compatibility](https://hexdocs.pm/gargamelle/1.2.0/browser-support.html)
+and [Native Erlang setup](https://hexdocs.pm/gargamelle/1.2.0/native-erlang.html)
 document the compatibility matrix, regex Unicode differences and deployment requirements.
 Other runtimes and platforms are unverified; Windows native support is unavailable.
 
 - Gargamelle supports the JSON Schema features exposed by its constructors. It
   does not validate arbitrary imported schemas or implement the full 2020-12 dialect.
-  The [technical contract, section 16](https://hexdocs.pm/gargamelle/1.1.0/contract.html)
+  The [technical contract, section 16](https://hexdocs.pm/gargamelle/1.2.0/contract.html)
   lists keyword coverage and restrictions.
 - JSON numbers are finite parsed binary64 values; `safe_integer` uses JavaScript's
   safe-integer range. Strings and object keys must contain Unicode scalar values.
@@ -303,7 +311,7 @@ Other runtimes and platforms are unverified; Windows native support is unavailab
   text for admission. Encoding failures identify the output field or array element
   with a JSON Pointer and a typed reason.
 
-Compatibility commitments are specified in the [technical contract, section 18](https://hexdocs.pm/gargamelle/1.1.0/contract.html).
+Compatibility commitments are specified in the [technical contract, section 18](https://hexdocs.pm/gargamelle/1.2.0/contract.html).
 
 ## Related libraries
 
@@ -311,19 +319,20 @@ Gargamelle was originally inspired by [glon](https://hexdocs.pm/glon/), but is n
 
 [Sextant](https://hexdocs.pm/sextant/sextant.html) also combines typed decoding with
 JSON Schema 2020-12 generation. Its `use`-based field API supports definitions whose
-later fields depend on earlier decoded values. Gargamelle uses static definitions
-and curried record constructors; its schema describes structural acceptance, while
-application rules are checked separately. Receiving boundaries bind structural definitions and semantic requirements
+later fields depend on earlier decoded values. Gargamelle uses static definitions,
+with ordinary or explicitly curried record constructors. Its schema describes
+structural acceptance, while application rules are checked separately. Receiving
+boundaries bind structural definitions and semantic requirements
 to handlers.
 
 ## Further documentation
 
-- [Technical contract](https://hexdocs.pm/gargamelle/1.1.0/contract.html): complete intended acceptance, output, emission and error semantics.
-- [Advanced definitions](https://hexdocs.pm/gargamelle/1.1.0/advanced.html): numeric constraints, recursion, tuples, key constraints, membership, conditionals, exclusion and HTML documentation.
-- [Constructing JSON values](https://hexdocs.pm/gargamelle/1.1.0/json-values.html): public constructors for opaque admitted JSON.
-- [Typed JSON encoding](https://hexdocs.pm/gargamelle/1.1.0/encoding.html): explicit encoders, checked output and typed receiving paths.
-- [Verified JSON boundaries](https://hexdocs.pm/gargamelle/1.1.0/boundaries.html): decoded and JSON-only receiving handlers, with paired loading and saving.
-- [Diagnostic presentation](https://hexdocs.pm/gargamelle/1.1.0/diagnostics.html): bounded summaries and complete structured error reports.
+- [Technical contract](https://hexdocs.pm/gargamelle/1.2.0/contract.html): complete intended acceptance, output, emission and error semantics.
+- [Advanced definitions](https://hexdocs.pm/gargamelle/1.2.0/advanced.html): numeric constraints, recursion, tuples, key constraints, membership, conditionals, exclusion and HTML documentation.
+- [Constructing JSON values](https://hexdocs.pm/gargamelle/1.2.0/json-values.html): public constructors for opaque admitted JSON.
+- [Typed JSON encoding](https://hexdocs.pm/gargamelle/1.2.0/encoding.html): explicit encoders, checked output and typed receiving paths.
+- [Verified JSON boundaries](https://hexdocs.pm/gargamelle/1.2.0/boundaries.html): decoded and JSON-only receiving handlers, with paired loading and saving.
+- [Diagnostic presentation](https://hexdocs.pm/gargamelle/1.2.0/diagnostics.html): bounded summaries and complete structured error reports.
 
 ## Verification
 
@@ -331,12 +340,12 @@ The library is checked with typed-output and rejection fixtures, generated
 compositions, independent JSON Schema validators, selected official suite cases
 and deliberate implementation mutations. These provide evidence for the contract,
 not a formal proof or full-dialect conformance. The package source is
-available in the [repository](https://github.com/vistuleB/gargamelle) and the [Hex archive](https://repo.hex.pm/tarballs/gargamelle-1.1.0.tar).
+available in the [repository](https://github.com/vistuleB/gargamelle) and the [Hex archive](https://repo.hex.pm/tarballs/gargamelle-1.2.0.tar).
 
 ## License
 
 Gargamelle is distributed under the MIT License.
-[Licenses](https://hexdocs.pm/gargamelle/1.1.0/license.html) contains the library,
+[Licenses](https://hexdocs.pm/gargamelle/1.2.0/license.html) contains the library,
 native regex engine and retained JSON Schema test-suite notices.
 
 ## Authorship

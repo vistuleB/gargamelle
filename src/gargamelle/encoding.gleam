@@ -300,6 +300,15 @@ pub fn contract(codec: Codec(a)) -> s.Contract(a) {
   contract
 }
 
+/// Extract the encoder without checking the codec's Contract. Executing it with
+/// `encode_json` produces admitted JSON only, not a VerifiedJson certificate.
+/// Output boundaries check their own receiving Contract, independently of this
+/// codec's Contract.
+pub fn encoder(codec: Codec(a)) -> Encoder(a) {
+  let Codec(encoder, _) = codec
+  encoder
+}
+
 /// Encode once, then verify the stored Contract once. A check-free Contract
 /// validates without decoding; semantic requirements cause one decoding pass.
 /// Checks inspect that decoded output, which need not equal the original input.

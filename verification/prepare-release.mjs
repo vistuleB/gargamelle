@@ -22,7 +22,7 @@ let directory;
 writeFileSync(reportPath,JSON.stringify({status:'running',source:before.digest})+'\n');
 try {
   const version=readFileSync(join(root,'gleam.toml'),'utf8').match(/^version = "([^"]+)"$/m)[1];
-  assert.equal(version,'1.1.0');
+  assert.equal(version,'1.2.0');
   const pkg=JSON.parse(readFileSync(join(root,'package.json'))),lock=JSON.parse(readFileSync(join(root,'package-lock.json')));
   assert.equal(pkg.version,version);assert.equal(lock.version,version);assert.equal(lock.packages[''].version,version);
   assert.equal(pkg.private,true);
@@ -58,7 +58,7 @@ try {
     assert.ok(!/(^|\/)(?:build|node_modules|reports|\.git|\.aws)(?:\/|$)|\.(?:beam|o|dylib|so|exe)$|(^|\/)gargamelle_regex_port$/.test(path),`Generated/private artifact: ${path}`);
     assert.ok(!/(^|\/)\.env(?:\.|$)|(?:^|\/)(?:credentials|id_rsa|id_ed25519)$/.test(path),`Credential path: ${path}`);
   }
-  for(const path of ['gleam.toml','README.md','LICENSE','src/gargamelle.gleam','src/gargamelle/record.gleam','src/gargamelle/encoding.gleam','src/gargamelle/boundary.gleam','src/gargamelle/diagnostics.gleam','src/gargamelle/encoding_runtime.mjs','src/gargamelle_encoding_runtime.erl','src/runtime.mjs','src/gargamelle_runtime.erl','src/gargamelle_regex.erl','priv/regex-src/Makefile','priv/regex-src/PROVENANCE.json','priv/regex-src/LICENSE.quickjs'])assert.ok(entries.includes(path),`Missing archive member: ${path}`);
+  for(const path of ['gleam.toml','README.md','LICENSE','src/gargamelle.gleam','src/gargamelle/record.gleam','src/gargamelle/codec_record.gleam','src/gargamelle/encoding.gleam','src/gargamelle/boundary.gleam','src/gargamelle/diagnostics.gleam','src/gargamelle/encoding_runtime.mjs','src/gargamelle_encoding_runtime.erl','src/runtime.mjs','src/gargamelle_runtime.erl','src/gargamelle_regex.erl','priv/regex-src/Makefile','priv/regex-src/PROVENANCE.json','priv/regex-src/LICENSE.quickjs'])assert.ok(entries.includes(path),`Missing archive member: ${path}`);
   assert.ok(!entries.includes('src/schema_fixtures.gleam'),'Verification fixtures must not ship');
   assert.ok(!entries.some(path=>path.startsWith('test/')),'Test modules must not ship');
   assert.ok(!entries.some(path=>path.startsWith('verification/experiments/')),'Private experiments must not ship');
@@ -99,7 +99,7 @@ pub fn main() {
   const encodingGuide=readFileSync(join(root,'docs/encoding.md'),'utf8');
   const encodingSnippets=[...encodingGuide.matchAll(/```gleam\n([\s\S]*?)\n```/g)].map(match=>match[1]);
   const encodingOutputs=[...encodingGuide.matchAll(/```text\n([\s\S]*?)\n```/g)].map(match=>match[1]);
-  assert.equal(encodingSnippets.length,2);assert.equal(encodingOutputs.length,2);
+  assert.equal(encodingSnippets.length,3);assert.equal(encodingOutputs.length,3);
   const encodingConsumers=encodingSnippets.map((source,index)=>{
     const module=`encoding_guide_${index}`;
     writeFileSync(join(consumer,`src/${module}.gleam`),source);
@@ -158,9 +158,9 @@ pub fn main() {
   const config=readFileSync(join(root,'gleam.toml'),'utf8');
   const docs=join(root,'build/dev/docs/gargamelle');
   const pages=[...config.matchAll(/^path = "([^"]+\.html)"$/gm)].map(match=>match[1]);
-  for(const page of ['index.html','gargamelle.html','gargamelle/encoding.html','gargamelle/boundary.html','gargamelle/diagnostics.html',...pages]){
+  for(const page of ['index.html','gargamelle.html','gargamelle/record.html','gargamelle/codec_record.html','gargamelle/encoding.html','gargamelle/boundary.html','gargamelle/diagnostics.html',...pages]){
     const html=readFileSync(join(docs,page),'utf8');
-    if(['index.html','gargamelle.html','gargamelle/encoding.html','gargamelle/boundary.html','gargamelle/diagnostics.html'].includes(page)){
+    if(['index.html','gargamelle.html','gargamelle/record.html','gargamelle/codec_record.html','gargamelle/encoding.html','gargamelle/boundary.html','gargamelle/diagnostics.html'].includes(page)){
       for(const [,linkedVersion] of html.matchAll(/https:\/\/hexdocs\.pm\/gargamelle\/(\d+\.\d+\.\d+)\//g))
         assert.equal(linkedVersion,version,`Stale versioned documentation link in ${page}`);
     }

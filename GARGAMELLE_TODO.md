@@ -1,6 +1,17 @@
 # Gargamelle handoff and next work
 
-## Latest scope — 1.1.0 release preparation
+## Latest scope — 1.2.0 release preparation
+
+Prepare the additive codec_record field builder and encoding.encoder accessor.
+No existing signatures, error variants, acceptance rules or runtime baselines
+change. Child semantic contracts are rejected explicitly; the completed codec
+uses the existing structural Contract and checked encoding path.
+Qualify the final archive locally and on the Linux matrix. Test the historical-model
+consumer in an isolated copy migrated to the package builder; leave its original
+source and published 1.1.0 dependency unchanged. Evidence and checksums belong in
+ignored reports. Publication remains the maintainer's action.
+
+## Previous scope — 1.1.0 release preparation
 
 Prepare a new minor release from record-builder commit `a5d363c`. Align release
 metadata, installation instructions and versioned links, then qualify the exact
