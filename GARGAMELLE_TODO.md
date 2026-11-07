@@ -1,6 +1,11 @@
 # Gargamelle handoff and next work
 
-## Latest scope — 1.2.0 release preparation
+## Latest scope — 1.3.0 release preparation
+
+Add the structural definition accessor for encoding codecs and qualify the
+archive on both targets and the Linux matrix.
+
+## Previous scope — 1.2.0 release preparation
 
 Prepare the additive codec_record field builder and encoding.encoder accessor.
 No existing signatures, error variants, acceptance rules or runtime baselines

@@ -115,7 +115,7 @@ pub fn source_codec() -> Result(
 
 pub fn main() {
   let assert Ok(codec) = source_codec()
-  let definition = gargamelle.contract_definition(gargamelle_encoding.contract(codec))
+  let definition = gargamelle_encoding.definition(codec)
   let assert Ok(verified) = gargamelle_encoding.encode(codec, Source("data.json", "example-hash"))
   let json = gargamelle.verified_json(verified)
   let assert Ok(Source("data.json", "example-hash")) = gargamelle.decode(definition, json)

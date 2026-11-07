@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.0
+
+- Add `gargamelle/encoding.definition` for direct access to a codec’s structural definition.
+- Clarify how the codec record builder uses the record constructor helpers.
+
 ## 1.2.0
 
 - Add `gargamelle/codec_record`: shared field declarations construct an existing

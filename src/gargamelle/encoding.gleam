@@ -300,6 +300,12 @@ pub fn contract(codec: Codec(a)) -> s.Contract(a) {
   contract
 }
 
+/// Return the structural definition stored in the codec's contract.
+/// Use the contract to retain its semantic requirements.
+pub fn definition(codec: Codec(a)) -> s.Definition(a) {
+  s.contract_definition(contract(codec))
+}
+
 /// Extract the encoder without checking the codec's Contract. Executing it with
 /// `encode_json` produces admitted JSON only, not a VerifiedJson certificate.
 /// Output boundaries check their own receiving Contract, independently of this
